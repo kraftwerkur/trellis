@@ -30,3 +30,4 @@ Thumbs.db
 *.pem
 *.key
 research/manifest_repo/
+static/

@@ -12,49 +12,6 @@ import {
   AreaChart, Area, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
 
-/* ─── Mock / Fallback Data ─── */
-
-const MOCK_AGENTS: Agent[] = [
-  { agent_id: "a1", name: "Compliance Checker", owner: "ops", department: "Legal", framework: "langchain", agent_type: "llm", runtime_type: "hosted", endpoint: null, health_endpoint: null, tools: ["pdf-parse"], channels: ["email"], maturity: "production", cost_mode: "standard", status: "healthy", llm_config: { model: "gpt-4o" }, created: "2026-02-20T10:00:00Z", last_health_check: new Date(Date.now() - 120000).toISOString() },
-  { agent_id: "a2", name: "Doc Summarizer", owner: "ops", department: "Clinical", framework: "crewai", agent_type: "llm", runtime_type: "hosted", endpoint: null, health_endpoint: null, tools: ["ocr"], channels: ["api"], maturity: "production", cost_mode: "standard", status: "healthy", llm_config: { model: "claude-3.5-sonnet" }, created: "2026-02-18T08:00:00Z", last_health_check: new Date(Date.now() - 300000).toISOString() },
-  { agent_id: "a3", name: "Risk Assessor", owner: "risk", department: "Finance", framework: "autogen", agent_type: "llm", runtime_type: "hosted", endpoint: null, health_endpoint: null, tools: ["calculator"], channels: ["api"], maturity: "staging", cost_mode: "budget", status: "healthy", llm_config: { model: "gpt-4o-mini" }, created: "2026-02-22T14:00:00Z", last_health_check: new Date(Date.now() - 60000).toISOString() },
-  { agent_id: "a4", name: "PHI Redactor", owner: "security", department: "IT", framework: "custom", agent_type: "tool", runtime_type: "hosted", endpoint: null, health_endpoint: null, tools: ["regex", "ner"], channels: ["gateway"], maturity: "production", cost_mode: "standard", status: "active", llm_config: null, created: "2026-02-15T09:00:00Z", last_health_check: new Date(Date.now() - 45000).toISOString() },
-  { agent_id: "a5", name: "Billing Auditor", owner: "finance", department: "Revenue Cycle", framework: "langchain", agent_type: "llm", runtime_type: "hosted", endpoint: null, health_endpoint: null, tools: ["sql"], channels: ["slack"], maturity: "production", cost_mode: "standard", status: "unhealthy", llm_config: { model: "gpt-4o" }, created: "2026-02-19T11:00:00Z", last_health_check: new Date(Date.now() - 7200000).toISOString() },
-  { agent_id: "a6", name: "Patient Scheduler", owner: "ops", department: "Clinical", framework: "crewai", agent_type: "llm", runtime_type: "hosted", endpoint: null, health_endpoint: null, tools: ["calendar"], channels: ["sms", "email"], maturity: "staging", cost_mode: "budget", status: "healthy", llm_config: { model: "claude-3.5-sonnet" }, created: "2026-02-25T16:00:00Z", last_health_check: new Date(Date.now() - 180000).toISOString() },
-];
-
-const MOCK_EVENTS: AuditEvent[] = [
-  { id: 1, trace_id: "t1", envelope_id: null, agent_id: "a1", event_type: "agent_action", details: { message: "Reviewed compliance doc #4821" }, timestamp: new Date(Date.now() - 30000).toISOString() },
-  { id: 2, trace_id: "t2", envelope_id: null, agent_id: "a4", event_type: "phi_blocked", details: { message: "Blocked SSN in outbound response", count: 3 }, timestamp: new Date(Date.now() - 90000).toISOString() },
-  { id: 3, trace_id: "t3", envelope_id: null, agent_id: "a3", event_type: "rule_triggered", details: { rule_name: "high-risk-flag", message: "Escalated to human review" }, timestamp: new Date(Date.now() - 180000).toISOString() },
-  { id: 4, trace_id: "t4", envelope_id: null, agent_id: "a2", event_type: "agent_action", details: { message: "Summarized radiology report batch (12 docs)" }, timestamp: new Date(Date.now() - 300000).toISOString() },
-  { id: 5, trace_id: "t5", envelope_id: null, agent_id: "a5", event_type: "budget_alert", details: { message: "Agent approaching 80% daily budget limit" }, timestamp: new Date(Date.now() - 420000).toISOString() },
-  { id: 6, trace_id: "t6", envelope_id: null, agent_id: "a4", event_type: "phi_blocked", details: { message: "Redacted MRN from query response", count: 1 }, timestamp: new Date(Date.now() - 600000).toISOString() },
-  { id: 7, trace_id: "t7", envelope_id: null, agent_id: "a1", event_type: "agent_action", details: { message: "Generated HIPAA audit trail export" }, timestamp: new Date(Date.now() - 900000).toISOString() },
-  { id: 8, trace_id: "t8", envelope_id: null, agent_id: "a6", event_type: "rule_triggered", details: { rule_name: "off-hours-block", message: "Blocked scheduling outside business hours" }, timestamp: new Date(Date.now() - 1200000).toISOString() },
-  { id: 9, trace_id: "t9", envelope_id: null, agent_id: "a3", event_type: "agent_action", details: { message: "Risk score calculated for claim #98234" }, timestamp: new Date(Date.now() - 1500000).toISOString() },
-  { id: 10, trace_id: "t10", envelope_id: null, agent_id: "a4", event_type: "phi_blocked", details: { message: "Blocked DOB + patient name combination", count: 2 }, timestamp: new Date(Date.now() - 1800000).toISOString() },
-];
-
-const MOCK_COST_TIMESERIES: CostTimeseriesBucket[] = [
-  { bucket: "2026-02-22", total_cost_usd: 1.24, total_tokens_in: 42000, total_tokens_out: 18000, request_count: 34 },
-  { bucket: "2026-02-23", total_cost_usd: 2.18, total_tokens_in: 68000, total_tokens_out: 31000, request_count: 52 },
-  { bucket: "2026-02-24", total_cost_usd: 1.87, total_tokens_in: 55000, total_tokens_out: 24000, request_count: 41 },
-  { bucket: "2026-02-25", total_cost_usd: 3.42, total_tokens_in: 98000, total_tokens_out: 45000, request_count: 78 },
-  { bucket: "2026-02-26", total_cost_usd: 2.95, total_tokens_in: 82000, total_tokens_out: 38000, request_count: 65 },
-  { bucket: "2026-02-27", total_cost_usd: 4.11, total_tokens_in: 112000, total_tokens_out: 52000, request_count: 91 },
-  { bucket: "2026-02-28", total_cost_usd: 3.56, total_tokens_in: 95000, total_tokens_out: 44000, request_count: 73 },
-];
-
-const MOCK_COSTS: CostSummary[] = [
-  { agent_id: "a1", total_cost_usd: 5.82, total_tokens_in: 180000, total_tokens_out: 85000, request_count: 142 },
-  { agent_id: "a2", total_cost_usd: 4.21, total_tokens_in: 130000, total_tokens_out: 62000, request_count: 98 },
-  { agent_id: "a3", total_cost_usd: 3.45, total_tokens_in: 95000, total_tokens_out: 48000, request_count: 76 },
-  { agent_id: "a4", total_cost_usd: 0.12, total_tokens_in: 5000, total_tokens_out: 2000, request_count: 210 },
-  { agent_id: "a5", total_cost_usd: 2.18, total_tokens_in: 68000, total_tokens_out: 30000, request_count: 54 },
-  { agent_id: "a6", total_cost_usd: 1.67, total_tokens_in: 52000, total_tokens_out: 24000, request_count: 64 },
-];
-
 /* ─── Sparkline Component ─── */
 
 function Sparkline({ data, color = "#22d3ee", height = 32 }: { data: number[]; color?: string; height?: number }) {
@@ -121,7 +78,7 @@ function CommandStatCard({ label, value, icon: Icon, accent, trend, sparkData }:
         <div className="text-2xl font-bold font-data text-zinc-100">{value}</div>
         <div className="text-[10px] text-zinc-500 uppercase tracking-widest">{label}</div>
       </div>
-      {sparkData && (
+      {sparkData && sparkData.length > 1 && (
         <div className="pt-1">
           <Sparkline data={sparkData} color={c.spark} />
         </div>
@@ -196,6 +153,17 @@ function AgentHealthGrid({ agents }: { agents: Agent[] }) {
     return { dot: "bg-red-500", ring: "ring-red-500/20", label: "Unhealthy" };
   };
 
+  if (agents.length === 0) {
+    return (
+      <div className="card-dark">
+        <div className="px-4 py-2.5 border-b border-white/[0.06]">
+          <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Agent Health</span>
+        </div>
+        <div className="text-center text-zinc-600 py-8 text-sm">No agents registered</div>
+      </div>
+    );
+  }
+
   return (
     <div className="card-dark">
       <div className="px-4 py-2.5 border-b border-white/[0.06]">
@@ -229,6 +197,17 @@ function AgentHealthGrid({ agents }: { agents: Agent[] }) {
 /* ─── Cost Trend Chart ─── */
 
 function CostTrendChart({ data }: { data: CostTimeseriesBucket[] }) {
+  if (data.length === 0) {
+    return (
+      <div className="card-dark">
+        <div className="px-4 py-2.5 border-b border-white/[0.06]">
+          <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">7-Day Cost Trend</span>
+        </div>
+        <div className="text-center text-zinc-600 py-8 text-sm">No cost data yet</div>
+      </div>
+    );
+  }
+
   const chartData = data.map(d => ({
     day: d.bucket.slice(5), // MM-DD
     cost: d.total_cost_usd,
@@ -274,18 +253,16 @@ export default function OverviewPage() {
   const fetchCosts = useCallback(() => api.costs.summary(), []);
   const fetchTimeseries = useCallback(() => api.costs.timeseries("day"), []);
 
-  const { data: rawAgents } = useStablePolling<Agent[]>(fetchAgents, 10000);
-  const { data: rawEvents } = useStablePolling<AuditEvent[]>(fetchAudit, 5000);
+  const { data: rawAgents, loading: loadingAgents } = useStablePolling<Agent[]>(fetchAgents, 10000);
+  const { data: rawEvents, loading: loadingEvents } = useStablePolling<AuditEvent[]>(fetchAudit, 5000);
   const { data: health } = useStablePolling(fetchHealth, 10000);
-  const { data: rawCosts } = useStablePolling<CostSummary[]>(fetchCosts, 15000);
+  const { data: rawCosts, loading: loadingCosts } = useStablePolling<CostSummary[]>(fetchCosts, 15000);
   const { data: rawTimeseries } = useStablePolling<CostTimeseriesBucket[]>(fetchTimeseries, 30000);
 
-  // Fallback to mock data when backend is unavailable
-  const agents = rawAgents ?? MOCK_AGENTS;
-  const events = rawEvents ?? MOCK_EVENTS;
-  const costs = rawCosts ?? MOCK_COSTS;
-  const timeseries = rawTimeseries ?? MOCK_COST_TIMESERIES;
-  const isMock = !rawAgents;
+  const agents = rawAgents ?? [];
+  const events = rawEvents ?? [];
+  const costs = rawCosts ?? [];
+  const timeseries = rawTimeseries ?? [];
 
   const onlineCount = agents.filter(a => a.status === "healthy" || a.status === "active").length;
   const totalAgents = agents.length;
@@ -296,7 +273,7 @@ export default function OverviewPage() {
   }, [events]);
 
   const totalCost = costs.reduce((s, c) => s + c.total_cost_usd, 0);
-  const budgetLimit = 50; // configurable
+  const budgetLimit = 50;
   const budgetPct = Math.min(100, Math.round((totalCost / budgetLimit) * 100));
 
   const phiBlocked = useMemo(() =>
@@ -326,9 +303,10 @@ export default function OverviewPage() {
 
   const systemHealth = useMemo(() => {
     const healthyPct = totalAgents > 0 ? (onlineCount / totalAgents) * 100 : 0;
-    const isGwUp = health?.status === "ok" || health?.status === "healthy" || isMock;
+    const isGwUp = health?.status === "ok" || health?.status === "healthy";
+    if (totalAgents === 0 && !isGwUp) return 0;
     return Math.round(isGwUp ? healthyPct : healthyPct * 0.5);
-  }, [onlineCount, totalAgents, health, isMock]);
+  }, [onlineCount, totalAgents, health]);
 
   const agentMap = useMemo(() => {
     const m: Record<string, Agent> = {};
@@ -340,12 +318,15 @@ export default function OverviewPage() {
   const costSpark = timeseries.map(t => t.total_cost_usd);
   const requestSpark = timeseries.map(t => t.request_count);
 
+  // Loading state — show placeholders
+  const isLoading = loadingAgents && loadingEvents && loadingCosts;
+
   return (
     <div className="space-y-4">
-      {/* Mock data banner */}
-      {isMock && (
-        <div className="text-[10px] text-amber-500/70 bg-amber-500/5 border border-amber-500/10 rounded-lg px-3 py-1.5 text-center">
-          ⚠ Demo mode — showing simulated data (backend unavailable)
+      {/* Loading indicator */}
+      {isLoading && (
+        <div className="text-[10px] text-zinc-500 bg-zinc-800/50 border border-zinc-700/30 rounded-lg px-3 py-1.5 text-center animate-pulse">
+          Connecting to Trellis API…
         </div>
       )}
 
@@ -353,7 +334,7 @@ export default function OverviewPage() {
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
         <CommandStatCard
           label="Active Agents"
-          value={`${onlineCount}/${totalAgents}`}
+          value={totalAgents > 0 ? `${onlineCount}/${totalAgents}` : "—"}
           icon={Bot}
           accent="emerald"
           trend={totalAgents > 0 ? { direction: onlineCount === totalAgents ? "up" : "down", label: `${onlineCount} healthy` } : undefined}
@@ -380,18 +361,18 @@ export default function OverviewPage() {
         />
         <CommandStatCard
           label="Budget Used"
-          value={`${budgetPct}%`}
+          value={totalCost > 0 ? `${budgetPct}%` : "—"}
           icon={DollarSign}
           accent="amber"
-          trend={{ direction: budgetPct > 75 ? "up" : "flat", label: `$${totalCost.toFixed(2)}/$${budgetLimit}` }}
+          trend={totalCost > 0 ? { direction: budgetPct > 75 ? "up" : "flat", label: `$${totalCost.toFixed(2)}/$${budgetLimit}` } : undefined}
           sparkData={costSpark}
         />
         <CommandStatCard
           label="System Health"
-          value={`${systemHealth}%`}
+          value={totalAgents > 0 ? `${systemHealth}%` : "—"}
           icon={HeartPulse}
           accent="purple"
-          trend={{ direction: systemHealth >= 90 ? "up" : systemHealth >= 70 ? "flat" : "down", label: systemHealth >= 90 ? "All clear" : "Degraded" }}
+          trend={totalAgents > 0 ? { direction: systemHealth >= 90 ? "up" : systemHealth >= 70 ? "flat" : "down", label: systemHealth >= 90 ? "All clear" : "Degraded" } : undefined}
         />
       </div>
 
@@ -404,10 +385,10 @@ export default function OverviewPage() {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
           {[
-            { label: "Total Agents", value: String(totalAgents), color: "text-blue-400" },
-            { label: "Active Agents", value: `${onlineCount}`, color: onlineCount === totalAgents ? "text-emerald-400" : "text-amber-400" },
+            { label: "Total Agents", value: totalAgents > 0 ? String(totalAgents) : "—", color: "text-blue-400" },
+            { label: "Active Agents", value: totalAgents > 0 ? `${onlineCount}` : "—", color: onlineCount === totalAgents && totalAgents > 0 ? "text-emerald-400" : "text-amber-400" },
             { label: "Events (1h)", value: String(eventsLastHour), color: "text-cyan-400" },
-            { label: "Rule Match Rate", value: `${ruleMatchRate}%`, color: "text-purple-400" },
+            { label: "Rule Match Rate", value: events.length > 0 ? `${ruleMatchRate}%` : "—", color: "text-purple-400" },
             { label: "PHI Detections Today", value: String(phiToday), color: phiToday > 0 ? "text-red-400" : "text-emerald-400" },
           ].map(s => (
             <div key={s.label} className="text-center">
@@ -425,24 +406,28 @@ export default function OverviewPage() {
         </div>
         <div className="lg:col-span-2 space-y-3">
           <CostTrendChart data={timeseries} />
-          {/* Mini summary */}
+          {/* Cost Breakdown */}
           <div className="card-dark p-4">
             <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-medium mb-2">Cost Breakdown</div>
-            <div className="space-y-2">
-              {costs.slice(0, 5).map(c => {
-                const agent = agentMap[c.agent_id];
-                const pct = totalCost > 0 ? (c.total_cost_usd / totalCost) * 100 : 0;
-                return (
-                  <div key={c.agent_id} className="flex items-center gap-2">
-                    <span className="text-xs text-zinc-300 truncate w-28">{agent?.name ?? c.agent_id.slice(0, 12)}</span>
-                    <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                      <div className="h-full bg-cyan-500/60 rounded-full" style={{ width: `${pct}%` }} />
+            {costs.length === 0 ? (
+              <div className="text-center text-zinc-600 py-4 text-sm">No cost data yet</div>
+            ) : (
+              <div className="space-y-2">
+                {costs.slice(0, 5).map(c => {
+                  const agent = agentMap[c.agent_id];
+                  const pct = totalCost > 0 ? (c.total_cost_usd / totalCost) * 100 : 0;
+                  return (
+                    <div key={c.agent_id} className="flex items-center gap-2">
+                      <span className="text-xs text-zinc-300 truncate w-28">{agent?.name ?? c.agent_id.slice(0, 12)}</span>
+                      <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-cyan-500/60 rounded-full" style={{ width: `${pct}%` }} />
+                      </div>
+                      <span className="text-[10px] text-zinc-500 font-data w-14 text-right">${c.total_cost_usd.toFixed(2)}</span>
                     </div>
-                    <span className="text-[10px] text-zinc-500 font-data w-14 text-right">${c.total_cost_usd.toFixed(2)}</span>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </div>
       </div>

@@ -6,7 +6,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
 import httpx
-from fastapi import APIRouter, FastAPI
+from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import select
 
@@ -213,9 +213,12 @@ if _static_dir.is_dir():
     async def dashboard_index_head():
         return FileResponse(_resolve_static())
 
-    # Catch-all: serve static dashboard files (GET/HEAD only)
-    @app.api_route("/{path:path}", methods=["GET", "HEAD"])
-    async def dashboard_catchall(path: str):
+    # Catch-all: serve static dashboard files (GET/HEAD + POST for Next.js RSC prefetch)
+    @app.api_route("/{path:path}", methods=["GET", "HEAD", "POST"])
+    async def dashboard_catchall(path: str, request: Request):
+        # Don't intercept API routes
+        if path.startswith("api/"):
+            raise HTTPException(status_code=404, detail="Not found")
         return FileResponse(_resolve_static(path))
 
 

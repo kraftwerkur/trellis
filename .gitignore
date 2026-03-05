@@ -31,3 +31,4 @@ Thumbs.db
 *.key
 research/manifest_repo/
 static/
+/static/

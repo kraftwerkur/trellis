@@ -173,7 +173,13 @@ async def root_health():
 import os
 from pathlib import Path
 
-_static_dir = Path(__file__).resolve().parent.parent / "static"
+_project_root = Path(__file__).resolve().parent.parent
+# Docker: /app/static (copied from dashboard/out)
+# Local dev: prefer dashboard/out (always fresh), fall back to static/
+_static_dir = _project_root / "static"
+_dashboard_out = _project_root / "dashboard" / "out"
+if _dashboard_out.is_dir():
+    _static_dir = _dashboard_out
 if _static_dir.is_dir():
     from fastapi.staticfiles import StaticFiles
     from fastapi.responses import FileResponse

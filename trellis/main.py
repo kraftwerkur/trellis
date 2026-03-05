@@ -202,8 +202,8 @@ if _static_dir.is_dir():
     async def dashboard_index_head():
         return FileResponse(_resolve_static())
 
-    # Catch-all: GET, HEAD, POST for Next.js RSC navigation
-    @app.api_route("/{path:path}", methods=["GET", "HEAD", "POST"])
+    # Catch-all: serve static dashboard files (GET/HEAD only)
+    @app.api_route("/{path:path}", methods=["GET", "HEAD"])
     async def dashboard_catchall(path: str):
         return FileResponse(_resolve_static(path))
 

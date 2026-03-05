@@ -30,7 +30,7 @@ curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "channels": ["teams", "api", "email"],
   "maturity": "assisted",
   "cost_mode": "managed",
-  "llm_config": {"model": "meta/llama-3.3-70b-instruct", "provider": "nvidia", "temperature": 0.3, "max_tokens": 2048}
+  "llm_config": {"system_prompt": "You are a helpful healthcare assistant.", "model": "meta/llama-3.3-70b-instruct", "provider": "nvidia", "temperature": 0.3, "max_tokens": 2048}
 }' -o /dev/null
 
 echo "  → IT Help Desk Agent"
@@ -46,7 +46,7 @@ curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "channels": ["teams", "api", "phone"],
   "maturity": "assisted",
   "cost_mode": "managed",
-  "llm_config": {"model": "meta/llama-3.3-70b-instruct", "provider": "nvidia", "temperature": 0.4, "max_tokens": 2048}
+  "llm_config": {"system_prompt": "You are a helpful healthcare assistant.", "model": "meta/llama-3.3-70b-instruct", "provider": "nvidia", "temperature": 0.4, "max_tokens": 2048}
 }' -o /dev/null
 
 echo "  → Revenue Cycle Agent"
@@ -62,7 +62,7 @@ curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "channels": ["api"],
   "maturity": "shadow",
   "cost_mode": "managed",
-  "llm_config": {"model": "qwen/qwen3-235b-a22b", "provider": "nvidia", "temperature": 0.2, "max_tokens": 4096}
+  "llm_config": {"system_prompt": "You are a helpful healthcare assistant.", "model": "qwen/qwen3-235b-a22b", "provider": "nvidia", "temperature": 0.2, "max_tokens": 4096}
 }' -o /dev/null
 
 echo ""

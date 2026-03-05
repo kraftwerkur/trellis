@@ -15,7 +15,7 @@ RG="rg-trellis"
 LOCATION="eastus2"
 ACR_NAME="acrtrellisprod"
 TRELLIS_DIR="${TRELLIS_DIR:-$SCRIPT_DIR/..}"
-INTAKE_DIR="${INTAKE_DIR:-$SCRIPT_DIR/../../intake}"
+INTAKE_DIR="${INTAKE_DIR:-}"
 
 case "${1:-help}" in
 
@@ -43,8 +43,12 @@ setup)
   echo "=== Step 3: Build and push images ==="
   az acr build -r "$ACR_NAME" -t trellis:latest "$TRELLIS_DIR" --no-logs
   echo "✓ Trellis image built"
-  az acr build -r "$ACR_NAME" -t intake:latest "$INTAKE_DIR" --no-logs
-  echo "✓ Intake image built"
+  if [ -n "$INTAKE_DIR" ] && [ -d "$INTAKE_DIR" ]; then
+    az acr build -r "$ACR_NAME" -t intake:latest "$INTAKE_DIR" --no-logs
+    echo "✓ Intake image built"
+  else
+    echo "⏭ Intake skipped (set INTAKE_DIR= to include)"
+  fi
 
   echo ""
   echo "=== Step 4: Create Log Analytics ==="
@@ -100,23 +104,28 @@ setup)
     --set-env-vars $ENV_VARS \
     -o none
 
-  echo ""
-  echo "=== Step 7: Deploy Intake ==="
   TRELLIS_FQDN=$(az containerapp show -n trellis-api -g "$RG" --query "properties.configuration.ingress.fqdn" -o tsv)
 
-  az containerapp create -n trellis-intake -g "$RG" \
-    --environment "$ENV_NAME" \
-    --image "$ACR_SERVER/intake:latest" \
-    --registry-server "$ACR_SERVER" --registry-username "$ACR_USER" --registry-password "$ACR_PASS" \
-    --cpu 0.25 --memory 0.5Gi \
-    --min-replicas 1 --max-replicas 1 \
-    --env-vars "TRELLIS_URL=http://trellis-api" \
-    --ingress disabled \
-    -o none 2>/dev/null || \
-  az containerapp update -n trellis-intake -g "$RG" \
-    --image "$ACR_SERVER/intake:latest" \
-    --set-env-vars "TRELLIS_URL=http://trellis-api" \
-    -o none
+  if [ -n "$INTAKE_DIR" ] && [ -d "$INTAKE_DIR" ]; then
+    echo ""
+    echo "=== Step 7: Deploy Intake ==="
+    az containerapp create -n trellis-intake -g "$RG" \
+      --environment "$ENV_NAME" \
+      --image "$ACR_SERVER/intake:latest" \
+      --registry-server "$ACR_SERVER" --registry-username "$ACR_USER" --registry-password "$ACR_PASS" \
+      --cpu 0.25 --memory 0.5Gi \
+      --min-replicas 1 --max-replicas 1 \
+      --env-vars "TRELLIS_URL=http://trellis-api" \
+      --ingress disabled \
+      -o none 2>/dev/null || \
+    az containerapp update -n trellis-intake -g "$RG" \
+      --image "$ACR_SERVER/intake:latest" \
+      --set-env-vars "TRELLIS_URL=http://trellis-api" \
+      -o none
+  else
+    echo ""
+    echo "⏭ Intake deploy skipped"
+  fi
 
   echo ""
   echo "=== Done! ==="
@@ -131,13 +140,16 @@ update)
   echo "=== Rebuilding and pushing images ==="
   az acr build -r "$ACR_NAME" -t trellis:latest "$TRELLIS_DIR" --no-logs
   echo "✓ Trellis image built"
-  az acr build -r "$ACR_NAME" -t intake:latest "$INTAKE_DIR" --no-logs
-  echo "✓ Intake image built"
 
   ACR_SERVER=$(az acr show -n "$ACR_NAME" -g "$RG" --query loginServer -o tsv)
   az containerapp update -n trellis-api -g "$RG" --image "$ACR_SERVER/trellis:latest" -o none
-  az containerapp update -n trellis-intake -g "$RG" --image "$ACR_SERVER/intake:latest" \
-    --set-env-vars "TRELLIS_URL=http://trellis-api" -o none
+
+  if [ -n "$INTAKE_DIR" ] && [ -d "$INTAKE_DIR" ]; then
+    az acr build -r "$ACR_NAME" -t intake:latest "$INTAKE_DIR" --no-logs
+    echo "✓ Intake image built"
+    az containerapp update -n trellis-intake -g "$RG" --image "$ACR_SERVER/intake:latest" \
+      --set-env-vars "TRELLIS_URL=http://trellis-api" -o none
+  fi
 
   TRELLIS_FQDN=$(az containerapp show -n trellis-api -g "$RG" --query "properties.configuration.ingress.fqdn" -o tsv)
   echo "Updated! https://$TRELLIS_FQDN"

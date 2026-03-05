@@ -4,6 +4,7 @@ WORKDIR /dashboard
 COPY dashboard/package.json dashboard/package-lock.json ./
 RUN npm ci
 COPY dashboard/ .
+ARG CACHEBUST=1
 RUN npm run build
 
 # Stage 2: Python API + static dashboard

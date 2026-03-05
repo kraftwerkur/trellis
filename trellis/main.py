@@ -200,6 +200,11 @@ if _static_dir.is_dir():
             return idx
         return _static_dir / "index.html"
 
+    # Mount _next/ as static files (JS/CSS chunks must be served with correct MIME types)
+    _next_dir = _static_dir / "_next"
+    if _next_dir.is_dir():
+        app.mount("/_next", StaticFiles(directory=str(_next_dir)), name="next-static")
+
     @app.get("/")
     async def dashboard_index():
         return FileResponse(_resolve_static())

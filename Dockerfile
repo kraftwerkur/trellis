@@ -1,10 +1,10 @@
 # Stage 1: Build dashboard
 FROM node:20-slim AS dashboard
 WORKDIR /dashboard
+ARG CACHEBUST=1
 COPY dashboard/package.json dashboard/package-lock.json ./
 RUN npm ci
 COPY dashboard/ .
-ARG CACHEBUST=1
 RUN npm run build
 
 # Stage 2: Python API + static dashboard

@@ -138,7 +138,7 @@ setup)
 
 update)
   echo "=== Rebuilding and pushing images ==="
-  az acr build -r "$ACR_NAME" -t trellis:latest "$TRELLIS_DIR" --no-logs
+  az acr build -r "$ACR_NAME" -t trellis:latest "$TRELLIS_DIR" --no-logs --no-cache
   echo "✓ Trellis image built"
 
   ACR_SERVER=$(az acr show -n "$ACR_NAME" -g "$RG" --query loginServer -o tsv)

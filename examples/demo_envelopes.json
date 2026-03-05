@@ -1,0 +1,168 @@
+[
+  {
+    "name": "PTO Policy Inquiry",
+    "description": "Employee asking about PTO policy → routes to SAM (HR agent)",
+    "envelope": {
+      "source_type": "teams",
+      "source_id": "teams-hr-general",
+      "payload": {
+        "text": "Hi, I'm a new nurse in the ICU and I'm trying to understand how PTO accrual works. Do I start earning PTO immediately or is there a waiting period? Also, what's the max I can carry over into next year?",
+        "data": {"conversation_id": "conv-9201", "channel": "teams"}
+      },
+      "metadata": {
+        "priority": "normal",
+        "sender": {
+          "id": "aad-jsmith-4821",
+          "name": "Jennifer Smith, RN",
+          "department": "Nursing",
+          "roles": ["employee"]
+        }
+      },
+      "routing_hints": {
+        "department": "HR",
+        "category": "policy",
+        "tags": ["pto", "benefits", "new-hire"]
+      }
+    }
+  },
+  {
+    "name": "Password Reset Request",
+    "description": "Employee locked out of account → routes to IT-Help",
+    "envelope": {
+      "source_type": "teams",
+      "source_id": "teams-it-helpdesk",
+      "payload": {
+        "text": "I'm locked out of my PeopleSoft account after too many failed password attempts. I need access ASAP — I have payroll to process by end of day. Employee ID: E-10482.",
+        "data": {"conversation_id": "conv-7733", "channel": "teams"}
+      },
+      "metadata": {
+        "priority": "high",
+        "sender": {
+          "id": "aad-mbrown-2201",
+          "name": "Maria Brown",
+          "department": "Finance",
+          "roles": ["manager"]
+        }
+      },
+      "routing_hints": {
+        "department": "IT",
+        "category": "access",
+        "tags": ["password-reset", "account-lockout", "peoplesoft"]
+      }
+    }
+  },
+  {
+    "name": "Claim Denial Appeal",
+    "description": "Revenue cycle team needs help with a denied insurance claim → routes to Rev-Cycle",
+    "envelope": {
+      "source_type": "api",
+      "source_id": "epic-claim-system",
+      "payload": {
+        "text": "Claim #CLM-2026-88421 for patient encounter ENC-445120 was denied by UnitedHealthcare with reason code CO-97 (payment adjusted because the benefit for this service is included in the payment for another service). This is a cardiac catheterization bundling issue. Need to generate appeal letter with supporting clinical documentation.",
+        "data": {
+          "claim_id": "CLM-2026-88421",
+          "encounter_id": "ENC-445120",
+          "payer": "UnitedHealthcare",
+          "denial_code": "CO-97",
+          "charge_amount_usd": 14250.00,
+          "procedure_code": "93458",
+          "service_date": "2026-02-15"
+        }
+      },
+      "metadata": {
+        "priority": "high",
+        "sender": {
+          "id": "system-epic-claims",
+          "name": "Epic Claims Workqueue",
+          "department": "Revenue Cycle",
+          "roles": ["system"]
+        }
+      },
+      "routing_hints": {
+        "department": "Revenue Cycle",
+        "category": "denial-appeal",
+        "tags": ["claim-denial", "appeal", "cardiac", "bundling"]
+      }
+    }
+  },
+  {
+    "name": "After-Hours IT Emergency",
+    "description": "Critical system outage at 2 AM → routes to IT-Help with priority escalation",
+    "envelope": {
+      "source_type": "api",
+      "source_id": "logicmonitor-alerts",
+      "payload": {
+        "text": "CRITICAL: Epic Hyperspace connection pool exhausted on PRODAPP-07. Active sessions: 847/850. Response time degraded to 12.4s (threshold: 2s). ED physicians reporting inability to place orders. Automated restart failed.",
+        "data": {
+          "alert_id": "LM-2026-02-23-0214",
+          "severity": "critical",
+          "system": "Epic Hyperspace",
+          "server": "PRODAPP-07",
+          "metric": "connection_pool_utilization",
+          "value": 99.6,
+          "threshold": 90.0,
+          "impact": "ED order entry degraded"
+        }
+      },
+      "metadata": {
+        "priority": "critical",
+        "sender": {
+          "id": "system-logicmonitor",
+          "name": "LogicMonitor Alerting",
+          "department": "IT",
+          "roles": ["system", "monitoring"]
+        }
+      },
+      "routing_hints": {
+        "department": "IT",
+        "category": "incident",
+        "tags": ["critical", "epic", "outage", "after-hours", "escalation"]
+      }
+    }
+  },
+  {
+    "name": "New Hire Onboarding",
+    "description": "New physician starting → fan-out to SAM (HR setup) + IT-Help (account provisioning)",
+    "envelope": {
+      "source_type": "api",
+      "source_id": "peoplesoft-hcm",
+      "payload": {
+        "text": "New hire onboarding initiated for Dr. Amara Okafor, Hospitalist, Internal Medicine. Start date: 2026-03-10. Requires Epic access (provider role), PeopleSoft self-service, VPN token, badge access to Building A floors 3-5, and pager assignment.",
+        "data": {
+          "employee_id": "E-20261045",
+          "name": "Dr. Amara Okafor",
+          "title": "Hospitalist",
+          "department": "Internal Medicine",
+          "start_date": "2026-03-10",
+          "access_requirements": [
+            "Epic Hyperspace - Provider",
+            "PeopleSoft Self-Service",
+            "VPN Remote Access",
+            "Badge - Building A, Floors 3-5",
+            "Pager Assignment"
+          ],
+          "hr_tasks": [
+            "Benefits enrollment",
+            "Credentialing verification",
+            "Orientation scheduling",
+            "Parking assignment"
+          ]
+        }
+      },
+      "metadata": {
+        "priority": "normal",
+        "sender": {
+          "id": "system-peoplesoft-hcm",
+          "name": "PeopleSoft HCM",
+          "department": "HR",
+          "roles": ["system"]
+        }
+      },
+      "routing_hints": {
+        "department": "HR",
+        "category": "onboarding",
+        "tags": ["new-hire", "onboarding", "physician", "it-provisioning"]
+      }
+    }
+  }
+]

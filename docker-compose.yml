@@ -1,0 +1,42 @@
+services:
+  trellis-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: trellis-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:////data/trellis.db
+      - LOG_LEVEL=info
+      - DISPATCH_TIMEOUT=30.0
+    volumes:
+      - trellis-data:/data
+    networks:
+      - trellis-net
+    restart: unless-stopped
+
+  trellis-dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+      args:
+        - NEXT_PUBLIC_TRELLIS_API_URL=http://localhost:8000
+    container_name: trellis-dashboard
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_TRELLIS_API_URL=http://localhost:8000
+    networks:
+      - trellis-net
+    depends_on:
+      trellis-api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  trellis-data:
+
+networks:
+  trellis-net:
+    driver: bridge

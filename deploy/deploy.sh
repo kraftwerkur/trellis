@@ -41,7 +41,7 @@ setup)
 
   echo ""
   echo "=== Step 3: Build and push images ==="
-  az acr build -r "$ACR_NAME" -t trellis:latest "$TRELLIS_DIR" --no-logs
+  az acr build -r "$ACR_NAME" -t trellis:latest "$TRELLIS_DIR" --no-logs --build-arg CACHEBUST="$(date +%s)"
   echo "✓ Trellis image built"
   if [ -n "$INTAKE_DIR" ] && [ -d "$INTAKE_DIR" ]; then
     az acr build -r "$ACR_NAME" -t intake:latest "$INTAKE_DIR" --no-logs

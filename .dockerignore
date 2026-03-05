@@ -1,0 +1,21 @@
+# Node
+dashboard/node_modules/
+dashboard/.next/
+dashboard/out/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+*.egg-info/
+
+# Git
+.git/
+
+# Data
+*.db
+data/
+
+# IDE
+.vscode/
+.idea/

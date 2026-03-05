@@ -30,6 +30,7 @@ export const api = {
     create: (data: Partial<Rule>) => apiFetch<Rule>("/api/rules", { method: "POST", body: JSON.stringify(data) }),
     update: (id: number, data: Partial<Rule>) => apiFetch<Rule>(`/api/rules/${id}`, { method: "PUT", body: JSON.stringify(data) }),
     toggle: (id: number) => apiFetch<Rule>(`/api/rules/${id}/toggle`, { method: "PUT" }),
+    delete: (id: number) => apiFetch<void>(`/api/rules/${id}`, { method: "DELETE" }),
     test: (envelope: Record<string, unknown>) => apiFetch<{ matched_rules: Rule[] }>("/api/rules/test", { method: "POST", body: JSON.stringify({ envelope }) }),
   },
   envelopes: {

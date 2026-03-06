@@ -39,7 +39,10 @@ class SecurityTriageAgent:
             env_dict = {"payload": {}}
 
         payload = env_dict.get("payload", {})
-        vuln = self._parse_vulnerability(payload)
+        # Payload fields may be in payload.data (structured) or payload top-level
+        payload_data = payload.get("data", {}) if isinstance(payload, dict) else {}
+        merged_payload = {**payload_data, **payload}
+        vuln = self._parse_vulnerability(merged_payload)
 
         # 2. Call tools to enrich
         tech_result = lookup_tech_stack(vuln["product"], vuln["vendor"])

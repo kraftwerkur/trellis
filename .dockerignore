@@ -14,7 +14,7 @@ __pycache__/
 
 # Data
 *.db
-data/
+/data/
 
 # IDE
 .vscode/

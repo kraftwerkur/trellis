@@ -646,46 +646,45 @@ TypeScript wins for the dashboard because:
 
 ---
 
-## Vertical Slice Plan
+## Development Roadmap
 
-Each slice ends with a demo. No invisible infrastructure sprints.
+Each phase delivers end-to-end functionality with a working demo.
 
-### Slice 1: Platform Core + HTTP Adapter ✅
-**Build:** Event router, agent registry (CRUD), HTTP adapter, SQLite database, basic envelope handling.
-**Demo:** POST an envelope to the HTTP adapter → router looks up agent → dispatches to a mock agent → returns result.
-**Status:** Complete. Running at `projects/trellis/`.
+### Phase 1: Platform Core ✅
+Event router, agent registry, HTTP adapter, SQLite database, envelope handling.
 
-### Slice 2: LLM Gateway
-**Build:** OpenAI-compatible API proxy (`/v1/chat/completions`). Agent authentication via Trellis API keys. Model routing (agent requests a model or Trellis picks). Token counting and cost logging. Tool/function call passthrough (logged but not intercepted). Budget caps per agent.
-**Demo:** Agent calls `trellis-llm/v1/chat/completions` → gateway authenticates agent, picks model, proxies to Ollama/OpenAI, logs tokens and cost, returns response. Show cost attribution per agent.
-**Effort:** 1-2 weeks.
+### Phase 2: LLM Gateway ✅
+OpenAI-compatible proxy, multi-provider support (NVIDIA NIM, Anthropic, OpenAI, Ollama), token counting, cost logging, budget caps per agent.
 
-### Slice 3: Agent Onboarding Framework ✅
-**Build:** Agent types (http, webhook, function, llm-config). Registration flow with contract validation (hit `/health`, fetch `/manifest`). Agent identity provisioning (Trellis API key generation). Health check polling.
-**Demo:** Register 3 different agent types, all receive envelopes and use the LLM gateway with their own identity and budget.
-**Status:** Complete. Four agent types, auto-key provisioning, health check background task, manifest sync, type-aware dispatcher.
+### Phase 3: Agent Onboarding ✅
+Four agent types (http, function, llm, native), auto-key provisioning, health checks, manifest sync.
 
-### Slice 4: Rules Engine + Audit ✅
-**Build:** Enhanced rules engine with JSON condition matching ($gt, $gte, $lt, $lte, $exists, $regex, $not, $contains, $in, equality). Fan-out routing (one event → multiple agents). Rule testing endpoint. Rule toggle endpoint. Granular audit_events table with trace-level chains. Audit emission on all agent/key/rule CRUD, envelope routing, LLM gateway calls, and budget cap hits.
-**Demo:** Create rules with complex conditions, test them via `/api/rules/test`, toggle enable/disable, fan-out to multiple agents, query audit trail by trace_id.
-**Status:** Complete. 31 new tests (57 total), all passing.
+### Phase 4: Rules Engine + Audit ✅
+JSON condition matching, fan-out routing, rule testing/toggle, immutable audit trail with trace chains.
 
-### Slice 5: FinOps ✅
-**Build:** Per-agent/department/trace cost rollups. Budget enforcement with 80%/100% alerts. Smart model routing (rule-based complexity classification: simple/medium/complex). Cost anomaly detection (3x 7-day average). Time-series cost data. FinOps executive summary endpoint.
-**Demo:** Show cost breakdown after 50 queries — per agent, per department, per trace. Show budget cap throttling with audit events. Show smart model routing classifying prompts.
-**Status:** Complete. 24 new tests (81 total), all passing.
+### Phase 5: FinOps ✅
+Cost rollups by agent/department/trace, budget enforcement, smart model routing, anomaly detection.
 
-### Slice 6: Dashboard
-**Build:** Next.js dark ops dashboard — live event flow, agent health indicators, cost meters, rule editor, audit viewer, agent registry management.
-**Demo:** Full ops dashboard. Register an agent, create a routing rule, send a message, watch it flow through in real-time, see the cost. The leadership demo.
-**Effort:** 2-3 weeks.
+### Phase 6: Dashboard ✅
+Next.js command center — live event flow, agent health, cost metrics, rule CRUD, activity timeline. Deployed to Azure Container Apps.
 
-### Slice 7: Teams Adapter + HL7/FHIR Adapter
-**Build:** Bot Framework integration (Teams chat → envelope). FHIR subscription listener (Epic events → envelope). Both feed through the same platform core.
-**Demo:** Message SAM in Teams, get a response, see the trace. Simulate an ADT^A01 Epic event, watch an agent respond before a human sees the alert. The CIO demo.
-**Effort:** 2-3 weeks.
+### Phase 7: Healthcare Adapters ✅
+HL7v2 (ADT/ORM/ORU/SIU), FHIR R4 (Patient/Encounter/Observation), Teams adapter (Bot Framework).
 
-**Total estimated timeline:** 10-16 weeks for all seven slices, building serially. Slices 1-3 are the minimum viable platform.
+### Phase 8: Real Agents (In Progress)
+**Security Triage Agent** — first tool-calling native agent. Cross-references vulnerabilities against HF tech stack, calculates risk scores, drafts structured advisories. Proves Tier 2 agent capability.
+
+### Phase 9: Classification Engine (Next)
+Platform-level enrichment middleware. Every inbound envelope gets auto-classified (department, category, urgency, entities) before hitting the rules engine. Senders don't need to know Trellis's routing structure — they just send raw events.
+
+### Phase 10: Agent Identity & Access
+Agent digital identities with scoped permissions, credential vault (managed secrets, auto-rotation), role-based access policies, delegation chains. Required for agents that interact with downstream systems (Epic, PeopleSoft, Ivanti).
+
+### Phase 11: Framework Adapters
+Dispatch adapters for external agent runtimes — Pi SDK (RPC), Qwen-Agent, OpenClaw sessions, LangChain (HTTP). Trellis is framework-agnostic; each adapter is a thin translation layer between envelopes and the agent's native interface.
+
+### Phase 12: Production Hardening
+PostgreSQL (replace ephemeral SQLite), Azure AD integration, RBAC, persistent storage, CI/CD pipeline, load testing.
 
 ---
 

@@ -10,33 +10,6 @@ import {
   Tooltip, ResponsiveContainer, Cell,
 } from "recharts";
 
-// ── Mock data ──────────────────────────────────────────────────────────
-
-const MOCK_STATS: PhiStatsResponse = {
-  total_detections: 347,
-  by_category: { SSN: 42, MRN: 78, NAME: 65, DATE: 89, ICD10: 31, CPT: 18, NPI: 12, EMAIL: 12 },
-  by_agent: { "compliance-checker": 124, "doc-summarizer": 98, "risk-assessor": 67, "email-responder": 58 },
-  by_day: { "2026-02-21": 38, "2026-02-22": 52, "2026-02-23": 41, "2026-02-24": 67, "2026-02-25": 55, "2026-02-26": 48, "2026-02-27": 46 },
-  recent_events: [
-    { timestamp: "2026-02-27T19:42:00Z", agent_id: "compliance-checker", count: 3, categories: ["SSN", "NAME"], mode: "full" },
-    { timestamp: "2026-02-27T19:38:00Z", agent_id: "doc-summarizer", count: 1, categories: ["MRN"], mode: "redact_only" },
-    { timestamp: "2026-02-27T19:30:00Z", agent_id: "risk-assessor", count: 2, categories: ["ICD10", "DATE"], mode: "audit_only" },
-    { timestamp: "2026-02-27T19:22:00Z", agent_id: "email-responder", count: 4, categories: ["NAME", "EMAIL", "DATE"], mode: "full" },
-    { timestamp: "2026-02-27T19:15:00Z", agent_id: "compliance-checker", count: 1, categories: ["NPI"], mode: "full" },
-    { timestamp: "2026-02-27T19:05:00Z", agent_id: "doc-summarizer", count: 2, categories: ["SSN", "MRN"], mode: "redact_only" },
-    { timestamp: "2026-02-27T18:52:00Z", agent_id: "risk-assessor", count: 3, categories: ["CPT", "DATE", "NAME"], mode: "audit_only" },
-    { timestamp: "2026-02-27T18:40:00Z", agent_id: "compliance-checker", count: 2, categories: ["MRN", "DATE"], mode: "full" },
-  ],
-};
-
-const MOCK_AGENT_CONFIGS: AgentPhiConfig[] = [
-  { agent_id: "compliance-checker", name: "Compliance Checker", phi_shield_mode: "full" },
-  { agent_id: "doc-summarizer", name: "Doc Summarizer", phi_shield_mode: "redact_only" },
-  { agent_id: "risk-assessor", name: "Risk Assessor", phi_shield_mode: "audit_only" },
-  { agent_id: "email-responder", name: "Email Responder", phi_shield_mode: "full" },
-  { agent_id: "data-analyst", name: "Data Analyst", phi_shield_mode: "off" },
-];
-
 const COLORS = ["#06b6d4", "#8b5cf6", "#f59e0b", "#10b981", "#ef4444", "#ec4899", "#3b82f6", "#f97316"];
 
 const MODE_COLORS: Record<PhiShieldMode, string> = {
@@ -68,24 +41,25 @@ export default function PhiPage() {
   const fetchStats = useCallback(() => api.phi.stats(), []);
   const fetchAgentConfigs = useCallback(() => api.phi.agentConfigs(), []);
 
-  const { data: rawStats } = useStablePolling(fetchStats, 30000);
-  const { data: rawAgentConfigs, refresh: refreshConfigs } = useStablePolling(fetchAgentConfigs, 30000);
+  const { data: rawStats, loading: loadingStats } = useStablePolling<PhiStatsResponse>(fetchStats, 30000);
+  const { data: rawAgentConfigs, refresh: refreshConfigs } = useStablePolling<AgentPhiConfig[]>(fetchAgentConfigs, 30000);
 
-  const stats = rawStats ?? MOCK_STATS;
-  const agentConfigs = rawAgentConfigs ?? MOCK_AGENT_CONFIGS;
-  const isMock = !rawStats;
+  const stats = rawStats ?? null;
+  const agentConfigs = rawAgentConfigs ?? [];
 
   const totalScans = useMemo(() => {
+    if (!stats) return 0;
     return Object.values(stats.by_day).reduce((a, b) => a + b, 0);
   }, [stats]);
 
   const categoryData = useMemo(() => {
+    if (!stats) return [];
     return Object.entries(stats.by_category)
       .map(([name, value]) => ({ name, value }))
       .sort((a, b) => b.value - a.value);
   }, [stats]);
 
-  const detectionRate = totalScans > 0 ? ((stats.total_detections / (totalScans * 3)) * 100).toFixed(1) : "0";
+  const detectionRate = stats && totalScans > 0 ? ((stats.total_detections / (totalScans * 3)) * 100).toFixed(1) : "0";
 
   async function handleTest() {
     if (!testText.trim()) return;
@@ -95,21 +69,8 @@ export default function PhiPage() {
       setTestResults(res.detections);
       setTestRedacted(res.redacted);
     } catch {
-      // Mock fallback for testing
-      const mockDetections: PhiDetectionResult[] = [];
-      let redacted = testText;
-      const ssnMatch = testText.match(/\b\d{3}-\d{2}-\d{4}\b/);
-      if (ssnMatch) {
-        mockDetections.push({ type: "SSN", text: ssnMatch[0], start: ssnMatch.index ?? 0, end: (ssnMatch.index ?? 0) + ssnMatch[0].length, source: "regex", score: 1.0 });
-        redacted = redacted.replace(ssnMatch[0], "[SSN_1]");
-      }
-      const mrnMatch = testText.match(/\bMRN[\s:#-]*\d{6,10}\b/i);
-      if (mrnMatch) {
-        mockDetections.push({ type: "MRN", text: mrnMatch[0], start: mrnMatch.index ?? 0, end: (mrnMatch.index ?? 0) + mrnMatch[0].length, source: "regex", score: 1.0 });
-        redacted = redacted.replace(mrnMatch[0], "[MRN_1]");
-      }
-      setTestResults(mockDetections);
-      setTestRedacted(redacted);
+      setTestResults([]);
+      setTestRedacted(null);
     } finally {
       setTestLoading(false);
     }
@@ -120,15 +81,15 @@ export default function PhiPage() {
       await api.phi.updateAgentMode(agentId, mode);
       refreshConfigs();
     } catch {
-      // silently fail in mock mode
+      // silently fail if API unavailable
     }
   }
 
   return (
     <div className="space-y-4">
-      {isMock && (
-        <div className="text-[10px] text-amber-500/60 uppercase tracking-widest">
-          ⚠ Showing mock data — backend unavailable
+      {loadingStats && (
+        <div className="text-[10px] text-zinc-500 bg-zinc-800/50 border border-zinc-700/30 rounded-lg px-3 py-1.5 text-center animate-pulse">
+          Connecting to Trellis API…
         </div>
       )}
 
@@ -136,8 +97,8 @@ export default function PhiPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
           { icon: Scan, color: "text-cyan-500", label: "Total Scans", value: String(totalScans) },
-          { icon: ShieldAlert, color: "text-red-500", label: "Detections", value: String(stats.total_detections) },
-          { icon: ShieldCheck, color: "text-emerald-500", label: "Redactions", value: String(Math.round(stats.total_detections * 0.82)) },
+          { icon: ShieldAlert, color: "text-red-500", label: "Detections", value: String(stats?.total_detections ?? 0) },
+          { icon: ShieldCheck, color: "text-emerald-500", label: "Redactions", value: String(Math.round((stats?.total_detections ?? 0) * 0.82)) },
           { icon: Eye, color: "text-violet-500", label: "Detection Rate", value: `${detectionRate}%` },
         ].map(s => (
           <div key={s.label} className="card-dark p-4 flex items-center gap-3">
@@ -157,18 +118,22 @@ export default function PhiPage() {
             <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Detection by Category</span>
           </div>
           <div className="p-4 h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={categoryData}>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#52525b" }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: "#52525b" }} tickLine={false} axisLine={false} />
-                <Tooltip contentStyle={{ background: "#0a0a0f", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, fontSize: 12 }}
-                  labelStyle={{ color: "#a1a1aa" }} />
-                <Bar dataKey="value" radius={[4, 4, 0, 0]}>
-                  {categoryData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
+            {categoryData.length === 0 ? (
+              <div className="text-center text-zinc-600 py-8 text-sm">No PHI detections yet</div>
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={categoryData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+                  <XAxis dataKey="name" tick={{ fontSize: 10, fill: "#52525b" }} tickLine={false} axisLine={false} />
+                  <YAxis tick={{ fontSize: 10, fill: "#52525b" }} tickLine={false} axisLine={false} />
+                  <Tooltip contentStyle={{ background: "#0a0a0f", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, fontSize: 12 }}
+                    labelStyle={{ color: "#a1a1aa" }} />
+                  <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                    {categoryData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
@@ -178,23 +143,27 @@ export default function PhiPage() {
             <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Agent PHI Shield Config</span>
           </div>
           <div className="p-4 space-y-2">
-            {agentConfigs.map(agent => (
-              <div key={agent.agent_id} className="flex items-center justify-between py-1.5">
-                <div>
-                  <div className="text-sm text-zinc-300 font-mono text-[11px]">{agent.agent_id}</div>
-                  <div className="text-[10px] text-zinc-600">{agent.name}</div>
+            {agentConfigs.length === 0 ? (
+              <div className="text-center text-zinc-600 py-8 text-sm">No agents configured</div>
+            ) : (
+              agentConfigs.map(agent => (
+                <div key={agent.agent_id} className="flex items-center justify-between py-1.5">
+                  <div>
+                    <div className="text-sm text-zinc-300 font-mono text-[11px]">{agent.agent_id}</div>
+                    <div className="text-[10px] text-zinc-600">{agent.name}</div>
+                  </div>
+                  <select
+                    value={agent.phi_shield_mode}
+                    onChange={e => handleModeChange(agent.agent_id, e.target.value as PhiShieldMode)}
+                    className="bg-zinc-900 border border-white/[0.06] rounded px-2 py-1 text-xs text-zinc-300 focus:outline-none focus:border-cyan-500/50"
+                  >
+                    {MODES.map(m => (
+                      <option key={m} value={m}>{m.replace(/_/g, " ")}</option>
+                    ))}
+                  </select>
                 </div>
-                <select
-                  value={agent.phi_shield_mode}
-                  onChange={e => handleModeChange(agent.agent_id, e.target.value as PhiShieldMode)}
-                  className="bg-zinc-900 border border-white/[0.06] rounded px-2 py-1 text-xs text-zinc-300 focus:outline-none focus:border-cyan-500/50"
-                >
-                  {MODES.map(m => (
-                    <option key={m} value={m}>{m.replace(/_/g, " ")}</option>
-                  ))}
-                </select>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -264,7 +233,7 @@ export default function PhiPage() {
             <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Recent Detections</span>
           </div>
           <div className="p-2">
-            {stats.recent_events.length === 0 ? (
+            {!stats || stats.recent_events.length === 0 ? (
               <div className="text-zinc-600 text-sm py-8 text-center">No recent detections</div>
             ) : (
               <div className="space-y-0.5">

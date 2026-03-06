@@ -78,6 +78,35 @@ The **LLM Gateway** is the critical infrastructure component. Agents call Trelli
 
 ---
 
+## Agent Architecture — Three Tiers
+
+Trellis doesn't force agents into one pattern. It supports three tiers of agent complexity, all managed the same way — same cost tracking, same PHI shield, same audit trail, same routing rules.
+
+### Tier 1: Atomic Agents (Prompt Wrappers)
+Single-function agents. A system prompt, an LLM call, a response. Fast, cheap, predictable.
+
+**Examples:** "Summarize this radiology report." "Extract ICD-10 codes from this note." "Draft a patient appointment reminder." "Classify this ticket by department."
+
+**Why they matter:** These are the building blocks. Each one does one thing well. They're simple enough that a department can define one in 15 minutes — just a system prompt and a model selection. Most enterprise AI use cases start here and many never need to go further.
+
+### Tier 2: Tool-Calling Agents
+Agents that orchestrate multiple steps and call tools. They reason about a problem, gather data, and produce structured output.
+
+**Examples:** The Security Triage Agent receives a vulnerability alert, cross-references it against the organization's tech stack, checks CISA KEV status, calculates a composite risk score, and drafts a structured advisory with recommended actions and escalation paths. All without human intervention.
+
+**Why they matter:** This is where agents start doing real work — not just generating text, but making decisions based on data. The tools are the differentiator. An agent that can query your actual tech stack, your actual ticket system, your actual clinical guidelines is fundamentally different from one that can only write prose about them.
+
+### Tier 3: Workflow Agents
+Chains of Tier 1 and Tier 2 agents orchestrated by routing rules. One event triggers multiple agents in sequence or parallel.
+
+**Examples:** A new hire event triggers fan-out — SAM (HR agent) generates onboarding documentation while IT Help Desk provisions accounts and access. A critical vulnerability triggers Security Triage for risk assessment, then routes the advisory to the appropriate response team based on the score.
+
+**Why they matter:** This is where the platform pays for itself. Individual agents are useful. Orchestrated agents are transformative. The routing rules and fan-out capabilities turn isolated automations into end-to-end workflows — without anyone writing integration code.
+
+**The key insight:** Start with prompt wrappers. Graduate to tool-calling when you need it. Orchestrate workflows when you're ready. The control plane manages them all the same way. Departments don't have to choose an architecture upfront — they can evolve their agents as their use cases mature.
+
+---
+
 ## Key Capabilities
 
 ### LLM Gateway → Cost Control

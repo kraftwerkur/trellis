@@ -1,42 +1,25 @@
-services:
-  trellis-api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: trellis-api
-    ports:
-      - "8000:8000"
-    environment:
-      - DATABASE_URL=sqlite+aiosqlite:////data/trellis.db
-      - LOG_LEVEL=info
-      - DISPATCH_TIMEOUT=30.0
-    volumes:
-      - trellis-data:/data
-    networks:
-      - trellis-net
-    restart: unless-stopped
+# Unified demo: Trellis + Intake
+# Usage: docker compose up --build
 
-  trellis-dashboard:
-    build:
-      context: ./dashboard
-      dockerfile: Dockerfile
-      args:
-        - NEXT_PUBLIC_TRELLIS_API_URL=http://localhost:8000
-    container_name: trellis-dashboard
+services:
+  trellis:
+    build: .
     ports:
-      - "3000:3000"
+      - "8100:8000"
     environment:
-      - NEXT_PUBLIC_TRELLIS_API_URL=http://localhost:8000
-    networks:
-      - trellis-net
+      - TRELLIS_ENV=demo
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8000/health').raise_for_status()"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  intake:
+    build: ../intake
+    environment:
+      - TRELLIS_URL=http://trellis:8000
     depends_on:
-      trellis-api:
+      trellis:
         condition: service_healthy
     restart: unless-stopped
-
-volumes:
-  trellis-data:
-
-networks:
-  trellis-net:
-    driver: bridge

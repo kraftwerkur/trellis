@@ -7,7 +7,7 @@ import type { Agent, AuditEvent, CostSummary, CostTimeseriesBucket } from "@/typ
 import {
   Bot, Activity, Shield, DollarSign, HeartPulse,
   TrendingUp, TrendingDown, Zap, Lock, Gauge,
-  AlertTriangle,
+  AlertTriangle, Check, Settings, UserPlus, Key, GitBranch,
 } from "lucide-react";
 import {
   AreaChart as RechartsAreaChart, Area, ResponsiveContainer, Tooltip, XAxis, YAxis,
@@ -98,18 +98,45 @@ function StatCard({ label, value, icon: Icon, accent, trend, sparkData }: {
 /* ─── Activity Timeline ─── */
 
 const EVENT_CONFIG: Record<string, { color: string; icon: React.ElementType; label: string }> = {
-  agent_action: { color: "text-cyan-400", icon: Zap, label: "Agent Action" },
-  phi_blocked: { color: "text-red-400", icon: Lock, label: "PHI Blocked" },
+  envelope_received: { color: "text-cyan-400", icon: Zap, label: "Envelope Received" },
+  rule_matched: { color: "text-amber-400", icon: GitBranch, label: "Rule Matched" },
   rule_triggered: { color: "text-amber-400", icon: AlertTriangle, label: "Rule Triggered" },
+  agent_dispatched: { color: "text-blue-400", icon: Bot, label: "Agent Dispatched" },
+  agent_responded: { color: "text-emerald-400", icon: Check, label: "Agent Responded" },
+  phi_detected: { color: "text-red-400", icon: Lock, label: "PHI Blocked" },
+  phi_blocked: { color: "text-red-400", icon: Lock, label: "PHI Blocked" },
+  rule_changed: { color: "text-purple-400", icon: Settings, label: "Rule Changed" },
+  agent_registered: { color: "text-green-400", icon: UserPlus, label: "Agent Registered" },
+  key_created: { color: "text-yellow-400", icon: Key, label: "Key Created" },
+  agent_action: { color: "text-cyan-400", icon: Zap, label: "Agent Action" },
   budget_alert: { color: "text-purple-400", icon: DollarSign, label: "Budget Alert" },
 };
 
 function formatTimeAgo(ts: string) {
-  const diff = Date.now() - new Date(ts).getTime();
+  const date = new Date(ts);
+  if (isNaN(date.getTime())) return "—";
+  const diff = Date.now() - date.getTime();
+  if (diff < 0) return "just now";
   if (diff < 60000) return "just now";
   if (diff < 3600000) return `${Math.floor(diff / 60000)}m ago`;
   if (diff < 86400000) return `${Math.floor(diff / 3600000)}h ago`;
-  return `${Math.floor(diff / 86400000)}d ago`;
+  if (diff < 604800000) return `${Math.floor(diff / 86400000)}d ago`;
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
+}
+
+const DEFAULT_EVENT_CFG = { color: "text-zinc-400", icon: Activity, label: "" };
+
+function eventSummary(e: AuditEvent): string {
+  const d = e.details || {};
+  if (d.message) return String(d.message);
+  if (d.rule_name) return `Rule: ${d.rule_name}`;
+  if (d.rule) return `Rule: ${d.rule}`;
+  if (d.status) return String(d.status);
+  if (d.dispatch_status) return String(d.dispatch_status);
+  if (d.agent_name) return `Agent: ${d.agent_name}`;
+  if (d.channel) return `Channel: ${d.channel}`;
+  if (d.reason) return String(d.reason);
+  return e.event_type.replace(/_/g, " ");
 }
 
 function ActivityTimeline({ events, agentMap }: { events: AuditEvent[]; agentMap: Record<string, Agent> }) {
@@ -124,10 +151,10 @@ function ActivityTimeline({ events, agentMap }: { events: AuditEvent[]; agentMap
           <div className="text-center text-zinc-600 py-8 text-sm">No recent activity</div>
         ) : (
           events.map(e => {
-            const cfg = EVENT_CONFIG[e.event_type] ?? EVENT_CONFIG.agent_action;
+            const cfg = EVENT_CONFIG[e.event_type] ?? { ...DEFAULT_EVENT_CFG, label: e.event_type.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase()) };
             const IconComp = cfg.icon;
             const agentName = e.agent_id ? (agentMap[e.agent_id]?.name ?? e.agent_id.slice(0, 8)) : "System";
-            const message = e.details.message ? String(e.details.message) : e.event_type.replace(/_/g, " ");
+            const message = eventSummary(e);
             return (
               <div key={e.id} className="flex items-start gap-3 px-4 py-3 hover:bg-white/[0.02] transition-colors">
                 <div className={`mt-0.5 w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${cfg.color.replace("text-", "bg-").replace("400", "500/10")}`}>

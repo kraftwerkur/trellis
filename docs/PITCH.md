@@ -105,6 +105,23 @@ Chains of Tier 1 and Tier 2 agents orchestrated by routing rules. One event trig
 
 **The key insight:** Start with prompt wrappers. Graduate to tool-calling when you need it. Orchestrate workflows when you're ready. The control plane manages them all the same way. Departments don't have to choose an architecture upfront — they can evolve their agents as their use cases mature.
 
+### Framework-Agnostic by Design
+
+Trellis is the control plane, not the agent runtime. It doesn't build agents — it governs them. Any agent framework can plug in:
+
+- **Pi SDK** agents via RPC
+- **Qwen-Agent** via their protocol
+- **OpenClaw** sessions
+- **LangChain / CrewAI** via HTTP webhooks
+- **Simple LLM wrappers** through the Trellis Gateway
+- **Custom Python agents** for built-in capabilities
+
+Each framework is just a **dispatch adapter** — a thin layer that translates between Trellis envelopes and the agent's native interface. Trellis owns everything around the agent: the envelope pipeline (intake, classification, routing), the LLM gateway (cost tracking, model routing, budget enforcement), and the governance layer (audit trail, PHI detection, compliance). The agent runtime is a black box.
+
+This matters because the agent framework space is dynamic. New frameworks emerge monthly. Today's best choice may be obsolete in a year. By keeping the dispatch adapter thin, swapping one agent runtime for another is a configuration change — not a rewrite. **Trellis's value is the envelope and the gateway, not any particular agent implementation.**
+
+We build agents to prove value and deliver results. We just don't marry the runtime.
+
 ---
 
 ## Key Capabilities

@@ -11,8 +11,8 @@ import {
 } from "lucide-react";
 import {
   AreaChart as RechartsAreaChart, Area, ResponsiveContainer, Tooltip, XAxis, YAxis,
+  PieChart, Pie, Cell,
 } from "recharts";
-import { AreaChart, DonutChart } from "@tremor/react";
 import {
   Card, CardContent, CardHeader, CardTitle,
 } from "@/components/ui/card";
@@ -214,18 +214,20 @@ function CostTrendChart({ data }: { data: CostTimeseriesBucket[] }) {
         {data.length === 0 ? (
           <div className="text-center text-zinc-600 py-8 text-sm">No cost data yet</div>
         ) : (
-          <AreaChart
-            className="h-40"
-            data={chartData}
-            index="day"
-            categories={["Cost"]}
-            colors={["cyan"]}
-            showLegend={false}
-            showGridLines={false}
-            showAnimation={false}
-            curveType="monotone"
-            valueFormatter={(v: number) => `$${v.toFixed(2)}`}
-          />
+          <ResponsiveContainer width="100%" height={160}>
+            <RechartsAreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+              <defs>
+                <linearGradient id="costGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="#22d3ee" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="day" tick={{ fill: "#52525b", fontSize: 10 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "#52525b", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `$${v.toFixed(0)}`} width={36} />
+              <Tooltip contentStyle={{ background: "#18181b", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, fontSize: 12 }} formatter={(v: number) => [`$${v.toFixed(2)}`, "Cost"]} />
+              <Area type="monotone" dataKey="Cost" stroke="#22d3ee" strokeWidth={2} fill="url(#costGrad)" dot={false} isAnimationActive={false} />
+            </RechartsAreaChart>
+          </ResponsiveContainer>
         )}
       </CardContent>
     </Card>
@@ -262,17 +264,20 @@ function EventsOverTimeChart({ events }: { events: AuditEvent[] }) {
         {chartData.length === 0 ? (
           <div className="text-center text-zinc-600 py-8 text-sm">No event data yet</div>
         ) : (
-          <AreaChart
-            className="h-44"
-            data={chartData}
-            index="hour"
-            categories={["Events"]}
-            colors={["violet"]}
-            showLegend={false}
-            showGridLines={false}
-            showAnimation={false}
-            curveType="monotone"
-          />
+          <ResponsiveContainer width="100%" height={176}>
+            <RechartsAreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+              <defs>
+                <linearGradient id="eventsGrad" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <XAxis dataKey="hour" tick={{ fill: "#52525b", fontSize: 10 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "#52525b", fontSize: 10 }} axisLine={false} tickLine={false} width={28} />
+              <Tooltip contentStyle={{ background: "#18181b", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, fontSize: 12 }} />
+              <Area type="monotone" dataKey="Events" stroke="#8b5cf6" strokeWidth={2} fill="url(#eventsGrad)" dot={false} isAnimationActive={false} />
+            </RechartsAreaChart>
+          </ResponsiveContainer>
         )}
       </CardContent>
     </Card>
@@ -293,8 +298,8 @@ function AgentStatusChart({ agents }: { agents: Agent[] }) {
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }, [agents]);
 
-  const colorMap: Record<string, string> = { Healthy: "emerald", Degraded: "amber", Unhealthy: "red", Offline: "zinc" };
-  const colors = statusData.map(d => colorMap[d.name] || "zinc");
+  const colorMap: Record<string, string> = { Healthy: "#34d399", Degraded: "#fbbf24", Unhealthy: "#f87171", Offline: "#71717a" };
+  const pieColors = statusData.map(d => colorMap[d.name] || "#71717a");
 
   return (
     <Card className="border-white/[0.06] bg-[#0d0e14] py-0 gap-0">
@@ -306,17 +311,15 @@ function AgentStatusChart({ agents }: { agents: Agent[] }) {
           <div className="text-center text-zinc-600 py-8 text-sm">No agents registered</div>
         ) : (
           <div className="flex items-center">
-            <div className="w-1/2">
-              <DonutChart
-                className="h-36"
-                data={statusData}
-                category="value"
-                index="name"
-                colors={colors}
-                showLabel={true}
-                label={`${agents.length}`}
-                showAnimation={false}
-              />
+            <div className="w-1/2 flex items-center justify-center">
+              <ResponsiveContainer width="100%" height={144}>
+                <PieChart>
+                  <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={36} outerRadius={56} strokeWidth={0} isAnimationActive={false}>
+                    {statusData.map((_, i) => <Cell key={i} fill={pieColors[i]} />)}
+                  </Pie>
+                  <text x="50%" y="50%" textAnchor="middle" dominantBaseline="central" fill="#e4e4e7" fontSize={18} fontWeight="bold">{agents.length}</text>
+                </PieChart>
+              </ResponsiveContainer>
             </div>
             <div className="w-1/2 space-y-2 pl-2">
               {statusData.map(d => (

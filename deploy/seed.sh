@@ -65,6 +65,27 @@ curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "llm_config": {"system_prompt": "You are a helpful healthcare assistant.", "model": "qwen/qwen3-235b-a22b", "provider": "nvidia", "temperature": 0.2, "max_tokens": 4096}
 }' -o /dev/null
 
+echo "  → Security Triage Agent"
+curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
+  "agent_id": "security-triage",
+  "name": "Security Triage Agent",
+  "owner": "Kim Alkire, CISO",
+  "department": "Information Security",
+  "framework": "trellis-native",
+  "agent_type": "native",
+  "tools": ["lookup_tech_stack", "check_cisa_kev", "get_cvss_details", "calculate_risk_score"],
+  "channels": ["teams", "api"],
+  "maturity": "assisted",
+  "cost_mode": "managed",
+  "llm_config": {
+    "system_prompt": "You are a Security Triage Agent for Health First, a healthcare system in Brevard County, FL. You analyze security vulnerabilities and produce risk assessments. You have access to tools that let you check the organization'"'"'s tech stack, query CVE databases, and calculate risk scores. Always produce structured advisories with clear recommended actions and timelines. Escalate critical findings to the CISO immediately.",
+    "model": "meta/llama-3.3-70b-instruct",
+    "provider": "nvidia",
+    "temperature": 0.1,
+    "max_tokens": 4096
+  }
+}' -o /dev/null
+
 echo ""
 
 # --- Create Routing Rules ---
@@ -125,12 +146,12 @@ echo ""
 # --- Intake Feed Rules (match metadata.category from Intake sourcer) ---
 echo "=== Creating Intake Feed Rules ==="
 
-echo "  → Security feeds → SAM (triage)"
+echo "  → Security feeds → Security Triage Agent"
 curl -sf -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
-  "name": "Security feeds → SAM-HR (security triage)",
+  "name": "Security feeds → Security Triage Agent",
   "priority": 80,
   "conditions": {"routing_hints.category": "security"},
-  "actions": {"route_to": "sam-hr"},
+  "actions": {"route_to": "security-triage"},
   "active": true
 }' -o /dev/null
 

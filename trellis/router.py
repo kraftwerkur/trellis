@@ -243,6 +243,9 @@ async def _dispatch_by_type(agent: Agent, envelope: Envelope):
         if not agent.llm_config:
             return "error", None, f"Agent '{agent.agent_id}' has no llm_config"
         return await dispatch_llm(agent.llm_config, envelope, agent_id=agent.agent_id)
+    elif agent.agent_type == "native":
+        from trellis.agents import dispatch_native_agent
+        return await dispatch_native_agent(agent, envelope)
     else:
         return "error", None, f"Unknown agent type: {agent.agent_type}"
 

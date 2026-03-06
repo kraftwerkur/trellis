@@ -6,19 +6,25 @@ import { useStablePolling } from "@/lib/hooks";
 import type { Agent, AuditEvent, CostSummary, CostTimeseriesBucket } from "@/types/trellis";
 import {
   Bot, Activity, Shield, DollarSign, HeartPulse,
-  TrendingUp, TrendingDown, AlertTriangle, Zap, Lock, Gauge,
+  TrendingUp, TrendingDown, Zap, Lock, Gauge,
+  AlertTriangle,
 } from "lucide-react";
 import {
-  AreaChart, Area, ResponsiveContainer, Tooltip, XAxis, YAxis,
+  AreaChart as RechartsAreaChart, Area, ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from "recharts";
+import { AreaChart, DonutChart } from "@tremor/react";
+import {
+  Card, CardContent, CardHeader, CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
-/* ─── Sparkline Component ─── */
+/* ─── Sparkline (small inline chart, keep recharts for this) ─── */
 
 function Sparkline({ data, color = "#22d3ee", height = 32 }: { data: number[]; color?: string; height?: number }) {
   const chartData = data.map((v, i) => ({ v, i }));
   return (
     <ResponsiveContainer width="100%" height={height}>
-      <AreaChart data={chartData} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
+      <RechartsAreaChart data={chartData} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
         <defs>
           <linearGradient id={`spark-${color.replace("#", "")}`} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={color} stopOpacity={0.3} />
@@ -34,14 +40,14 @@ function Sparkline({ data, color = "#22d3ee", height = 32 }: { data: number[]; c
           dot={false}
           isAnimationActive={false}
         />
-      </AreaChart>
+      </RechartsAreaChart>
     </ResponsiveContainer>
   );
 }
 
-/* ─── Enhanced Stat Card ─── */
+/* ─── Stat Card (shadcn Card based) ─── */
 
-function CommandStatCard({ label, value, icon: Icon, accent, trend, sparkData }: {
+function StatCard({ label, value, icon: Icon, accent, trend, sparkData }: {
   label: string;
   value: string;
   icon: React.ElementType;
@@ -60,30 +66,32 @@ function CommandStatCard({ label, value, icon: Icon, accent, trend, sparkData }:
   const c = accentColors[accent] ?? accentColors.cyan;
 
   return (
-    <div className="card-dark p-4 space-y-2">
-      <div className="flex items-center justify-between">
-        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${c.bg}`}>
-          <Icon className={`w-4 h-4 ${c.text}`} />
+    <Card className="border-white/[0.06] bg-[#0d0e14] py-0 gap-0">
+      <CardContent className="p-4 space-y-2">
+        <div className="flex items-center justify-between">
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${c.bg}`}>
+            <Icon className={`w-4 h-4 ${c.text}`} />
+          </div>
+          {trend && (
+            <Badge variant="outline" className={`text-[10px] border-0 px-1.5 py-0 font-medium ${
+              trend.direction === "up" ? "text-emerald-400" : trend.direction === "down" ? "text-red-400" : "text-zinc-500"
+            }`}>
+              {trend.direction === "up" ? <TrendingUp className="w-3 h-3 mr-1" /> : trend.direction === "down" ? <TrendingDown className="w-3 h-3 mr-1" /> : null}
+              {trend.label}
+            </Badge>
+          )}
         </div>
-        {trend && (
-          <div className={`flex items-center gap-1 text-[10px] font-medium ${
-            trend.direction === "up" ? "text-emerald-400" : trend.direction === "down" ? "text-red-400" : "text-zinc-500"
-          }`}>
-            {trend.direction === "up" ? <TrendingUp className="w-3 h-3" /> : trend.direction === "down" ? <TrendingDown className="w-3 h-3" /> : null}
-            {trend.label}
+        <div>
+          <div className="text-2xl font-bold font-data text-zinc-100">{value}</div>
+          <div className="text-[10px] text-zinc-500 uppercase tracking-widest">{label}</div>
+        </div>
+        {sparkData && sparkData.length > 1 && (
+          <div className="pt-1">
+            <Sparkline data={sparkData} color={c.spark} />
           </div>
         )}
-      </div>
-      <div>
-        <div className="text-2xl font-bold font-data text-zinc-100">{value}</div>
-        <div className="text-[10px] text-zinc-500 uppercase tracking-widest">{label}</div>
-      </div>
-      {sparkData && sparkData.length > 1 && (
-        <div className="pt-1">
-          <Sparkline data={sparkData} color={c.spark} />
-        </div>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -106,12 +114,12 @@ function formatTimeAgo(ts: string) {
 
 function ActivityTimeline({ events, agentMap }: { events: AuditEvent[]; agentMap: Record<string, Agent> }) {
   return (
-    <div className="card-dark">
-      <div className="flex items-center justify-between px-4 py-2.5 border-b border-white/[0.06]">
-        <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Activity Timeline</span>
+    <Card className="border-white/[0.06] bg-[#0d0e14] py-0 gap-0">
+      <CardHeader className="flex-row items-center justify-between px-4 py-2.5 border-b border-white/[0.06]">
+        <CardTitle className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Activity Timeline</CardTitle>
         <span className="live-pulse w-2 h-2 rounded-full bg-emerald-500 inline-block" />
-      </div>
-      <div className="divide-y divide-white/[0.04] max-h-[400px] overflow-y-auto">
+      </CardHeader>
+      <CardContent className="p-0 divide-y divide-white/[0.04] max-h-[400px] overflow-y-auto">
         {events.length === 0 ? (
           <div className="text-center text-zinc-600 py-8 text-sm">No recent activity</div>
         ) : (
@@ -138,8 +146,8 @@ function ActivityTimeline({ events, agentMap }: { events: AuditEvent[]; agentMap
             );
           })
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -153,94 +161,178 @@ function AgentHealthGrid({ agents }: { agents: Agent[] }) {
     return { dot: "bg-red-500", ring: "ring-red-500/20", label: "Unhealthy" };
   };
 
-  if (agents.length === 0) {
-    return (
-      <div className="card-dark">
-        <div className="px-4 py-2.5 border-b border-white/[0.06]">
-          <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Agent Health</span>
-        </div>
-        <div className="text-center text-zinc-600 py-8 text-sm">No agents registered</div>
-      </div>
-    );
-  }
-
   return (
-    <div className="card-dark">
-      <div className="px-4 py-2.5 border-b border-white/[0.06]">
-        <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Agent Health</span>
-      </div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-white/[0.04]">
-        {agents.map(a => {
-          const sc = statusConfig(a.status);
-          return (
-            <div key={a.agent_id} className="bg-zinc-950 p-3 space-y-1.5">
-              <div className="flex items-center gap-2">
-                <span className={`w-2 h-2 rounded-full ${sc.dot} ring-2 ${sc.ring}`} />
-                <span className="text-xs font-medium text-zinc-200 truncate">{a.name}</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[10px] text-zinc-500 font-data">
-                  {a.llm_config && typeof a.llm_config === "object" && "model" in a.llm_config
-                    ? String(a.llm_config.model)
-                    : a.framework}
-                </span>
-                <span className="text-[10px] text-zinc-600 font-data">{formatTimeAgo(a.last_health_check ?? a.created)}</span>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    </div>
+    <Card className="border-white/[0.06] bg-[#0d0e14] py-0 gap-0">
+      <CardHeader className="px-4 py-2.5 border-b border-white/[0.06]">
+        <CardTitle className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Agent Health</CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        {agents.length === 0 ? (
+          <div className="text-center text-zinc-600 py-8 text-sm">No agents registered</div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-white/[0.04]">
+            {agents.map(a => {
+              const sc = statusConfig(a.status);
+              return (
+                <div key={a.agent_id} className="bg-[#0a0b10] p-3 space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <span className={`w-2 h-2 rounded-full ${sc.dot} ring-2 ${sc.ring}`} />
+                    <span className="text-xs font-medium text-zinc-200 truncate">{a.name}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] text-zinc-500 font-data">
+                      {a.llm_config && typeof a.llm_config === "object" && "model" in a.llm_config
+                        ? String(a.llm_config.model)
+                        : a.framework}
+                    </span>
+                    <span className="text-[10px] text-zinc-600 font-data">{formatTimeAgo(a.last_health_check ?? a.created)}</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
-/* ─── Cost Trend Chart ─── */
+/* ─── Cost Trend Chart (Tremor AreaChart) ─── */
 
 function CostTrendChart({ data }: { data: CostTimeseriesBucket[] }) {
-  if (data.length === 0) {
-    return (
-      <div className="card-dark">
-        <div className="px-4 py-2.5 border-b border-white/[0.06]">
-          <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">7-Day Cost Trend</span>
-        </div>
-        <div className="text-center text-zinc-600 py-8 text-sm">No cost data yet</div>
-      </div>
-    );
-  }
-
   const chartData = data.map(d => ({
-    day: d.bucket.slice(5), // MM-DD
-    cost: d.total_cost_usd,
-    requests: d.request_count,
+    day: d.bucket.slice(5),
+    Cost: d.total_cost_usd,
   }));
 
   return (
-    <div className="card-dark">
-      <div className="px-4 py-2.5 border-b border-white/[0.06]">
-        <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">7-Day Cost Trend</span>
-      </div>
-      <div className="p-4">
-        <ResponsiveContainer width="100%" height={160}>
-          <AreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-            <defs>
-              <linearGradient id="costGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.25} />
-                <stop offset="100%" stopColor="#22d3ee" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <XAxis dataKey="day" tick={{ fontSize: 10, fill: "#52525b" }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fontSize: 10, fill: "#52525b" }} axisLine={false} tickLine={false} tickFormatter={v => `$${v}`} width={40} />
-            <Tooltip
-              contentStyle={{ backgroundColor: "#18181b", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, fontSize: 12 }}
-              labelStyle={{ color: "#a1a1aa" }}
-              itemStyle={{ color: "#22d3ee" }}
-              formatter={(v: number) => [`$${v.toFixed(2)}`, "Cost"]}
-            />
-            <Area type="monotone" dataKey="cost" stroke="#22d3ee" strokeWidth={2} fill="url(#costGrad)" dot={false} />
-          </AreaChart>
-        </ResponsiveContainer>
-      </div>
-    </div>
+    <Card className="border-white/[0.06] bg-[#0d0e14] py-0 gap-0">
+      <CardHeader className="px-4 py-2.5 border-b border-white/[0.06]">
+        <CardTitle className="text-xs uppercase tracking-widest text-zinc-500 font-medium">7-Day Cost Trend</CardTitle>
+      </CardHeader>
+      <CardContent className="p-4">
+        {data.length === 0 ? (
+          <div className="text-center text-zinc-600 py-8 text-sm">No cost data yet</div>
+        ) : (
+          <AreaChart
+            className="h-40"
+            data={chartData}
+            index="day"
+            categories={["Cost"]}
+            colors={["cyan"]}
+            showLegend={false}
+            showGridLines={false}
+            showAnimation={false}
+            curveType="monotone"
+            valueFormatter={(v: number) => `$${v.toFixed(2)}`}
+          />
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ─── Events Over Time (Tremor AreaChart) ─── */
+
+function EventsOverTimeChart({ events }: { events: AuditEvent[] }) {
+  const chartData = useMemo(() => {
+    if (events.length === 0) return [];
+    const now = Date.now();
+    const buckets: Record<string, number> = {};
+    for (let i = 23; i >= 0; i--) {
+      const h = new Date(now - i * 3600000);
+      const key = `${String(h.getHours()).padStart(2, "0")}:00`;
+      buckets[key] = 0;
+    }
+    events.forEach(e => {
+      const t = new Date(e.timestamp);
+      if (now - t.getTime() > 86400000) return;
+      const key = `${String(t.getHours()).padStart(2, "0")}:00`;
+      if (key in buckets) buckets[key]++;
+    });
+    return Object.entries(buckets).map(([hour, count]) => ({ hour, Events: count }));
+  }, [events]);
+
+  return (
+    <Card className="border-white/[0.06] bg-[#0d0e14] py-0 gap-0">
+      <CardHeader className="px-4 py-2.5 border-b border-white/[0.06]">
+        <CardTitle className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Events Over Time (24h)</CardTitle>
+      </CardHeader>
+      <CardContent className="p-4">
+        {chartData.length === 0 ? (
+          <div className="text-center text-zinc-600 py-8 text-sm">No event data yet</div>
+        ) : (
+          <AreaChart
+            className="h-44"
+            data={chartData}
+            index="hour"
+            categories={["Events"]}
+            colors={["violet"]}
+            showLegend={false}
+            showGridLines={false}
+            showAnimation={false}
+            curveType="monotone"
+          />
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/* ─── Agent Status (Tremor DonutChart) ─── */
+
+function AgentStatusChart({ agents }: { agents: Agent[] }) {
+  const statusData = useMemo(() => {
+    if (agents.length === 0) return [];
+    const counts: Record<string, number> = {};
+    agents.forEach(a => {
+      const s = a.status.toLowerCase();
+      const label = (s === "active" || s === "healthy") ? "Healthy" : s === "degraded" || s === "warning" ? "Degraded" : s === "offline" ? "Offline" : "Unhealthy";
+      counts[label] = (counts[label] || 0) + 1;
+    });
+    return Object.entries(counts).map(([name, value]) => ({ name, value }));
+  }, [agents]);
+
+  const colorMap: Record<string, string> = { Healthy: "emerald", Degraded: "amber", Unhealthy: "red", Offline: "zinc" };
+  const colors = statusData.map(d => colorMap[d.name] || "zinc");
+
+  return (
+    <Card className="border-white/[0.06] bg-[#0d0e14] py-0 gap-0">
+      <CardHeader className="px-4 py-2.5 border-b border-white/[0.06]">
+        <CardTitle className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Agent Status</CardTitle>
+      </CardHeader>
+      <CardContent className="p-4">
+        {agents.length === 0 ? (
+          <div className="text-center text-zinc-600 py-8 text-sm">No agents registered</div>
+        ) : (
+          <div className="flex items-center">
+            <div className="w-1/2">
+              <DonutChart
+                className="h-36"
+                data={statusData}
+                category="value"
+                index="name"
+                colors={colors}
+                showLabel={true}
+                label={`${agents.length}`}
+                showAnimation={false}
+              />
+            </div>
+            <div className="w-1/2 space-y-2 pl-2">
+              {statusData.map(d => (
+                <div key={d.name} className="flex items-center gap-2 text-xs">
+                  <span className={`w-2 h-2 rounded-full shrink-0 ${
+                    d.name === "Healthy" ? "bg-emerald-500" : d.name === "Degraded" ? "bg-amber-500" : d.name === "Unhealthy" ? "bg-red-500" : "bg-zinc-500"
+                  }`} />
+                  <span className="text-zinc-400">{d.name}</span>
+                  <span className="ml-auto font-data text-zinc-200">{d.value}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -314,16 +406,13 @@ export default function OverviewPage() {
     return m;
   }, [agents]);
 
-  // Sparkline data from timeseries
   const costSpark = timeseries.map(t => t.total_cost_usd);
   const requestSpark = timeseries.map(t => t.request_count);
 
-  // Loading state — show placeholders
   const isLoading = loadingAgents && loadingEvents && loadingCosts;
 
   return (
     <div className="space-y-4">
-      {/* Loading indicator */}
       {isLoading && (
         <div className="text-[10px] text-zinc-500 bg-zinc-800/50 border border-zinc-700/30 rounded-lg px-3 py-1.5 text-center animate-pulse">
           Connecting to Trellis API…
@@ -332,34 +421,34 @@ export default function OverviewPage() {
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
-        <CommandStatCard
+        <StatCard
           label="Active Agents"
           value={totalAgents > 0 ? `${onlineCount}/${totalAgents}` : "—"}
           icon={Bot}
           accent="emerald"
           trend={totalAgents > 0 ? { direction: onlineCount === totalAgents ? "up" : "down", label: `${onlineCount} healthy` } : undefined}
         />
-        <CommandStatCard
+        <StatCard
           label="Events / 24h"
           value={String(events24h)}
           icon={Activity}
           accent="blue"
           sparkData={requestSpark}
         />
-        <CommandStatCard
+        <StatCard
           label="Total Requests"
           value={String(totalRequests)}
           icon={Gauge}
           accent="cyan"
           sparkData={requestSpark}
         />
-        <CommandStatCard
+        <StatCard
           label="PHI Blocked"
           value={String(phiBlocked)}
           icon={Shield}
           accent="red"
         />
-        <CommandStatCard
+        <StatCard
           label="Budget Used"
           value={totalCost > 0 ? `${budgetPct}%` : "—"}
           icon={DollarSign}
@@ -367,7 +456,7 @@ export default function OverviewPage() {
           trend={totalCost > 0 ? { direction: budgetPct > 75 ? "up" : "flat", label: `$${totalCost.toFixed(2)}/$${budgetLimit}` } : undefined}
           sparkData={costSpark}
         />
-        <CommandStatCard
+        <StatCard
           label="System Health"
           value={totalAgents > 0 ? `${systemHealth}%` : "—"}
           icon={HeartPulse}
@@ -377,25 +466,37 @@ export default function OverviewPage() {
       </div>
 
       {/* System Health Summary */}
-      <div className="card-dark p-4 gradient-border">
-        <div className="flex items-center gap-2 mb-3">
-          <HeartPulse className="w-4 h-4 text-cyan-400" />
-          <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">System Health Summary</span>
-          <span className="live-pulse w-2 h-2 rounded-full bg-emerald-500 inline-block ml-auto" />
+      <Card className="border-white/[0.06] bg-[#0d0e14] py-0 gap-0 gradient-border">
+        <CardContent className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <HeartPulse className="w-4 h-4 text-cyan-400" />
+            <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">System Health Summary</span>
+            <span className="live-pulse w-2 h-2 rounded-full bg-emerald-500 inline-block ml-auto" />
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            {[
+              { label: "Total Agents", value: totalAgents > 0 ? String(totalAgents) : "—", color: "text-blue-400" },
+              { label: "Active Agents", value: totalAgents > 0 ? `${onlineCount}` : "—", color: onlineCount === totalAgents && totalAgents > 0 ? "text-emerald-400" : "text-amber-400" },
+              { label: "Events (1h)", value: String(eventsLastHour), color: "text-cyan-400" },
+              { label: "Rule Match Rate", value: events.length > 0 ? `${ruleMatchRate}%` : "—", color: "text-purple-400" },
+              { label: "PHI Detections Today", value: String(phiToday), color: phiToday > 0 ? "text-red-400" : "text-emerald-400" },
+            ].map(s => (
+              <div key={s.label} className="text-center">
+                <div className={`text-xl font-bold font-data ${s.color}`}>{s.value}</div>
+                <div className="text-[10px] text-zinc-600 uppercase tracking-wider mt-0.5">{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Events Over Time + Agent Status */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
+        <div className="lg:col-span-3">
+          <EventsOverTimeChart events={events} />
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-          {[
-            { label: "Total Agents", value: totalAgents > 0 ? String(totalAgents) : "—", color: "text-blue-400" },
-            { label: "Active Agents", value: totalAgents > 0 ? `${onlineCount}` : "—", color: onlineCount === totalAgents && totalAgents > 0 ? "text-emerald-400" : "text-amber-400" },
-            { label: "Events (1h)", value: String(eventsLastHour), color: "text-cyan-400" },
-            { label: "Rule Match Rate", value: events.length > 0 ? `${ruleMatchRate}%` : "—", color: "text-purple-400" },
-            { label: "PHI Detections Today", value: String(phiToday), color: phiToday > 0 ? "text-red-400" : "text-emerald-400" },
-          ].map(s => (
-            <div key={s.label} className="text-center">
-              <div className={`text-xl font-bold font-data ${s.color}`}>{s.value}</div>
-              <div className="text-[10px] text-zinc-600 uppercase tracking-wider mt-0.5">{s.label}</div>
-            </div>
-          ))}
+        <div className="lg:col-span-2">
+          <AgentStatusChart agents={agents} />
         </div>
       </div>
 
@@ -407,28 +508,30 @@ export default function OverviewPage() {
         <div className="lg:col-span-2 space-y-3">
           <CostTrendChart data={timeseries} />
           {/* Cost Breakdown */}
-          <div className="card-dark p-4">
-            <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-medium mb-2">Cost Breakdown</div>
-            {costs.length === 0 ? (
-              <div className="text-center text-zinc-600 py-4 text-sm">No cost data yet</div>
-            ) : (
-              <div className="space-y-2">
-                {costs.slice(0, 5).map(c => {
-                  const agent = agentMap[c.agent_id];
-                  const pct = totalCost > 0 ? (c.total_cost_usd / totalCost) * 100 : 0;
-                  return (
-                    <div key={c.agent_id} className="flex items-center gap-2">
-                      <span className="text-xs text-zinc-300 truncate w-28">{agent?.name ?? c.agent_id.slice(0, 12)}</span>
-                      <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                        <div className="h-full bg-cyan-500/60 rounded-full" style={{ width: `${pct}%` }} />
+          <Card className="border-white/[0.06] bg-[#0d0e14] py-0 gap-0">
+            <CardContent className="p-4">
+              <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-medium mb-2">Cost Breakdown</div>
+              {costs.length === 0 ? (
+                <div className="text-center text-zinc-600 py-4 text-sm">No cost data yet</div>
+              ) : (
+                <div className="space-y-2">
+                  {costs.slice(0, 5).map(c => {
+                    const agent = agentMap[c.agent_id];
+                    const pct = totalCost > 0 ? (c.total_cost_usd / totalCost) * 100 : 0;
+                    return (
+                      <div key={c.agent_id} className="flex items-center gap-2">
+                        <span className="text-xs text-zinc-300 truncate w-28">{agent?.name ?? c.agent_id.slice(0, 12)}</span>
+                        <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                          <div className="h-full bg-cyan-500/60 rounded-full" style={{ width: `${pct}%` }} />
+                        </div>
+                        <span className="text-[10px] text-zinc-500 font-data w-14 text-right">${c.total_cost_usd.toFixed(2)}</span>
                       </div>
-                      <span className="text-[10px] text-zinc-500 font-data w-14 text-right">${c.total_cost_usd.toFixed(2)}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
 

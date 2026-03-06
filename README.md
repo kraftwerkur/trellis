@@ -111,9 +111,36 @@ graph TD
 - Executive FinOps summary endpoint
 
 ### ✅ Slice 6 — Dashboard
-- Next.js dashboard with real-time agent monitoring
-- Cost visualization and FinOps charts
-- Agent health status overview
+- Next.js dark ops dashboard with real-time agent monitoring
+- **Agent Registry** — health status, registration, type/department overview
+- **Rules CRUD** — create, edit, toggle, test routing rules from the UI
+- **FinOps Charts** — cost trends over time, per-department/per-agent breakdowns, budget utilization
+- **PHI Shield** — detection category charts, per-agent mode configuration, recent event feed
+- **Audit Viewer** — full event log with trace chain visualization
+- **Gateway Monitor** — LLM request log, model usage, latency tracking
+
+### ✅ PHI Shield
+- HIPAA-compliant PHI/PII detection and redaction engine
+- Covers all 18 HIPAA Safe Harbor identifiers + healthcare-specific types (MRN, NPI, ICD-10, CPT)
+- Dual detection: regex patterns (structured) + Presidio NLP (unstructured names, addresses)
+- Per-agent shield modes: `full` (redact + rehydrate), `redact_only`, `audit_only`, `off`
+- Ephemeral token vault — PHI never persisted, never logged
+- Integrated into LLM Gateway: automatic redaction before model inference
+- Dashboard page with detection stats, category breakdown, and per-agent configuration
+
+### ✅ Adapters — HL7v2 & FHIR R4
+- **HL7v2 Adapter** — native pipe-delimited parser, supports ADT^A01, ADT^A03, ORM^O01, ORU^R01, SIU^S12
+- **FHIR R4 Adapter** — Patient, Encounter, Observation, Appointment resources
+- **FHIR Subscription Webhook** — Epic-style subscription notification bundles
+- **Teams Adapter** — Bot Framework integration (Teams chat → envelope)
+- **Document Adapter** — PDF, DOCX, TXT, CSV, Markdown ingestion with configurable chunking
+- All adapters produce standard Generic Envelopes routed through the same rules engine
+
+### ✅ Azure Deployment
+- One-command deploy via `deploy/deploy.sh` to Azure Container Apps
+- Scales to zero when idle (~$5-10/mo at demo scale)
+- Azure Container Registry, Key Vault, Log Analytics included
+- Runs entirely within your Azure tenant — PHI never leaves your perimeter
 
 ---
 
@@ -329,9 +356,9 @@ Trellis runs entirely inside your network. The LLM Gateway can point to Azure Op
 
 ## Roadmap
 
-- [ ] Teams adapter (Bot Framework)
-- [ ] HL7/FHIR adapter (Epic integration)
 - [ ] Agent-to-agent delegation chains
 - [ ] Streaming support for LLM Gateway
 - [ ] Role-based access control (RBAC)
-- [ ] Azure deployment (AKS + Managed Identity)
+- [ ] Azure SQL migration (prod persistence)
+- [ ] Pluggable agent runtimes (Pi SDK default, LangChain, custom)
+- [ ] Smart model routing with ML-based complexity classifier

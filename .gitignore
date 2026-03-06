@@ -15,7 +15,7 @@ node_modules/
 # Data (local dev only)
 *.db
 *.db.bak
-data/
+/data/
 
 # IDE
 .vscode/

@@ -1,0 +1,20 @@
+{
+  "systems": [
+    {"name": "Epic", "category": "EMR", "vendor": "Epic Systems", "criticality": "critical"},
+    {"name": "PeopleSoft", "category": "ERP", "vendor": "Oracle", "modules": ["HCM", "Finance", "Supply Chain"], "criticality": "high"},
+    {"name": "CrowdStrike Falcon", "category": "EDR", "vendor": "CrowdStrike", "criticality": "critical"},
+    {"name": "Microsoft Sentinel", "category": "SIEM", "vendor": "Microsoft", "criticality": "critical"},
+    {"name": "Microsoft Defender", "category": "Security", "vendor": "Microsoft", "criticality": "high"},
+    {"name": "Nutanix", "category": "Infrastructure", "vendor": "Nutanix", "criticality": "high"},
+    {"name": "Azure", "category": "Cloud", "vendor": "Microsoft", "criticality": "high"},
+    {"name": "Arista", "category": "Network", "vendor": "Arista", "criticality": "high"},
+    {"name": "Ivanti SM", "category": "ITSM", "vendor": "Ivanti", "criticality": "medium"},
+    {"name": "LogicMonitor", "category": "Monitoring", "vendor": "LogicMonitor", "criticality": "medium"},
+    {"name": "xMatters", "category": "On-Call", "vendor": "xMatters", "criticality": "medium"},
+    {"name": "SailPoint", "category": "IAM", "vendor": "SailPoint", "criticality": "high"},
+    {"name": "8x8", "category": "Communications", "vendor": "8x8", "criticality": "medium"},
+    {"name": "UKG", "category": "Workforce", "vendor": "UKG", "modules": ["Pro", "Workforce Central"], "criticality": "medium"},
+    {"name": "VMware", "category": "Virtualization", "vendor": "Broadcom", "criticality": "high"},
+    {"name": "Caregility", "category": "Virtual Care", "vendor": "Caregility", "criticality": "medium"}
+  ]
+}

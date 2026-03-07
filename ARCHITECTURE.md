@@ -674,8 +674,8 @@ HL7v2 (ADT/ORM/ORU/SIU), FHIR R4 (Patient/Encounter/Observation), Teams adapter 
 ### Phase 8: Real Agents (In Progress)
 **Security Triage Agent** — first tool-calling native agent. Cross-references vulnerabilities against HF tech stack, calculates risk scores, drafts structured advisories. Proves Tier 2 agent capability.
 
-### Phase 9: Classification Engine (Next)
-Platform-level enrichment middleware. Every inbound envelope gets auto-classified (department, category, urgency, entities) before hitting the rules engine. Senders don't need to know Trellis's routing structure — they just send raw events.
+### Phase 9: Classification Engine + Platform Housekeeping (Next)
+Platform-level enrichment middleware. Every inbound envelope gets auto-classified (department, category, urgency, entities) before hitting the rules engine. Senders don't need to know Trellis's routing structure — they just send raw events. This phase also introduces **Platform Housekeeping Agents** — autonomous agents that maintain Trellis itself (rule optimization, health auditing, cost analysis, schema drift detection, audit compaction). These share the "core platform infrastructure" framing with the classification engine. See [Platform Housekeeping Agents](#platform-housekeeping-agents).
 
 ### Phase 10: Agent Identity & Access
 Agent digital identities with scoped permissions, credential vault (managed secrets, auto-rotation), role-based access policies, delegation chains. Required for agents that interact with downstream systems (Epic, PeopleSoft, Ivanti).
@@ -979,6 +979,119 @@ Optional metadata fields for healthcare document classification:
   }
 }
 ```
+
+---
+
+---
+
+## Platform Housekeeping Agents
+
+Trellis manages user-facing agents. But who manages Trellis? These five agents do. They're registered in the same agent registry (`agent_type: "native"`, `department: "platform"`), use the same envelope/audit infrastructure, and follow the same autoresearch pattern: observe → hypothesize → test → measure → keep/discard.
+
+**Key constraints:**
+- All costs classified as **"Platform Overhead"** in FinOps — separate budget category, never billed to departments.
+- Cannot be disabled via user routing rules. They're core infrastructure, like health checks on a load balancer.
+- Start conservative. Most launch as "observe-only" or "suggest." Graduate to "auto-act" after the platform team trusts the recommendations.
+
+---
+
+### 1. Rule Optimizer
+
+**Purpose:** Find dead rules, overlapping rules, and unmatched events. Suggest consolidations.
+
+| Field | Value |
+|-------|-------|
+| **Schedule** | Nightly (2:00 AM) |
+| **Inputs** | Routing history (audit log), rules engine config, dead-letter queue |
+| **Outputs** | Report: dead rules (zero matches in 30 days), overlapping rules (same envelope matches multiple), top unmatched event patterns. Suggested new rules for frequent dead-letter patterns. |
+| **Autonomy** | **suggest** — proposes rule changes for human approval via dashboard. Never auto-modifies routing. |
+| **Implementation** | Reads `audit_events` table (routing decisions) + `rules` table. Aggregates match counts per rule over a sliding window. Compares rule conditions pairwise for overlap detection. Clusters dead-letter envelopes by `source_type` + `routing_hints` to suggest new rules. Single SQL-heavy cron job — no LLM needed. |
+
+---
+
+### 2. Health Auditor
+
+**Purpose:** Catch agent degradation before humans notice.
+
+| Field | Value |
+|-------|-------|
+| **Schedule** | Every 15 minutes |
+| **Inputs** | Agent registry (health endpoints), historical response time data (last 7 days) |
+| **Outputs** | Alerts: agent responding >10x slower than its 7-day p50, agent returning non-200, agent unreachable. Dashboard status updates. |
+| **Autonomy** | **observe-only** — updates dashboard health indicators and fires alerts. Does not restart or disable agents. |
+| **Implementation** | Hits each agent's `/health` endpoint. Stores response time + status in a `health_checks` table. Compares current response time against rolling p50/p95. Alert thresholds configurable per agent. Uses the existing health check infrastructure (already polling every 60s) but adds trend analysis and anomaly detection on top. |
+
+---
+
+### 3. Cost Optimizer
+
+**Purpose:** Find agents burning expensive models on simple tasks. Track cost-per-resolution trends.
+
+| Field | Value |
+|-------|-------|
+| **Schedule** | Daily (6:00 AM) |
+| **Inputs** | FinOps cost events, LLM gateway logs (model requested vs. model served, prompt complexity), agent resolution outcomes |
+| **Outputs** | Report: agents where >50% of calls use expensive models but prompt complexity is "simple." Cost-per-resolution trend per agent (rising = investigate). Specific model downgrade recommendations. |
+| **Autonomy** | **suggest** — recommends model policy changes. Platform admin approves via dashboard. |
+| **Implementation** | Queries `cost_events` joined with gateway logs. Groups by agent + model. If the complexity classifier (from smart model routing) tagged most requests as "simple" but the agent is pinned to an expensive model, flags it. Tracks `total_cost / completed_envelopes` per agent per week for trend analysis. Could use a cheap LLM call to summarize findings into a readable report, but the core logic is SQL aggregation. |
+
+---
+
+### 4. Schema Drift Detector
+
+**Purpose:** Catch payload structure changes before they silently break routing or agent logic.
+
+| Field | Value |
+|-------|-------|
+| **Schedule** | **Inline** (lightweight, on every envelope) + **daily deep scan** (1:00 AM) |
+| **Inputs** | Incoming envelopes (`payload.data` structure), stored schema fingerprints per `source_type` + `source_id` |
+| **Outputs** | Inline: pass/warn flag on envelope metadata (doesn't block routing). Daily: report of all detected schema changes — new fields, removed fields, type changes. Diff against last known good schema. |
+| **Autonomy** | **observe-only** — flags drift, never blocks envelopes. Alert escalation if a source's schema changes significantly (>3 fields added/removed). |
+| **Implementation** | **Inline path:** Extract `payload.data` keys + types → hash → compare against stored fingerprint for that `source_type`/`source_id`. If hash differs, add `schema_drift: true` to envelope metadata. Sub-millisecond — just a hash comparison. **Daily path:** For each source, build a full schema tree from the last 24h of envelopes. Diff against the stored baseline. Store new baseline if platform admin acknowledges the change. Schema fingerprints stored in a `schema_baselines` table. |
+
+---
+
+### 5. Audit Compactor
+
+**Purpose:** Prevent unbounded audit log growth. Roll up old events, archive detail, keep summaries.
+
+| Field | Value |
+|-------|-------|
+| **Schedule** | Weekly (Sunday 3:00 AM) |
+| **Inputs** | Audit log (events older than configured retention window, default 90 days for detail) |
+| **Outputs** | Compacted summary records (hourly rollups: event counts by type, agent, department). Archived raw events moved to cold storage (Azure Blob). Compaction report: rows compacted, storage freed, archive location. |
+| **Autonomy** | **auto-act** — compacts and archives automatically. All actions logged. Reversible: raw events exist in cold storage indefinitely (HIPAA 6-year retention still met). |
+| **Implementation** | Groups audit events by hour + event_type + agent_id + department. Creates summary rows with counts and key metrics. Moves raw rows to Azure Blob Storage (JSON lines, gzipped) organized by `YYYY/MM/DD/`. Deletes raw rows from primary database after confirming archive write succeeded. Uses database transactions — if archive write fails, nothing gets deleted. The only housekeeping agent that starts as auto-act because (a) it's append-only operations on a new table + blob writes, (b) the original data is preserved in cold storage, and (c) unbounded DB growth is a real operational risk that shouldn't wait for human approval every week. |
+
+---
+
+### Registration Pattern
+
+All five agents register like any other native agent:
+
+```json
+{
+  "agent_id": "platform-rule-optimizer",
+  "name": "Rule Optimizer",
+  "department": "platform",
+  "agent_type": "native",
+  "runtime_type": "pi",
+  "tags": ["housekeeping", "platform-infra"],
+  "cost_mode": "managed",
+  "maturity": "autonomous"
+}
+```
+
+The `department: "platform"` tag is what separates them in FinOps. The event router skips user routing rules for `department: "platform"` agents — they're triggered by schedule, not by envelope routing.
+
+### Dashboard Integration
+
+The dashboard gets a **Platform Health** tab showing:
+- Rule Optimizer: last run, dead rules found, suggestions pending
+- Health Auditor: real-time agent health grid with trend sparklines
+- Cost Optimizer: top 5 cost reduction opportunities, total savings if implemented
+- Schema Drift: sources with active drift warnings
+- Audit Compactor: DB size trend, last compaction stats, archive size
 
 ---
 

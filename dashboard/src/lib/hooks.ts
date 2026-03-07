@@ -45,7 +45,8 @@ export function useStablePolling<T>(
 
   useEffect(() => {
     mounted.current = true;
-    refresh();
+    // Use microtask to avoid synchronous setState in effect body
+    queueMicrotask(refresh);
     if (intervalMs > 0) {
       const id = setInterval(refresh, intervalMs);
       return () => { mounted.current = false; clearInterval(id); };

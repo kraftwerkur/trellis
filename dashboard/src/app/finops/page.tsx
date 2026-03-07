@@ -28,7 +28,7 @@ export default function FinOpsPage() {
   const { data: rawStats } = useStablePolling<GatewayStatsResponse>(fetchStats, 30000);
 
   const timeseries = rawTimeseries ?? [];
-  const summary = rawSummary ?? [];
+  const summary = useMemo(() => rawSummary ?? [], [rawSummary]);
   const stats = rawStats ?? null;
 
   const totalCost = rawFinops?.spend_this_month_usd ?? summary.reduce((s, c) => s + c.total_cost_usd, 0);

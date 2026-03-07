@@ -1,6 +1,6 @@
 "use client";
 
-import { BookOpen, Terminal, ExternalLink } from "lucide-react";
+import { Terminal, ExternalLink } from "lucide-react";
 
 function CodeBlock({ children }: { children: string }) {
   return (

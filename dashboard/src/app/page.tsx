@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "@/lib/api";
 import { useStablePolling } from "@/lib/hooks";
 import type { Agent, AuditEvent, CostSummary, CostTimeseriesBucket } from "@/types/trellis";
@@ -264,9 +264,14 @@ function CostTrendChart({ data }: { data: CostTimeseriesBucket[] }) {
 /* ─── Events Over Time (Tremor AreaChart) ─── */
 
 function EventsOverTimeChart({ events }: { events: AuditEvent[] }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(id);
+  }, []);
+
   const chartData = useMemo(() => {
     if (events.length === 0) return [];
-    const now = Date.now();
     const buckets: Record<string, number> = {};
     for (let i = 23; i >= 0; i--) {
       const h = new Date(now - i * 3600000);
@@ -280,7 +285,7 @@ function EventsOverTimeChart({ events }: { events: AuditEvent[] }) {
       if (key in buckets) buckets[key]++;
     });
     return Object.entries(buckets).map(([hour, count]) => ({ hour, Events: count }));
-  }, [events]);
+  }, [events, now]);
 
   return (
     <Card className="border-white/[0.06] bg-[#0d0e14] py-0 gap-0">
@@ -381,18 +386,25 @@ export default function OverviewPage() {
   const { data: rawCosts, loading: loadingCosts } = useStablePolling<CostSummary[]>(fetchCosts, 15000);
   const { data: rawTimeseries } = useStablePolling<CostTimeseriesBucket[]>(fetchTimeseries, 30000);
 
-  const agents = rawAgents ?? [];
-  const events = rawEvents ?? [];
-  const costs = rawCosts ?? [];
+  const agents = useMemo(() => rawAgents ?? [], [rawAgents]);
+  const events = useMemo(() => rawEvents ?? [], [rawEvents]);
+  const costs = useMemo(() => rawCosts ?? [], [rawCosts]);
   const timeseries = rawTimeseries ?? [];
+
+  // Stable clock for time-based filtering (updates every minute)
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 60000);
+    return () => clearInterval(id);
+  }, []);
 
   const onlineCount = agents.filter(a => a.status === "healthy" || a.status === "active").length;
   const totalAgents = agents.length;
   const recentEvents = useMemo(() => events.slice(0, 12), [events]);
   const events24h = useMemo(() => {
-    const cutoff = Date.now() - 86400000;
+    const cutoff = now - 86400000;
     return events.filter(e => new Date(e.timestamp).getTime() > cutoff).length;
-  }, [events]);
+  }, [events, now]);
 
   const totalCost = costs.reduce((s, c) => s + c.total_cost_usd, 0);
   const budgetLimit = 50;
@@ -403,9 +415,9 @@ export default function OverviewPage() {
   , [events]);
 
   const eventsLastHour = useMemo(() => {
-    const cutoff = Date.now() - 3600000;
+    const cutoff = now - 3600000;
     return events.filter(e => new Date(e.timestamp).getTime() > cutoff).length;
-  }, [events]);
+  }, [events, now]);
 
   const ruleMatchRate = useMemo(() => {
     if (events.length === 0) return 0;

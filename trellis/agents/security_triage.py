@@ -215,9 +215,12 @@ class SecurityTriageAgent:
         return "\n".join(lines)
 
     async def _llm_enhance(self, vuln, tech, risk, advisory) -> str | None:
-        """Use LLM via gateway to draft a narrative advisory. Returns None on failure."""
+        """Use LLM via gateway cost pipeline to draft a narrative advisory. Returns None on failure."""
         try:
-            from trellis.gateway import _providers, MODEL_PROVIDER_MAP
+            from trellis.gateway import (
+                _providers, MODEL_PROVIDER_MAP, log_cost_event, calculate_cost,
+            )
+            from trellis.database import async_session
         except ImportError:
             return None
 
@@ -257,7 +260,27 @@ class SecurityTriageAgent:
             if not provider:
                 return None
 
+        start = time.monotonic()
         result = await provider.chat_completion(body)
+        latency_ms = int((time.monotonic() - start) * 1000)
+
+        # Log cost through the gateway pipeline
+        usage = result.get("usage", {})
+        tokens_in = usage.get("prompt_tokens", 0)
+        tokens_out = usage.get("completion_tokens", 0)
+        prov_name = getattr(provider, "name", provider_name)
+
+        try:
+            async with async_session() as db:
+                await log_cost_event(
+                    db, agent_id=self.agent.agent_id, trace_id=None,
+                    model_requested=model, model_used=model,
+                    provider=prov_name, tokens_in=tokens_in, tokens_out=tokens_out,
+                    latency_ms=latency_ms, has_tool_calls=False,
+                )
+        except Exception as e:
+            logger.warning(f"Failed to log LLM cost event: {e}")
+
         choices = result.get("choices", [])
         if choices:
             return choices[0].get("message", {}).get("content", "")

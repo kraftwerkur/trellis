@@ -288,6 +288,14 @@ async def _dispatch_single(envelope: Envelope, matched_rule: Rule, db: AsyncSess
             envelope_id=envelope.envelope_id, agent_id=target_agent_id,
             details={"dispatch_status": status})
 
+        # Emit audit events for tool calls (native agent visibility)
+        if result_data and isinstance(result_data, dict):
+            tool_calls = (result_data.get("result") or {}).get("data", {}).get("tool_calls", [])
+            for tc in tool_calls:
+                await emit_audit(db, "tool_call", trace_id=envelope.metadata.trace_id,
+                    envelope_id=envelope.envelope_id, agent_id=target_agent_id,
+                    details={"tool": tc.get("tool"), "agent_type": agent.agent_type})
+
     log = EnvelopeLog(
         envelope_id=envelope.envelope_id, trace_id=envelope.metadata.trace_id,
         source_type=envelope.source_type, envelope_data=envelope.model_dump(),

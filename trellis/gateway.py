@@ -517,6 +517,18 @@ async def chat_completions(
     try:
         result = await provider.chat_completion(body)
     except Exception as e:
+        latency_ms = int((time.monotonic() - start) * 1000)
+        # Record error in observatory
+        from trellis.observatory import record_llm_error
+        await record_llm_error(
+            db,
+            agent_id=api_key.agent_id,
+            model_requested=request.model or model,
+            model_used=model,
+            provider=provider.name,
+            error_type=type(e).__name__,
+            latency_ms=latency_ms,
+        )
         raise HTTPException(status_code=502, detail=f"Provider error: {e}")
     latency_ms = int((time.monotonic() - start) * 1000)
 

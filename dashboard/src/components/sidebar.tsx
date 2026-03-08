@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Bot, Shield, ShieldCheck, GitBranch, Network, DollarSign, BookOpen, Wrench, ChevronLeft, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Bot, Shield, ShieldCheck, GitBranch, Network, DollarSign, BookOpen, Wrench, Telescope, ChevronLeft, ChevronRight } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
@@ -13,6 +13,7 @@ const NAV_ITEMS = [
   { href: "/gateway", label: "Gateway", icon: Network },
   { href: "/phi", label: "PHI Shield", icon: ShieldCheck },
   { href: "/finops", label: "FinOps", icon: DollarSign },
+  { href: "/observatory", label: "Observatory", icon: Telescope },
   { href: "/docs", label: "Docs", icon: BookOpen },
 ];
 

@@ -202,3 +202,55 @@ export interface AgentPhiConfig {
   name: string;
   phi_shield_mode: PhiShieldMode;
 }
+
+/* ─── Observatory Types ─── */
+
+export interface ObservatorySummary {
+  total_requests: number;
+  total_cost_usd: number;
+  error_rate: number;
+  unique_models: number;
+  unique_agents: number;
+  period_start: string;
+  period_end: string;
+}
+
+export interface ObservatoryModel {
+  model_id: string;
+  provider: string;
+  request_count: number;
+  error_count: number;
+  error_rate: number;
+  avg_latency_ms: number;
+  total_cost_usd: number;
+  total_input_tokens: number;
+  total_output_tokens: number;
+  last_used: string;
+}
+
+export interface ObservatoryModelMetrics {
+  model_id: string;
+  latency: {
+    p50_ms: number;
+    p95_ms: number;
+    p99_ms: number;
+    avg_ms: number;
+  };
+  tokens: {
+    total_input: number;
+    total_output: number;
+    avg_input_per_request: number;
+    avg_output_per_request: number;
+  };
+  hourly: Array<{
+    hour: string;
+    requests: number;
+    errors: number;
+    avg_latency_ms: number;
+    cost_usd: number;
+  }>;
+  cost_per_request_trend: Array<{
+    hour: string;
+    cost_per_request: number;
+  }>;
+}

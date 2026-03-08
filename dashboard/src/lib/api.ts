@@ -13,9 +13,10 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 export type {
   Agent, AuditEvent, Rule, EnvelopeLog, CostEvent, CostSummary, CostTimeseriesBucket, GatewayStats, GatewayStatsResponse, HealthStatus,
   PhiTestResponse, PhiStatsResponse, PhiShieldMode, AgentPhiConfig, GatewayProvider, GatewayModel, FinOpsSummary, ToolInfo, ToolCallLog,
+  ObservatorySummary, ObservatoryModel, ObservatoryModelMetrics,
 } from "../types/trellis";
 
-import type { Agent, AuditEvent, Rule, EnvelopeLog, CostEvent, CostSummary, CostTimeseriesBucket, GatewayStatsResponse, HealthStatus, PhiTestResponse, PhiStatsResponse, PhiShieldMode, AgentPhiConfig, GatewayProvider, GatewayModel, FinOpsSummary, ToolInfo, ToolCallLog } from "../types/trellis";
+import type { Agent, AuditEvent, Rule, EnvelopeLog, CostEvent, CostSummary, CostTimeseriesBucket, GatewayStatsResponse, HealthStatus, PhiTestResponse, PhiStatsResponse, PhiShieldMode, AgentPhiConfig, GatewayProvider, GatewayModel, FinOpsSummary, ToolInfo, ToolCallLog, ObservatorySummary, ObservatoryModel, ObservatoryModelMetrics } from "../types/trellis";
 
 // API functions
 export const api = {
@@ -65,6 +66,11 @@ export const api = {
     list: () => apiFetch<ToolInfo[]>("/api/tools"),
     get: (name: string) => apiFetch<ToolInfo>(`/api/tools/${name}`),
     usage: (name: string, limit: number = 50) => apiFetch<ToolCallLog[]>(`/api/tools/${name}/usage?limit=${limit}`),
+  },
+  observatory: {
+    summary: () => apiFetch<ObservatorySummary>("/api/observatory/summary"),
+    models: () => apiFetch<ObservatoryModel[]>("/api/observatory/models"),
+    modelMetrics: (modelId: string) => apiFetch<ObservatoryModelMetrics>(`/api/observatory/models/${encodeURIComponent(modelId)}/metrics`),
   },
   phi: {
     test: (text: string) => apiFetch<PhiTestResponse>("/api/phi/test", { method: "POST", body: JSON.stringify({ text }) }),

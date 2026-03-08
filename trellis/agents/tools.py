@@ -1,4 +1,4 @@
-"""Security Triage Agent tools — self-contained, no external APIs needed."""
+"""Trellis agent tools — self-contained, no external APIs needed."""
 
 import json
 from pathlib import Path
@@ -407,4 +407,225 @@ def lookup_hr_policy(category: str, keywords: list[str]) -> dict:
     return {
         "policy_reference": policy["policy_reference"],
         "standard_procedure": policy["standard_procedure"],
+    }
+
+
+# ── Revenue Cycle Tools ─────────────────────────────────────────────
+
+_RC_CATEGORY_KEYWORDS = {
+    "denial_appeal": ["denial", "denied", "appeal", "rejected", "not covered", "co-4", "co-16", "co-45", "co-97", "co-29", "co-50"],
+    "coding_review": ["coding", "cpt", "icd", "modifier", "diagnosis", "procedure code", "unbundling", "upcoding", "co-4"],
+    "billing_inquiry": ["billing", "bill", "statement", "balance", "patient balance", "charge", "invoice", "payment plan"],
+    "ar_followup": ["ar", "accounts receivable", "aging", "follow up", "unpaid", "outstanding", "claim status", "resubmit"],
+    "compliance": ["compliance", "audit", "hipaa", "fraud", "waste", "abuse", "oa-23", "overpayment", "refund", "recoupment"],
+    "prior_auth": ["prior auth", "preauthorization", "pre-auth", "authorization", "auth", "precertification"],
+    "credentialing": ["credentialing", "credential", "provider enrollment", "npi", "ptan", "taxonomy", "network"],
+    "charge_capture": ["charge capture", "missed charge", "late charge", "charge entry", "cdm", "chargemaster"],
+    "underpayment": ["underpayment", "underpaid", "short pay", "fee schedule", "co-45", "contractual", "eob"],
+    "bad_debt": ["bad debt", "write off", "collection", "charity care", "financial assistance", "indigent", "uninsured"],
+}
+
+_RC_DENIAL_CODES = {
+    "CO-4": "Procedure code inconsistent with modifier or modifier required",
+    "CO-16": "Claim/service lacks information or submission/billing error",
+    "CO-45": "Charges exceed fee schedule/maximum allowable",
+    "CO-97": "Payment adjusted — already adjudicated",
+    "PR-1": "Deductible amount",
+    "PR-2": "Coinsurance amount",
+    "CO-29": "Time limit for filing has expired",
+    "CO-50": "Non-covered service — not deemed medically necessary",
+    "OA-23": "Impact of prior payer adjudication",
+}
+
+_RC_DENIAL_RESOLUTION = {
+    "CO-4": {
+        "root_cause": "Modifier missing or incorrect on procedure code",
+        "resolution_steps": ["Review procedure and modifier pairing", "Correct modifier per CPT guidelines", "Resubmit claim with corrected modifier"],
+        "appeal_template_ref": "APPEAL-MOD-001",
+    },
+    "CO-16": {
+        "root_cause": "Missing or invalid claim information",
+        "resolution_steps": ["Identify missing fields from remittance", "Obtain missing documentation", "Correct and resubmit claim"],
+        "appeal_template_ref": "APPEAL-INFO-001",
+    },
+    "CO-45": {
+        "root_cause": "Billed amount exceeds payer fee schedule",
+        "resolution_steps": ["Verify contractual adjustment applied", "Review fee schedule for service", "If underpaid, calculate variance and appeal"],
+        "appeal_template_ref": "APPEAL-FEE-001",
+    },
+    "CO-97": {
+        "root_cause": "Claim previously adjudicated — possible duplicate or COB issue",
+        "resolution_steps": ["Check prior adjudication details", "Verify COB order", "If COB: resubmit with prior EOB attached"],
+        "appeal_template_ref": "APPEAL-DUP-001",
+    },
+    "PR-1": {
+        "root_cause": "Patient deductible applies",
+        "resolution_steps": ["Verify deductible accumulator", "Bill patient for deductible amount", "Send patient statement"],
+        "appeal_template_ref": None,
+    },
+    "PR-2": {
+        "root_cause": "Patient coinsurance applies",
+        "resolution_steps": ["Calculate coinsurance per EOB", "Bill patient for coinsurance", "Send patient statement"],
+        "appeal_template_ref": None,
+    },
+    "CO-29": {
+        "root_cause": "Claim submitted past timely filing limit",
+        "resolution_steps": ["Document original submission date proof", "Obtain proof of timely filing (clearinghouse receipt)", "Appeal with timely filing exception documentation"],
+        "appeal_template_ref": "APPEAL-TF-001",
+    },
+    "CO-50": {
+        "root_cause": "Service not deemed medically necessary by payer",
+        "resolution_steps": ["Obtain clinical documentation supporting necessity", "Request peer-to-peer review if clinical denial", "Submit appeal with medical records and clinical notes"],
+        "appeal_template_ref": "APPEAL-MED-NEC-001",
+    },
+    "OA-23": {
+        "root_cause": "Primary payer adjudication affects secondary payment",
+        "resolution_steps": ["Attach primary payer EOB to secondary claim", "Verify COB setup is correct", "Resubmit to secondary with primary EOB"],
+        "appeal_template_ref": "APPEAL-COB-001",
+    },
+}
+
+_RC_PRIORITY_AMOUNTS = {
+    "CRITICAL": 50000.0,
+    "HIGH": 10000.0,
+    "MEDIUM": 2500.0,
+}
+
+_RC_HIGH_PRIORITY_CATEGORIES = {"denial_appeal", "compliance", "prior_auth"}
+
+
+def classify_rev_cycle_case(description: str, category_hint: str | None = None) -> dict:
+    """Classify a revenue cycle case by category using keyword matching.
+
+    Returns category, subcategory, matched keywords, and detected denial codes.
+    """
+    desc_lower = description.lower()
+    scores: dict[str, int] = {}
+    matched_keywords: list[str] = []
+
+    for category, keywords in _RC_CATEGORY_KEYWORDS.items():
+        score = sum(1 for kw in keywords if kw in desc_lower)
+        if score > 0:
+            scores[category] = score
+            matched_keywords.extend(kw for kw in keywords if kw in desc_lower)
+
+    if category_hint and category_hint in _RC_CATEGORY_KEYWORDS:
+        scores[category_hint] = scores.get(category_hint, 0) + 3
+
+    if not scores:
+        best = "billing_inquiry"
+        subcategory = "general"
+    else:
+        best = max(scores, key=scores.get)
+        subcategory = best
+
+    # Detect denial codes mentioned in description
+    denial_codes = [code for code in _RC_DENIAL_CODES if code.lower() in desc_lower]
+
+    return {
+        "category": best,
+        "subcategory": subcategory,
+        "keywords": list(set(matched_keywords)),
+        "denial_codes": denial_codes,
+    }
+
+
+def analyze_denial(denial_code: str, payer: str, amount: float) -> dict:
+    """Analyze a denial code and return root cause, resolution steps, and appeal template.
+
+    Args:
+        denial_code: Standard denial reason code (e.g., "CO-4", "CO-16")
+        payer: Payer name (for context)
+        amount: Claim dollar amount
+
+    Returns:
+        root_cause, resolution_steps, appeal_template_ref, denial_description
+    """
+    code_upper = denial_code.upper()
+    description = _RC_DENIAL_CODES.get(code_upper, "Unknown denial reason code")
+    resolution = _RC_DENIAL_RESOLUTION.get(code_upper, {
+        "root_cause": "Review denial reason with payer",
+        "resolution_steps": ["Contact payer for clarification", "Review remittance advice", "Determine appeal eligibility"],
+        "appeal_template_ref": "APPEAL-GENERAL-001",
+    })
+
+    return {
+        "denial_code": code_upper,
+        "denial_description": description,
+        "payer": payer,
+        "amount": amount,
+        "root_cause": resolution["root_cause"],
+        "resolution_steps": resolution["resolution_steps"],
+        "appeal_template_ref": resolution["appeal_template_ref"],
+    }
+
+
+def assess_rev_cycle_priority(
+    category: str,
+    amount: float,
+    days_aged: int,
+    timely_filing_deadline: int,
+) -> dict:
+    """Assess revenue cycle case priority based on dollar amount, aging, and category.
+
+    Args:
+        category: Case category (e.g., "denial_appeal", "ar_followup")
+        amount: Dollar amount of claim/balance
+        days_aged: Days since claim was filed or denial received
+        timely_filing_deadline: Payer timely filing limit in days
+
+    Returns:
+        priority (CRITICAL/HIGH/MEDIUM/LOW), urgency, justification
+    """
+    reasons = []
+
+    # Amount-based priority floor
+    if amount >= _RC_PRIORITY_AMOUNTS["CRITICAL"]:
+        amount_priority = "CRITICAL"
+        reasons.append(f"High-dollar claim ${amount:,.0f}")
+    elif amount >= _RC_PRIORITY_AMOUNTS["HIGH"]:
+        amount_priority = "HIGH"
+        reasons.append(f"Significant claim ${amount:,.0f}")
+    elif amount >= _RC_PRIORITY_AMOUNTS["MEDIUM"]:
+        amount_priority = "MEDIUM"
+        reasons.append(f"Moderate claim ${amount:,.0f}")
+    else:
+        amount_priority = "LOW"
+
+    # Category-based priority floor
+    if category in _RC_HIGH_PRIORITY_CATEGORIES:
+        category_priority = "HIGH"
+        reasons.append(f"{category.replace('_', ' ').title()} requires prompt action")
+    else:
+        category_priority = "LOW"
+
+    # Aging urgency
+    if timely_filing_deadline > 0 and days_aged > 0:
+        pct_used = days_aged / timely_filing_deadline
+        if pct_used >= 1.0:
+            reasons.append("Timely filing deadline exceeded")
+            aging_priority = "CRITICAL"
+        elif pct_used >= 0.80:
+            remaining = timely_filing_deadline - days_aged
+            reasons.append(f"Only {remaining} days left in filing window")
+            aging_priority = "HIGH"
+        elif days_aged > 90:
+            reasons.append(f"Aged {days_aged} days")
+            aging_priority = "MEDIUM"
+        else:
+            aging_priority = "LOW"
+    else:
+        aging_priority = "LOW"
+
+    # Take highest priority across all dimensions
+    priority_rank = {"CRITICAL": 4, "HIGH": 3, "MEDIUM": 2, "LOW": 1}
+    final = max([amount_priority, category_priority, aging_priority], key=lambda p: priority_rank[p])
+
+    # Urgency label
+    urgency_map = {"CRITICAL": "immediate", "HIGH": "high", "MEDIUM": "standard", "LOW": "routine"}
+
+    return {
+        "priority": final,
+        "urgency": urgency_map[final],
+        "justification": " | ".join(reasons) if reasons else "Standard rev cycle case",
     }

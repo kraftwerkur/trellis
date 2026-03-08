@@ -37,6 +37,7 @@ async def check_one_agent(agent) -> dict:
 
     # Native agents have no health endpoint — always healthy
     if agent.agent_type == "native":
+        agent.status = "healthy"
         return {
             "agent_id": agent_id,
             "status": "healthy",
@@ -45,14 +46,16 @@ async def check_one_agent(agent) -> dict:
             "note": "native agent, no health endpoint",
         }
 
-    # Agents without health endpoints
+    # Function agents without health endpoints — in-process, always healthy
     if not agent.health_endpoint:
+        if agent.agent_type == "function":
+            agent.status = "healthy"
         return {
             "agent_id": agent_id,
-            "status": "unknown",
+            "status": "healthy" if agent.agent_type == "function" else "unknown",
             "latency_ms": None,
             "baseline_ms": None,
-            "note": "no health_endpoint configured",
+            "note": "in-process agent" if agent.agent_type == "function" else "no health_endpoint configured",
         }
 
     # HTTP health check

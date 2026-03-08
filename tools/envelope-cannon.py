@@ -564,7 +564,7 @@ async def fire_envelope(
     url = f"{target.rstrip('/')}/api/envelopes"
     t0 = time.monotonic()
     try:
-        resp = await client.post(url, json=envelope, timeout=15.0)
+        resp = await client.post(url, json=envelope, timeout=60.0)
         latency_ms = int((time.monotonic() - t0) * 1000)
         resp.raise_for_status()
         print(f"  [{index}/{total}] {label} → {target_hint} ({priority}, {latency_ms}ms)")

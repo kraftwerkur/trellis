@@ -54,8 +54,7 @@ curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "owner": "Lisa Chen, Director Revenue Cycle",
   "department": "Revenue Cycle",
   "framework": "trellis-native",
-  "agent_type": "function",
-  "function_ref": "trellis.functions.echo",
+  "agent_type": "native",
   "tools": ["epic-claims", "payer-portal", "appeal-generator", "coding-lookup"],
   "channels": ["api"],
   "maturity": "shadow",
@@ -104,6 +103,20 @@ echo "  → Audit Compactor Agent"
 curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "agent_id": "platform-audit-compactor",
   "name": "Audit Compactor Agent",
+  "owner": "Platform",
+  "department": "platform",
+  "framework": "trellis-native",
+  "agent_type": "native",
+  "tools": [],
+  "channels": ["api"],
+  "maturity": "autonomous",
+  "cost_mode": "managed"
+}' -o /dev/null
+
+echo "  → rule-optimizer agent"
+curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
+  "agent_id": "rule-optimizer",
+  "name": "Rule Optimizer Agent",
   "owner": "Platform",
   "department": "platform",
   "framework": "trellis-native",
@@ -189,6 +202,15 @@ curl -sf -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
   "priority": 75,
   "conditions": {"routing_hints.category": "health-check"},
   "actions": {"route_to": "health-auditor"},
+  "active": true
+}' -o /dev/null
+
+echo "  → Rule optimization requests → Rule Optimizer"
+curl -sf -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
+  "name": "Rule optimization requests → Rule Optimizer",
+  "priority": 75,
+  "conditions": {"routing_hints.category": "rule-optimization"},
+  "actions": {"route_to": "rule-optimizer"},
   "active": true
 }' -o /dev/null
 

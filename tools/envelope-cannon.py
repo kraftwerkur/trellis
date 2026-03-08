@@ -561,7 +561,7 @@ async def fire_envelope(
         print(f"  [DRY RUN] [{index}/{total}] {label} → {target_hint} ({priority})")
         return {"success": True, "label": label, "priority": priority, "latency_ms": 0}
 
-    url = f"{target.rstrip('/')}/api/events"
+    url = f"{target.rstrip('/')}/api/envelopes"
     t0 = time.monotonic()
     try:
         resp = await client.post(url, json=envelope, timeout=15.0)

@@ -1119,9 +1119,11 @@ The dashboard gets a **Platform Health** tab showing:
 
 ## Phase 13: Intelligent Routing — Agent-Declared Intake + Scored Matching
 
-**Problem:** Current routing is rigid pattern matching — static rules with hardcoded conditions. Doesn't scale past 20+ agents. Adding a new agent requires manually creating routing rules. Classification Engine infers hints but feeds them into dumb rules.
+**Status:** Full design complete — see [`docs/INTELLIGENT-ROUTING-DESIGN.md`](docs/INTELLIGENT-ROUTING-DESIGN.md)
 
-**Vision:** Agents declare what they handle. The Classification Engine scores incoming envelopes against all agent intake declarations simultaneously. Best match wins. Rules become policy overrides, not primary routing.
+**Problem:** Current routing is rigid pattern matching — static rules with hardcoded conditions. Doesn't scale past 20+ agents. Adding a new agent requires manually creating routing rules. Classification Engine infers hints but feeds them into dumb rules. See §2 of the design doc for concrete Health First examples.
+
+**Vision:** Agents declare what they handle. The Classification Engine's output feeds a multi-dimensional scoring engine that scores every envelope against every agent simultaneously. Best match wins. Rules evolve into a small policy layer — governance constraints, not routing logic. A daily feedback loop improves routing accuracy over time.
 
 ### Architecture Change
 
@@ -1132,74 +1134,46 @@ Envelope → Classification Engine (tag) → Rules Engine (pattern match) → Ag
 
 **New flow:**
 ```
-Envelope → Classification Engine (enrich) → Agent Scorer (score all agents) → Policy Layer (enforce constraints) → Agent
+Envelope → Classification Engine (enrich)
+         → Pre-Score Policy Filter (PHI gate, maturity gate, scope)
+         → Agent Scorer (5 dimensions × historical weight × load factor)
+         → Post-Score Policy Enforcement (mandatory CC, regulatory overrides)
+         → Dispatcher → Agent(s)
+         → Feedback Collector → Daily Weight Updater
 ```
 
-### Stories
+### Key Design Decisions
 
-#### 13.1 — Agent Intake Declarations
-- Each agent declares its intake criteria in its registration:
-  ```json
-  {
-    "agent_id": "security-triage",
-    "intake": {
-      "categories": ["security", "vulnerability", "compliance"],
-      "source_types": ["nvd", "cisa_kev", "nist", "crowdstrike"],
-      "keywords": ["cve", "exploit", "breach", "patch", "firewall"],
-      "systems": ["CrowdStrike", "Sentinel", "Defender"],
-      "priority_range": ["high", "critical"],
-      "description": "Handles security vulnerabilities, threat intelligence, and compliance incidents affecting Health First infrastructure"
-    }
-  }
-  ```
-- Intake declaration stored in Agent model
-- Backward compatible — agents without intake declarations fall back to rules-based routing
+- **Scoring dimensions:** Category affinity (30%), Source type (25%), Keyword overlap/Jaccard (20%), System match (15%), Priority alignment (10%) — weighted, configurable.
+- **Hierarchical categories:** Dot-notation (`security.vulnerability.cvss_critical`). Parent declarations score 0.8 for child envelopes, child declarations score 0.4 for parent envelopes.
+- **Server breach problem:** If top 2 agents both score ≥0.55 and differ by ≤0.15, and their categories appear in the co-dispatch map (e.g., security+incident), both receive envelope as co-primaries.
+- **Historical multiplier:** Per-agent, per-category success rate → multiplier [0.70, 1.30]. α=0.15 EMA, updated daily. Cold start = 1.0 (neutral).
+- **Load factor:** In-memory in-flight count. Penalizes at >50% capacity, eliminates at 100%.
+- **Policies:** VETO, REQUIRE, REDIRECT, CC types. PHI Isolation, Shadow Gate, Anti-Circular, Compliance CC, After-Hours Redirect are the core healthcare policies.
+- **Migration:** shadow → hybrid → scored modes via single API call. Rollback is immediate.
 
-#### 13.2 — Agent Scoring Engine
-- Replace pattern-match routing with multi-dimensional scoring:
-  - **Category match** (0-30 points): envelope category vs agent categories
-  - **Source type match** (0-20 points): exact source type match
-  - **Keyword overlap** (0-20 points): payload keywords vs agent keywords (Jaccard similarity)
-  - **System match** (0-15 points): affected systems vs agent declared systems
-  - **Priority alignment** (0-10 points): envelope priority within agent's preferred range
-  - **Semantic similarity** (0-5 points): embedding distance between envelope description and agent description (optional, LLM-enhanced)
-- Score all agents in parallel, return ranked list
-- Configurable threshold — minimum score to route (prevents bad matches)
-- Tie-breaking by agent priority/load
+### Implementation Stories (11 total, ~8-10 days)
 
-#### 13.3 — Policy Layer (Rules Evolution)
-- Rules transform from routing decisions to policy constraints:
-  - **Blocklist:** "Never send PHI-flagged envelopes to external agents"
-  - **Mandatory CC:** "Always copy compliance team on regulatory items"
-  - **Override:** "All Epic-related issues go to clinical-support regardless of score"
-  - **Fan-out policy:** "Onboarding events always go to BOTH HR and IT"
-  - **Rate limiting:** "Max 10 envelopes/minute to any single agent"
-- Policies evaluated AFTER scoring, can veto or modify the scored result
-- Much simpler to maintain than routing rules — fewer policies needed
+| Story | What | Days |
+|-------|------|------|
+| 13.1 | Agent intake schema + storage | 0.5 |
+| 13.2 | Overlap validation | 0.5 |
+| 13.3 | Scoring engine (core) | 1.5 |
+| 13.4 | Policy layer | 1.0 |
+| 13.5 | Routing decision + score logging | 0.5 |
+| 13.6 | Feedback collection | 0.5 |
+| 13.7 | Daily weight updater | 0.5 |
+| 13.8 | Agent load tracking | 0.5 |
+| 13.9 | Routing mode API + shadow report | 0.5 |
+| 13.10 | Intake declarations for existing agents | 0.5 |
+| 13.11 | Dashboard: Routing Intelligence tab | 1.0 |
 
-#### 13.4 — Self-Learning Feedback Loop
-- Track which agent actually resolved each envelope successfully
-- Feed resolution outcomes back into scoring weights
-- Agents that consistently resolve certain envelope types get higher scores for those types over time
-- Misrouted envelopes (agent returns "not my domain") reduce that agent's score for similar envelopes
-- Weekly optimization report from Rule Optimizer with scoring drift analysis
-
-#### 13.5 — Migration Path
-- Phase 1: Add intake declarations to all existing agents (backward compatible)
-- Phase 2: Run scored routing in shadow mode alongside rules — log what scored routing WOULD have done vs what rules DID
-- Phase 3: Switch primary routing to scored, rules become policy layer
-- Phase 4: Enable self-learning feedback loop
-- Zero downtime migration — both systems run in parallel during transition
+Full acceptance criteria, test requirements, and file specifications in the design doc.
 
 ### Success Criteria
-- New agent registration requires NO manual rule creation — just declare intake
-- 95%+ routing accuracy from scoring alone (measured against human-verified test set)
-- Policy layer has <10 rules total (vs potentially hundreds of routing rules)
-- Self-learning improves routing accuracy by 5%+ over first month
-- Cold-start problem solved — new agents with good intake declarations route correctly from day one
-
-### Estimate
-- 2-3 days for Stories 13.1-13.3 (core architecture)
-- 1 day for Story 13.4 (feedback loop)
-- 1 day for Story 13.5 (migration + shadow mode)
-- Total: ~1 week
+- New agent registration requires NO manual rule creation — declare intake, done
+- ≥92% routing accuracy (measured against human-verified test set)
+- Policy layer ≤10 active policies (vs. potentially hundreds of routing rules)
+- Self-learning improves routing accuracy measurably over first month
+- Cold start solved — new agents route correctly from day one with good intake declaration
+- Shadow mode agreement rate ≥90% before switching to scored routing

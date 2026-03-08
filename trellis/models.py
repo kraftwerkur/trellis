@@ -133,6 +133,24 @@ class AuditSummary(Base):
     )
 
 
+class ToolCallLog(Base):
+    __tablename__ = "tool_calls"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    trace_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    agent_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    tool_name: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    tool_category: Mapped[str | None] = mapped_column(String, nullable=True)
+    params: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    result_summary: Mapped[str | None] = mapped_column(String, nullable=True)
+    status: Mapped[str] = mapped_column(String, nullable=False)  # "success", "denied", "error"
+    latency_ms: Mapped[float | None] = mapped_column(Float, nullable=True)
+    error: Mapped[str | None] = mapped_column(String, nullable=True)
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True
+    )
+
+
 class Rule(Base):
     __tablename__ = "rules"
 

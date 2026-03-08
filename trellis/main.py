@@ -181,7 +181,7 @@ async def mock_agent_manifest():
 from trellis.api import (
     agents_router, audit_router, costs_router, event_router,
     finops_router, gateway_mgmt_router, health_router, keys_router, rules_router,
-    phi_router,
+    phi_router, tools_router,
 )
 from trellis.gateway import router as gateway_llm_router
 
@@ -196,6 +196,7 @@ api.include_router(audit_router)
 api.include_router(finops_router)
 api.include_router(gateway_mgmt_router)
 api.include_router(phi_router)
+api.include_router(tools_router)
 
 app.include_router(api)
 app.include_router(gateway_llm_router)

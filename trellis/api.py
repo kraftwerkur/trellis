@@ -818,6 +818,73 @@ async def update_agent_phi_mode(agent_id: str, body: PhiModeUpdate, db: AsyncSes
     return agent
 
 
+# ── Tool Registry API ──────────────────────────────────────────────────────
+
+tools_router = APIRouter(prefix="/tools", tags=["tools"])
+
+
+@tools_router.get("")
+async def list_tools():
+    """List all registered tools with metadata and usage stats."""
+    from trellis.tool_registry import tool_registry
+    return tool_registry.list_tools()
+
+
+@tools_router.get("/{tool_name}")
+async def get_tool(tool_name: str):
+    """Get details for a specific tool."""
+    from trellis.tool_registry import tool_registry, ToolNotFound
+    try:
+        meta = tool_registry.get(tool_name)
+    except ToolNotFound:
+        raise HTTPException(404, f"Tool '{tool_name}' not found")
+    return {
+        "name": meta.name,
+        "category": meta.category,
+        "description": meta.description,
+        "requires_permissions": meta.requires_permissions,
+        "call_count": meta.call_count,
+        "error_count": meta.error_count,
+        "avg_latency_ms": round(meta.total_latency_ms / meta.call_count, 1) if meta.call_count else 0.0,
+    }
+
+
+@tools_router.get("/{tool_name}/usage")
+async def get_tool_usage(
+    tool_name: str,
+    limit: int = Query(50, ge=1, le=500),
+    db: AsyncSession = Depends(get_db),
+):
+    """Get call history for a specific tool."""
+    from trellis.tool_registry import tool_registry, ToolNotFound
+    from trellis.models import ToolCallLog
+    try:
+        tool_registry.get(tool_name)
+    except ToolNotFound:
+        raise HTTPException(404, f"Tool '{tool_name}' not found")
+    result = await db.execute(
+        select(ToolCallLog)
+        .where(ToolCallLog.tool_name == tool_name)
+        .order_by(ToolCallLog.timestamp.desc())
+        .limit(limit)
+    )
+    rows = result.scalars().all()
+    return [
+        {
+            "id": r.id,
+            "trace_id": r.trace_id,
+            "agent_id": r.agent_id,
+            "params": r.params,
+            "result_summary": r.result_summary,
+            "status": r.status,
+            "latency_ms": r.latency_ms,
+            "error": r.error,
+            "timestamp": r.timestamp.isoformat() if r.timestamp else None,
+        }
+        for r in rows
+    ]
+
+
 async def seed_default_routes(db: AsyncSession) -> None:
     count = (await db.execute(select(func.count(ModelRoute.id)))).scalar()
     if count and count > 0:

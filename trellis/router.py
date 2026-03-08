@@ -382,6 +382,11 @@ async def _log_gateway_cost(dispatch_result: dict, db: AsyncSession) -> None:
 
 
 async def route_envelope(envelope: Envelope, db: AsyncSession) -> dict:
+    # ── Classification Engine (platform middleware — always runs) ──────────
+    from trellis.classification import classify_envelope
+    envelope = classify_envelope(envelope)
+    # ──────────────────────────────────────────────────────────────────────
+
     await emit_audit(db, "envelope_received", trace_id=envelope.metadata.trace_id,
         envelope_id=envelope.envelope_id,
         details={"source_type": envelope.source_type, "source_id": envelope.source_id})

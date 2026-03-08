@@ -691,6 +691,11 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Verbose NVD fetch progress",
     )
+    p.add_argument(
+        "--raw",
+        action="store_true",
+        help="Strip routing_hints before sending — tests that the Classification Engine infers routing correctly",
+    )
     return p
 
 
@@ -747,6 +752,11 @@ async def main() -> None:
     # Fire!
     print(f"Firing {len(envelopes)} envelopes...")
     t0 = time.monotonic()
+    if args.raw:
+        print("   [RAW MODE — stripping routing_hints to test Classification Engine]")
+        for env in envelopes:
+            env.pop("routing_hints", None)
+
     results = await fire_batch(envelopes, args.target, args.rate, args.dry_run)
     elapsed = time.monotonic() - t0
 

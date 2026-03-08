@@ -127,3 +127,26 @@ async def compactor_loop(interval: float | None = None) -> None:
         except Exception as e:
             logger.error(f"Compactor loop error: {e}")
         await asyncio.sleep(interval)
+
+
+class AuditCompactorAgent:
+    """Native agent wrapper for on-demand compaction reports."""
+
+    def __init__(self, agent):
+        self.agent = agent
+
+    async def process(self, envelope) -> dict:
+        """Run a dry-run compaction report when triggered via envelope."""
+        from trellis.database import async_session
+
+        async with async_session() as db:
+            stats = await run_compaction(db)
+
+        return {
+            "status": "completed",
+            "result": {
+                "text": f"Audit Compaction (dry run): {stats.get('events_archived', 0)} events would be archived, "
+                        f"{stats.get('summaries_created', 0)} summaries would be created.",
+                "data": {"compaction": stats},
+            },
+        }

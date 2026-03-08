@@ -15,6 +15,7 @@ export default function AgentsPage() {
   const { data: agents, loading } = useStablePolling<Agent[]>(fetchAgents, 10000);
   const { data: costs } = useStablePolling<CostSummary[]>(fetchCosts, 15000);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [search, setSearch] = useState("");
 
   const costMap = useMemo(() => {
     const m: Record<string, CostSummary> = {};
@@ -22,11 +23,27 @@ export default function AgentsPage() {
     return m;
   }, [costs]);
 
+  const filteredAgents = useMemo(() => {
+    if (!agents) return [];
+    if (!search.trim()) return agents;
+    const q = search.toLowerCase();
+    return agents.filter(a => a.name.toLowerCase().includes(q) || a.agent_id.toLowerCase().includes(q));
+  }, [agents, search]);
+
   return (
     <div className="card-dark overflow-hidden">
-      <div className="px-4 py-2.5 border-b border-white/[0.06]">
-        <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Agent Registry</span>
-        {agents && <span className="text-xs text-zinc-600 ml-2">({agents.length})</span>}
+      <div className="px-4 py-2.5 border-b border-white/[0.06] flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Agent Registry</span>
+          {agents && <span className="text-xs text-zinc-600">({filteredAgents.length}{search ? `/${agents.length}` : ""})</span>}
+        </div>
+        <input
+          type="text"
+          placeholder="Filter agents…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="bg-white/[0.04] border border-white/[0.06] rounded-md px-3 py-1 text-xs text-zinc-300 placeholder-zinc-600 outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/20 transition-colors w-48"
+        />
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -50,10 +67,10 @@ export default function AgentsPage() {
                   ))}
                 </tr>
               ))
-            ) : !agents?.length ? (
-              <tr><td colSpan={7} className="text-center text-zinc-600 py-8">No agents registered</td></tr>
+            ) : !filteredAgents.length ? (
+              <tr><td colSpan={7} className="text-center text-zinc-600 py-8">{agents?.length ? "No agents match filter" : "No agents registered"}</td></tr>
             ) : (
-              agents.map(a => {
+              filteredAgents.map(a => {
                 const ok = a.status === "healthy" || a.status === "active";
                 const isExpanded = expanded === a.agent_id;
                 return (
@@ -85,7 +102,12 @@ function AgentRow({ agent: a, ok, isExpanded, cost, onToggle }: {
     <>
       <tr className="table-row-hover cursor-pointer" onClick={onToggle}>
         <td className="px-3 py-2">
-          <span className={`status-dot ${ok ? "status-dot-online" : "status-dot-unhealthy"}`} />
+          <span className={`status-dot ${
+            a.status === "healthy" || a.status === "active" ? "status-dot-healthy" :
+            a.status === "degraded" || a.status === "warning" ? "status-dot-degraded" :
+            a.status === "error" || a.status === "unhealthy" || a.status === "offline" ? "status-dot-unhealthy" :
+            "bg-zinc-500"
+          }`} style={a.status !== "healthy" && a.status !== "active" && a.status !== "degraded" && a.status !== "warning" && a.status !== "error" && a.status !== "unhealthy" && a.status !== "offline" ? { animation: "none", color: "#71717a" } : undefined} />
         </td>
         <td className="px-3 py-2 text-zinc-200 font-medium">{a.name}</td>
         <td className="px-3 py-2 font-data text-xs text-zinc-500">{a.agent_id.slice(0, 12)}…</td>

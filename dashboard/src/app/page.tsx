@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import {
   AreaChart as RechartsAreaChart, Area, ResponsiveContainer, Tooltip, XAxis, YAxis,
-  PieChart, Pie, Cell,
+  PieChart, Pie, Cell, CartesianGrid,
 } from "recharts";
 import {
   Card, CardContent, CardHeader, CardTitle,
@@ -289,8 +289,9 @@ function EventsOverTimeChart({ events }: { events: AuditEvent[] }) {
 
   return (
     <Card className="border-white/[0.06] bg-[#0d0e14] py-0 gap-0">
-      <CardHeader className="px-4 py-2.5 border-b border-white/[0.06]">
-        <CardTitle className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Events Over Time (24h)</CardTitle>
+      <CardHeader className="flex-row items-center justify-between px-4 py-2.5 border-b border-white/[0.06]">
+        <CardTitle className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Events Over Time</CardTitle>
+        <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 font-medium">Last 24h</span>
       </CardHeader>
       <CardContent className="p-4">
         {chartData.length === 0 ? (
@@ -300,13 +301,20 @@ function EventsOverTimeChart({ events }: { events: AuditEvent[] }) {
             <RechartsAreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="eventsGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.3} />
+                  <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.4} />
+                  <stop offset="50%" stopColor="#8b5cf6" stopOpacity={0.1} />
                   <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0} />
                 </linearGradient>
               </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
               <XAxis dataKey="hour" tick={{ fill: "#52525b", fontSize: 10 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: "#52525b", fontSize: 10 }} axisLine={false} tickLine={false} width={28} />
-              <Tooltip contentStyle={{ background: "#18181b", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, fontSize: 12 }} />
+              <Tooltip
+                contentStyle={{ background: "#18181b", border: "1px solid rgba(139,92,246,0.3)", borderRadius: 8, fontSize: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.5)" }}
+                labelStyle={{ color: "#a1a1aa", fontSize: 10, marginBottom: 4 }}
+                itemStyle={{ color: "#c084fc" }}
+                cursor={{ stroke: "rgba(139,92,246,0.2)", strokeWidth: 1 }}
+              />
               <Area type="monotone" dataKey="Events" stroke="#8b5cf6" strokeWidth={2} fill="url(#eventsGrad)" dot={false} isAnimationActive={false} />
             </RechartsAreaChart>
           </ResponsiveContainer>
@@ -460,6 +468,28 @@ export default function OverviewPage() {
           Connecting to Trellis API…
         </div>
       )}
+
+      {/* System Health Bar */}
+      <div className="health-bar px-4 py-3 flex items-center gap-6 flex-wrap">
+        <div className="flex items-center gap-2">
+          <HeartPulse className="w-4 h-4 text-cyan-400" />
+          <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-medium">System Health</span>
+        </div>
+        <div className="flex items-center gap-6 flex-wrap flex-1">
+          {[
+            { label: "Uptime", value: health?.status === "ok" || health?.status === "healthy" ? "Online" : "Offline", color: health?.status === "ok" || health?.status === "healthy" ? "text-emerald-400" : "text-red-400", dot: health?.status === "ok" || health?.status === "healthy" ? "bg-emerald-500" : "bg-red-500" },
+            { label: "Events Processed", value: String(events.length), color: "text-cyan-400", dot: events.length > 0 ? "bg-emerald-500" : "bg-zinc-500" },
+            { label: "Active Agents", value: totalAgents > 0 ? `${onlineCount}/${totalAgents}` : "—", color: onlineCount === totalAgents && totalAgents > 0 ? "text-emerald-400" : totalAgents > 0 ? "text-amber-400" : "text-zinc-500", dot: onlineCount === totalAgents && totalAgents > 0 ? "bg-emerald-500" : totalAgents > 0 ? "bg-amber-500" : "bg-zinc-500" },
+            { label: "Rule Match Rate", value: events.length > 0 ? `${ruleMatchRate}%` : "—", color: ruleMatchRate >= 50 ? "text-emerald-400" : ruleMatchRate > 0 ? "text-amber-400" : "text-zinc-500", dot: ruleMatchRate >= 50 ? "bg-emerald-500" : ruleMatchRate > 0 ? "bg-amber-500" : "bg-zinc-500" },
+          ].map(m => (
+            <div key={m.label} className="flex items-center gap-2">
+              <span className={`w-2 h-2 rounded-full ${m.dot}`} />
+              <span className="text-[10px] text-zinc-500 uppercase tracking-wider">{m.label}</span>
+              <span className={`text-xs font-data font-semibold ${m.color}`}>{m.value}</span>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">

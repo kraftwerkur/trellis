@@ -207,6 +207,30 @@ body {
 .event-error { background: rgba(239,68,68,0.15); color: #f87171; border: 1px solid rgba(239,68,68,0.3); }
 .event-default { background: rgba(113,113,122,0.15); color: #a1a1aa; border: 1px solid rgba(113,113,122,0.3); }
 
+/* Heartbeat animation */
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  14% { transform: scale(1.3); opacity: 1; }
+  28% { transform: scale(1); opacity: 0.6; }
+  42% { transform: scale(1.2); opacity: 0.9; }
+  56% { transform: scale(1); opacity: 0.6; }
+}
+.heartbeat-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  display: inline-block;
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+/* System Health Bar */
+.health-bar {
+  background: linear-gradient(135deg, rgba(6,182,212,0.06), rgba(16,185,129,0.04));
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 0.5rem;
+}
+
 /* Flow arrow for rules */
 .flow-arrow {
   display: flex;

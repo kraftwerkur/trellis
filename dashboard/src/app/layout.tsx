@@ -64,6 +64,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               {children}
             </ErrorBoundary>
           </div>
+          <footer className="flex items-center justify-center gap-2 py-4 text-[10px] text-zinc-600 uppercase tracking-widest">
+            <span className="heartbeat-dot" />
+            <span>Trellis v0.1.0 • Health First</span>
+          </footer>
         </main>
       </body>
     </html>

@@ -1,12 +1,16 @@
 """Native agent dispatch for Trellis."""
 
+from trellis.agents.audit_compactor import AuditCompactorAgent
 from trellis.agents.health_auditor import HealthAuditorAgent
+from trellis.agents.it_help import ITHelpAgent
 from trellis.agents.security_triage import SecurityTriageAgent
 
 # Registry of native agent classes by agent_id
 _NATIVE_AGENTS = {
     "security-triage": SecurityTriageAgent,
     "health-auditor": HealthAuditorAgent,
+    "audit-compactor": AuditCompactorAgent,
+    "it-help": ITHelpAgent,
 }
 
 

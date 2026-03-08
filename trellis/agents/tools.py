@@ -163,3 +163,100 @@ def calculate_risk_score(
         },
         "remediation_timeline": timelines[priority],
     }
+
+
+# ── IT Help Desk Tools ──────────────────────────────────────────────
+
+_CATEGORY_KEYWORDS = {
+    "network": ["vpn", "wifi", "network", "connectivity", "dns", "dhcp", "firewall", "arista", "cisco", "anyconnect", "internet"],
+    "application": ["epic", "peoplesoft", "ukg", "8x8", "sailpoint", "app", "application", "software", "login", "access", "error", "crash"],
+    "endpoint": ["printer", "laptop", "desktop", "monitor", "keyboard", "mouse", "docking", "hardware", "pc", "workstation"],
+    "access": ["password", "account", "locked", "mfa", "reset", "permissions", "role", "unlock", "credentials", "sso"],
+    "infrastructure": ["server", "storage", "nutanix", "azure", "vm", "virtual", "backup", "disk", "cpu", "memory", "outage"],
+}
+
+_KNOWN_RESOLUTIONS = {
+    "password_reset": "Direct to self-service portal at password.hf.org, or IAM team for locked accounts",
+    "vpn_connectivity": "Check Cisco AnyConnect version, clear DNS cache, verify MFA token",
+    "printer_issues": "Restart print spooler, check queue, verify network path",
+    "epic_access": "Submit access request via ServiceNow, requires manager approval",
+    "email_8x8": "Check 8x8 app version, clear cache, verify network connectivity",
+    "account_lockout": "Check AD lockout status, verify no brute-force, unlock via IAM",
+    "app_error": "Collect screenshots, check application logs, restart application",
+}
+
+_RESOLUTION_PATTERNS = {
+    "password": "password_reset", "reset": "password_reset", "locked out": "account_lockout",
+    "lockout": "account_lockout", "vpn": "vpn_connectivity", "anyconnect": "vpn_connectivity",
+    "printer": "printer_issues", "print": "printer_issues", "epic": "epic_access",
+    "8x8": "email_8x8", "phone": "email_8x8",
+}
+
+_TEAM_MAP = {
+    "network": "Network Ops",
+    "application": "App Support",
+    "endpoint": "Desktop Support",
+    "access": "IAM",
+    "infrastructure": "Infrastructure",
+}
+
+
+def classify_ticket(description: str, category_hint: str | None = None) -> dict:
+    """Classify an IT ticket by category based on keyword matching."""
+    desc_lower = description.lower()
+    scores: dict[str, int] = {}
+    matched_keywords: list[str] = []
+
+    for category, keywords in _CATEGORY_KEYWORDS.items():
+        score = sum(1 for kw in keywords if kw in desc_lower)
+        if score > 0:
+            scores[category] = score
+            matched_keywords.extend(kw for kw in keywords if kw in desc_lower)
+
+    if category_hint and category_hint in _CATEGORY_KEYWORDS:
+        scores[category_hint] = scores.get(category_hint, 0) + 3
+
+    if not scores:
+        return {"category": "application", "subcategory": "general", "keywords": []}
+
+    best = max(scores, key=scores.get)
+    # Determine subcategory from matched keywords
+    subcategory = "general"
+    for kw in matched_keywords:
+        if kw in _RESOLUTION_PATTERNS:
+            subcategory = _RESOLUTION_PATTERNS[kw]
+            break
+
+    return {"category": best, "subcategory": subcategory, "keywords": list(set(matched_keywords))}
+
+
+def lookup_known_resolution(category: str, keywords: list[str]) -> str | None:
+    """Look up a known resolution for common IT issues."""
+    for kw in keywords:
+        pattern_key = _RESOLUTION_PATTERNS.get(kw)
+        if pattern_key and pattern_key in _KNOWN_RESOLUTIONS:
+            return _KNOWN_RESOLUTIONS[pattern_key]
+    return None
+
+
+def assess_priority(severity: str | None, affected_users: int = 1, system_criticality: str | None = None) -> dict:
+    """Assess ticket priority based on impact and urgency."""
+    severity = (severity or "low").lower()
+    sev_score = {"critical": 4, "high": 3, "medium": 2, "low": 1}.get(severity, 1)
+    crit_score = {"tier_1": 4, "tier_2": 3, "tier_3": 2}.get(system_criticality or "", 1)
+    user_score = 4 if affected_users > 100 else 3 if affected_users > 10 else 2 if affected_users > 1 else 1
+
+    composite = (sev_score * 2 + crit_score * 2 + user_score) / 5
+    if composite >= 3.5:
+        priority = "CRITICAL"
+    elif composite >= 2.5:
+        priority = "HIGH"
+    elif composite >= 1.5:
+        priority = "MEDIUM"
+    else:
+        priority = "LOW"
+
+    return {
+        "priority": priority,
+        "justification": f"Severity={severity}, affected_users={affected_users}, system_criticality={system_criticality or 'unknown'}",
+    }

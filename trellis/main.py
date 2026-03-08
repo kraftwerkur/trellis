@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+import os
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 
@@ -81,6 +82,19 @@ async def lifespan(app: FastAPI):
     async with async_session() as db:
         await seed_default_routes(db)
 
+    # Warn if management/ingestion API keys are not configured
+    _log = logging.getLogger("trellis")
+    if not os.environ.get("TRELLIS_MANAGEMENT_API_KEY"):
+        _log.warning(
+            "TRELLIS_MANAGEMENT_API_KEY is not set — management API is unprotected (dev mode). "
+            "Set this env var in production!"
+        )
+    if not os.environ.get("TRELLIS_INGESTION_API_KEY"):
+        _log.warning(
+            "TRELLIS_INGESTION_API_KEY is not set — ingestion API is unprotected (dev mode). "
+            "Set this env var in production!"
+        )
+
     _hc_start()
     task = asyncio.create_task(health_check_loop(interval=60.0))
 
@@ -110,9 +124,16 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+_cors_env = os.environ.get("TRELLIS_CORS_ORIGINS", "")
+_cors_origins = (
+    [o.strip() for o in _cors_env.split(",") if o.strip()]
+    if _cors_env
+    else ["http://localhost:8100", "http://localhost:3000"]
+)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], allow_credentials=True,
+    allow_origins=_cors_origins, allow_credentials=True,
     allow_methods=["*"], allow_headers=["*"],
 )
 

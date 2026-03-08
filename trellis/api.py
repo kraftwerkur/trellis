@@ -4,6 +4,7 @@ Consolidates: api/agents, api/audit, api/costs, api/finops, api/gateway,
 api/health, api/keys, api/router, api/rules.
 """
 
+import os
 import secrets
 from datetime import datetime, timedelta, timezone
 
@@ -40,6 +41,32 @@ from trellis.schemas import (
 
 logger = logging.getLogger("trellis.api")
 
+
+# ── API Key Auth ───────────────────────────────────────────────────────────
+
+async def require_management_auth(request: Request):
+    """Dependency: require management API key if TRELLIS_MANAGEMENT_API_KEY is set."""
+    key = os.environ.get("TRELLIS_MANAGEMENT_API_KEY")
+    if not key:
+        return  # dev mode — no auth required
+    auth = request.headers.get("authorization", "")
+    api_key = request.headers.get("x-api-key", "")
+    if auth == f"Bearer {key}" or api_key == key:
+        return
+    raise HTTPException(status_code=401, detail="Invalid or missing management API key")
+
+
+async def require_ingestion_auth(request: Request):
+    """Dependency: require ingestion API key if TRELLIS_INGESTION_API_KEY is set."""
+    key = os.environ.get("TRELLIS_INGESTION_API_KEY")
+    if not key:
+        return  # dev mode — no auth required
+    auth = request.headers.get("authorization", "")
+    api_key = request.headers.get("x-api-key", "")
+    if auth == f"Bearer {key}" or api_key == key:
+        return
+    raise HTTPException(status_code=401, detail="Invalid or missing ingestion API key")
+
 # ── Health ─────────────────────────────────────────────────────────────────
 
 health_router = APIRouter()
@@ -52,7 +79,7 @@ async def health_check():
 
 # ── Agents ─────────────────────────────────────────────────────────────────
 
-agents_router = APIRouter(prefix="/agents", tags=["agents"])
+agents_router = APIRouter(prefix="/agents", tags=["agents"], dependencies=[Depends(require_management_auth)])
 
 
 def _generate_api_key() -> str:
@@ -165,7 +192,7 @@ async def sync_agent_manifest(agent_id: str, db: AsyncSession = Depends(get_db))
 
 # ── Rules ──────────────────────────────────────────────────────────────────
 
-rules_router = APIRouter(prefix="/rules", tags=["rules"])
+rules_router = APIRouter(prefix="/rules", tags=["rules"], dependencies=[Depends(require_management_auth)])
 
 
 @rules_router.get("", response_model=list[RuleRead])
@@ -244,7 +271,7 @@ async def test_rules(body: RuleTestRequest, db: AsyncSession = Depends(get_db)):
 
 # ── Envelope routing ───────────────────────────────────────────────────────
 
-event_router = APIRouter(tags=["routing"])
+event_router = APIRouter(tags=["routing"], dependencies=[Depends(require_ingestion_auth)])
 
 
 @event_router.post("/envelopes")
@@ -367,7 +394,7 @@ async def revoke_key(key_id: int, db: AsyncSession = Depends(get_db)):
 
 # ── Audit ──────────────────────────────────────────────────────────────────
 
-audit_router = APIRouter(prefix="/audit", tags=["audit"])
+audit_router = APIRouter(prefix="/audit", tags=["audit"], dependencies=[Depends(require_management_auth)])
 
 
 @audit_router.get("", response_model=list[AuditEventRead])
@@ -396,7 +423,7 @@ async def get_trace_audit(trace_id: str, db: AsyncSession = Depends(get_db)):
 
 # ── Costs ──────────────────────────────────────────────────────────────────
 
-costs_router = APIRouter(prefix="/costs", tags=["costs"])
+costs_router = APIRouter(prefix="/costs", tags=["costs"], dependencies=[Depends(require_management_auth)])
 
 
 @costs_router.get("", response_model=list[CostEventRead])
@@ -528,7 +555,7 @@ async def cost_timeseries(
 
 # ── FinOps ─────────────────────────────────────────────────────────────────
 
-finops_router = APIRouter(prefix="/finops", tags=["finops"])
+finops_router = APIRouter(prefix="/finops", tags=["finops"], dependencies=[Depends(require_management_auth)])
 
 
 @finops_router.get("/summary")
@@ -581,7 +608,7 @@ async def finops_summary(db: AsyncSession = Depends(get_db)):
 
 # ── Gateway management ────────────────────────────────────────────────────
 
-gateway_mgmt_router = APIRouter(prefix="/gateway", tags=["gateway"])
+gateway_mgmt_router = APIRouter(prefix="/gateway", tags=["gateway"], dependencies=[Depends(require_management_auth)])
 
 PROVIDER_META = {
     "ollama": {"display_name": "Ollama (Local)"}, "groq": {"display_name": "Groq"},

@@ -27,7 +27,7 @@ class Agent(Base):
     status: Mapped[str] = mapped_column(String, default="unknown")
     llm_config: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     function_ref: Mapped[str | None] = mapped_column(String, nullable=True)
-    phi_shield_mode: Mapped[str] = mapped_column(String, default="off")
+    phi_shield_mode: Mapped[str] = mapped_column(String, default="audit_only")
     created: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )

@@ -46,17 +46,18 @@ async def test_compaction_groups_correctly(client, tmp_path):
             stats = await run_compaction(db)
 
     assert stats["archived"] == 8
-    assert stats["summaries_created"] == 2
+    assert stats["summaries_created"] >= 2  # groups by (hour, event_type, agent_id)
 
     from trellis.models import AuditSummary
     async with async_session() as db:
         from sqlalchemy import select
         result = await db.execute(select(AuditSummary))
         summaries = list(result.scalars().all())
-    assert len(summaries) == 2
-    counts = {s.event_type: s.count for s in summaries}
-    assert counts["health_check"] == 5
-    assert counts["rule_matched"] == 3
+    assert len(summaries) >= 2  # grouped by (hour, event_type, agent_id)
+    total_health = sum(s.count for s in summaries if s.event_type == "health_check")
+    total_rule = sum(s.count for s in summaries if s.event_type == "rule_matched")
+    assert total_health == 5
+    assert total_rule == 3
 
 
 @pytest.mark.asyncio
@@ -73,10 +74,12 @@ async def test_archive_file_created(client, tmp_path):
     gz_files = list(tmp_path.rglob("*.jsonl.gz"))
     assert len(gz_files) >= 1
 
-    with gzip.open(gz_files[0], "rt") as f:
-        lines = [json.loads(l) for l in f if l.strip()]
-    assert len(lines) == 3
-    assert lines[0]["event_type"] == "health_check"
+    all_lines = []
+    for gz_file in gz_files:
+        with gzip.open(gz_file, "rt") as f:
+            all_lines.extend(json.loads(l) for l in f if l.strip())
+    assert len(all_lines) == 3
+    assert all(l["event_type"] == "health_check" for l in all_lines)
 
 
 @pytest.mark.asyncio

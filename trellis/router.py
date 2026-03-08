@@ -3,7 +3,9 @@
 Consolidates: core/rule_engine, core/event_router, core/dispatcher, core/audit.
 """
 
+import asyncio
 import logging
+import os
 import re
 import time
 from datetime import datetime, timezone
@@ -250,6 +252,32 @@ async def _dispatch_by_type(agent: Agent, envelope: Envelope):
         return "error", None, f"Unknown agent type: {agent.agent_type}"
 
 
+async def _maybe_send_email(dispatch_result: dict, rule: Rule, envelope: Envelope) -> None:
+    """Fire email outputs based on rule on_complete config or global default. Never raises."""
+    try:
+        from trellis.outputs.email import send_email_output, _extract_priority
+        priority = _extract_priority(dispatch_result) or (
+            envelope.metadata.priority if hasattr(envelope.metadata, "priority") else None
+        )
+
+        on_complete = rule.actions.get("on_complete", [])
+        if on_complete:
+            for action in on_complete:
+                if action.get("type") != "email":
+                    continue
+                conditions = action.get("conditions", {})
+                priority_filter = conditions.get("priority")
+                if priority_filter and priority not in priority_filter:
+                    continue
+                await send_email_output(dispatch_result, action)
+        elif priority == "CRITICAL":
+            default_email = os.environ.get("TRELLIS_DEFAULT_EMAIL")
+            if default_email:
+                await send_email_output(dispatch_result, {"to": default_email})
+    except Exception as e:
+        logger.warning(f"Post-dispatch email hook failed (non-fatal): {e}")
+
+
 async def _dispatch_single(envelope: Envelope, matched_rule: Rule, db: AsyncSession) -> dict:
     target_agent_id = matched_rule.actions.get("route_to")
 
@@ -305,9 +333,15 @@ async def _dispatch_single(envelope: Envelope, matched_rule: Rule, db: AsyncSess
     )
     db.add(log)
 
-    return {"status": status, "envelope_id": envelope.envelope_id,
-            "matched_rule": matched_rule.name, "target_agent": target_agent_id,
-            "result": result_data, "error": error}
+    dispatch_result = {"status": status, "envelope_id": envelope.envelope_id,
+                       "matched_rule": matched_rule.name, "target_agent": target_agent_id,
+                       "result": result_data, "error": error}
+
+    # Post-dispatch: fire email outputs if conditions match (non-blocking)
+    if status == "success" and result_data:
+        asyncio.ensure_future(_maybe_send_email(dispatch_result, matched_rule, envelope))
+
+    return dispatch_result
 
 
 async def _log_gateway_cost(dispatch_result: dict, db: AsyncSession) -> None:

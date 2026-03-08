@@ -18,7 +18,7 @@ echo ""
 echo "=== Registering Agents ==="
 
 echo "  → SAM — HR Operations Agent"
-curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "agent_id": "sam-hr",
   "name": "SAM — HR Operations Agent",
   "owner": "Jane Smith, VP Human Resources",
@@ -30,10 +30,10 @@ curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "maturity": "assisted",
   "cost_mode": "managed",
   "llm_config": {"system_prompt": "You are a helpful healthcare assistant.", "model": "meta/llama-3.3-70b-instruct", "provider": "nvidia", "temperature": 0.3, "max_tokens": 2048}
-}' -o /dev/null
+}'
 
 echo "  → IT Help Desk Agent"
-curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "agent_id": "it-help",
   "name": "IT Help Desk Agent",
   "owner": "Mike Torres, Director IT Operations",
@@ -45,10 +45,10 @@ curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "maturity": "assisted",
   "cost_mode": "managed",
   "llm_config": {"system_prompt": "You are a helpful healthcare assistant.", "model": "meta/llama-3.3-70b-instruct", "provider": "nvidia", "temperature": 0.4, "max_tokens": 2048}
-}' -o /dev/null
+}'
 
 echo "  → Revenue Cycle Agent"
-curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "agent_id": "rev-cycle",
   "name": "Revenue Cycle Agent",
   "owner": "Lisa Chen, Director Revenue Cycle",
@@ -60,10 +60,10 @@ curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "maturity": "shadow",
   "cost_mode": "managed",
   "llm_config": {"system_prompt": "You are a helpful healthcare assistant.", "model": "qwen/qwen3-235b-a22b", "provider": "nvidia", "temperature": 0.2, "max_tokens": 4096}
-}' -o /dev/null
+}'
 
 echo "  → Security Triage Agent"
-curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "agent_id": "security-triage",
   "name": "Security Triage Agent",
   "owner": "Kim Alkire, CISO",
@@ -81,12 +81,12 @@ curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
     "temperature": 0.1,
     "max_tokens": 4096
   }
-}' -o /dev/null
+}'
 
 echo ""
 
 echo "  → Health Auditor Agent"
-curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "agent_id": "health-auditor",
   "name": "Health Auditor Agent",
   "owner": "Platform",
@@ -97,10 +97,10 @@ curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "channels": ["api"],
   "maturity": "autonomous",
   "cost_mode": "managed"
-}' -o /dev/null
+}'
 
 echo "  → Audit Compactor Agent"
-curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "agent_id": "platform-audit-compactor",
   "name": "Audit Compactor Agent",
   "owner": "Platform",
@@ -111,10 +111,10 @@ curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "channels": ["api"],
   "maturity": "autonomous",
   "cost_mode": "managed"
-}' -o /dev/null
+}'
 
 echo "  → rule-optimizer agent"
-curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "agent_id": "rule-optimizer",
   "name": "Rule Optimizer Agent",
   "owner": "Platform",
@@ -125,10 +125,10 @@ curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "channels": ["api"],
   "maturity": "autonomous",
   "cost_mode": "managed"
-}' -o /dev/null
+}'
 
 echo "  → schema-drift-detector agent"
-curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "agent_id": "schema-drift-detector",
   "name": "Schema Drift Detector",
   "owner": "Platform",
@@ -139,10 +139,10 @@ curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "channels": ["api"],
   "maturity": "autonomous",
   "cost_mode": "managed"
-}' -o /dev/null
+}'
 
 echo "  → cost-optimizer agent"
-curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "agent_id": "cost-optimizer",
   "name": "Cost Optimizer Agent",
   "owner": "Platform",
@@ -153,7 +153,7 @@ curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "channels": ["api"],
   "maturity": "autonomous",
   "cost_mode": "managed"
-}' -o /dev/null
+}'
 
 echo ""
 
@@ -161,54 +161,54 @@ echo ""
 echo "=== Creating Routing Rules ==="
 
 echo "  → HR policy → SAM"
-curl -sf -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
   "name": "HR policy questions → SAM",
   "priority": 100,
   "conditions": {"routing_hints.department": "HR", "routing_hints.category": "policy"},
   "actions": {"route_to": "sam-hr"},
   "active": true,
   "fan_out": false
-}' -o /dev/null
+}'
 
 echo "  → IT access → IT-Help"
-curl -sf -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
   "name": "IT access & password issues → IT-Help",
   "priority": 100,
   "conditions": {"routing_hints.department": "IT", "routing_hints.category": "access"},
   "actions": {"route_to": "it-help"},
   "active": true,
   "fan_out": false
-}' -o /dev/null
+}'
 
 echo "  → Claim denials → Rev-Cycle"
-curl -sf -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
   "name": "Claim denials → Rev-Cycle",
   "priority": 100,
   "conditions": {"routing_hints.department": "Revenue Cycle", "routing_hints.category": "denial-appeal"},
   "actions": {"route_to": "rev-cycle"},
   "active": true,
   "fan_out": false
-}' -o /dev/null
+}'
 
 echo "  → Critical IT incidents (escalated)"
-curl -sf -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
   "name": "Critical IT incidents → IT-Help (escalated)",
   "priority": 50,
   "conditions": {"metadata.priority": "critical", "routing_hints.department": "IT", "routing_hints.category": "incident"},
   "actions": {"route_to": "it-help", "set_priority": "critical"},
   "active": true,
   "fan_out": false
-}' -o /dev/null
+}'
 
 echo "  → New hire onboarding (fan-out → SAM + IT)"
-curl -sf -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
   "name": "New hire onboarding → SAM + IT-Help (fan-out)",
   "priority": 90,
   "conditions": {"routing_hints.category": "onboarding", "routing_hints.tags": {"$contains": "it-provisioning"}},
   "actions": {"route_to": ["sam-hr", "it-help"]},
   "active": true,
   "fan_out": true
-}' -o /dev/null
+}'
 
 echo ""
 
@@ -216,67 +216,67 @@ echo ""
 echo "=== Creating Intake Feed Rules ==="
 
 echo "  → Security feeds → Security Triage Agent"
-curl -sf -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
   "name": "Security feeds → Security Triage Agent",
   "priority": 80,
   "conditions": {"routing_hints.category": "security"},
   "actions": {"route_to": "security-triage"},
   "active": true
-}' -o /dev/null
+}'
 
 echo "  → Health check requests → Health Auditor"
-curl -sf -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
   "name": "Health check requests → Health Auditor",
   "priority": 75,
   "conditions": {"routing_hints.category": "health-check"},
   "actions": {"route_to": "health-auditor"},
   "active": true
-}' -o /dev/null
+}'
 
 echo "  → Rule optimization requests → Rule Optimizer"
-curl -sf -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
   "name": "Rule optimization requests → Rule Optimizer",
   "priority": 75,
   "conditions": {"routing_hints.category": "rule-optimization"},
   "actions": {"route_to": "rule-optimizer"},
   "active": true
-}' -o /dev/null
+}'
 
 echo "  → Schema check requests → Schema Drift Detector"
-curl -sf -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
   "name": "Schema check requests → Schema Drift Detector",
   "priority": 75,
   "conditions": {"routing_hints.category": "schema-check"},
   "actions": {"route_to": "schema-drift-detector"},
   "active": true
-}' -o /dev/null
+}'
 
 echo "  → Cost optimization requests → Cost Optimizer"
-curl -sf -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
   "name": "Cost optimization requests → Cost Optimizer",
   "priority": 75,
   "conditions": {"routing_hints.category": "cost-optimization"},
   "actions": {"route_to": "cost-optimizer"},
   "active": true
-}' -o /dev/null
+}'
 
 echo "  → Healthcare news → IT-Help (awareness)"
-curl -sf -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
   "name": "Healthcare news → IT-Help (awareness)",
   "priority": 90,
   "conditions": {"routing_hints.category": "industry"},
   "actions": {"route_to": "it-help"},
   "active": true
-}' -o /dev/null
+}'
 
 echo "  → Regulatory feeds → Rev-Cycle (compliance)"
-curl -sf -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
   "name": "Regulatory feeds → Rev-Cycle (compliance)",
   "priority": 90,
   "conditions": {"routing_hints.category": "regulatory"},
   "actions": {"route_to": "rev-cycle"},
   "active": true
-}' -o /dev/null
+}'
 
 echo ""
 
@@ -284,48 +284,50 @@ echo ""
 echo "=== Sending Test Envelopes ==="
 
 echo "  → HR policy question"
-curl -sf -X POST "$BASE/api/events" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/events" -H "Content-Type: application/json" -d '{
   "source_type": "teams",
   "payload": {"text": "What is our PTO policy for new hires in their first year?"},
   "metadata": {"user": "sarah.jones@healthfirst.org", "channel": "teams", "priority": "normal"},
   "routing_hints": {"department": "HR", "category": "policy"}
-}' -o /dev/null
+}'
 
 echo "  → IT password reset"
-curl -sf -X POST "$BASE/api/events" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/events" -H "Content-Type: application/json" -d '{
   "source_type": "teams",
   "payload": {"text": "I am locked out of my Epic account, need password reset ASAP"},
   "metadata": {"user": "dr.wilson@healthfirst.org", "channel": "teams", "priority": "high"},
   "routing_hints": {"department": "IT", "category": "access"}
-}' -o /dev/null
+}'
 
 echo "  → Claim denial appeal"
-curl -sf -X POST "$BASE/api/events" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/events" -H "Content-Type: application/json" -d '{
   "source_type": "api",
   "payload": {"text": "Claim #HC-2026-44891 denied by UHC for medical necessity. Patient: hip replacement, 68yo. Need appeal letter."},
   "metadata": {"claim_id": "HC-2026-44891", "payer": "UnitedHealthcare", "priority": "normal"},
   "routing_hints": {"department": "Revenue Cycle", "category": "denial-appeal"}
-}' -o /dev/null
+}'
 
 echo "  → Critical IT incident"
-curl -sf -X POST "$BASE/api/events" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/events" -H "Content-Type: application/json" -d '{
   "source_type": "monitoring",
   "payload": {"text": "CRITICAL: Epic Hyperspace connection pool exhausted at Holmes Regional. 47 clinicians affected."},
   "metadata": {"source": "logicmonitor", "priority": "critical", "facility": "Holmes Regional"},
   "routing_hints": {"department": "IT", "category": "incident"}
-}' -o /dev/null
+}'
 
 echo "  → New hire onboarding (fan-out)"
-curl -sf -X POST "$BASE/api/events" -H "Content-Type: application/json" -d '{
+curl -s -f -X POST "$BASE/api/events" -H "Content-Type: application/json" -d '{
   "source_type": "api",
   "payload": {"text": "New hire: Dr. Amanda Chen, Cardiology, starting March 15. Needs Epic access, AD account, badge, parking, HR orientation."},
   "metadata": {"hire_date": "2026-03-15", "department": "Cardiology", "priority": "normal"},
   "routing_hints": {"category": "onboarding", "tags": ["it-provisioning", "hr-orientation"]}
-}' -o /dev/null
+}'
 
 echo ""
 echo "=== Done! ==="
 echo "Dashboard: $BASE"
 echo ""
-echo "3 agents registered, 5 routing rules active, 5 test events processed."
+AGENT_COUNT=$(curl -sf "$BASE/api/agents" 2>/dev/null | python3 -c "import json,sys; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "?")
+RULE_COUNT=$(curl -sf "$BASE/api/rules" 2>/dev/null | python3 -c "import json,sys; print(len(json.load(sys.stdin)))" 2>/dev/null || echo "?")
+echo "$AGENT_COUNT agents registered, $RULE_COUNT routing rules active."
 echo "Refresh the dashboard to see everything."

@@ -1,6 +1,7 @@
 """Native agent dispatch for Trellis."""
 
 from trellis.agents.audit_compactor import AuditCompactorAgent
+from trellis.agents.cost_optimizer import CostOptimizerAgent
 from trellis.agents.health_auditor import HealthAuditorAgent
 from trellis.agents.it_help import ITHelpAgent
 from trellis.agents.rev_cycle import RevCycleAgent
@@ -15,6 +16,7 @@ _NATIVE_AGENTS = {
     "health-auditor": HealthAuditorAgent,
     "audit-compactor": AuditCompactorAgent,
     "rule-optimizer": RuleOptimizerAgent,
+    "cost-optimizer": CostOptimizerAgent,
     "schema-drift-detector": SchemaDriftDetectorAgent,
     "it-help": ITHelpAgent,
     "sam-hr": SAMHRAgent,

@@ -110,10 +110,13 @@ async def lifespan(app: FastAPI):
     from trellis.agents.schema_drift import schema_drift_loop
     schema_drift_task = asyncio.create_task(schema_drift_loop())
 
+    from trellis.agents.cost_optimizer import cost_optimizer_loop
+    cost_optimizer_task = asyncio.create_task(cost_optimizer_loop())
+
     yield
 
     _hc_stop()
-    for t in (task, auditor_task, compactor_task, optimizer_task, schema_drift_task):
+    for t in (task, auditor_task, compactor_task, optimizer_task, schema_drift_task, cost_optimizer_task):
         t.cancel()
         try:
             await t

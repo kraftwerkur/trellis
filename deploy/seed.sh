@@ -141,6 +141,20 @@ curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "cost_mode": "managed"
 }' -o /dev/null
 
+echo "  → cost-optimizer agent"
+curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
+  "agent_id": "cost-optimizer",
+  "name": "Cost Optimizer Agent",
+  "owner": "Platform",
+  "department": "platform",
+  "framework": "trellis-native",
+  "agent_type": "native",
+  "tools": [],
+  "channels": ["api"],
+  "maturity": "autonomous",
+  "cost_mode": "managed"
+}' -o /dev/null
+
 echo ""
 
 # --- Create Routing Rules ---
@@ -234,6 +248,15 @@ curl -sf -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
   "priority": 75,
   "conditions": {"routing_hints.category": "schema-check"},
   "actions": {"route_to": "schema-drift-detector"},
+  "active": true
+}' -o /dev/null
+
+echo "  → Cost optimization requests → Cost Optimizer"
+curl -sf -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
+  "name": "Cost optimization requests → Cost Optimizer",
+  "priority": 75,
+  "conditions": {"routing_hints.category": "cost-optimization"},
+  "actions": {"route_to": "cost-optimizer"},
   "active": true
 }' -o /dev/null
 

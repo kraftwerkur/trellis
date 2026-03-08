@@ -306,6 +306,9 @@ async def _dispatch_single(envelope: Envelope, matched_rule: Rule, db: AsyncSess
         envelope_id=envelope.envelope_id, agent_id=target_agent_id,
         details={"agent_type": agent.agent_type, "rule_name": matched_rule.name})
 
+    # Commit pre-dispatch audit trail and release DB lock before potentially long LLM calls
+    await db.commit()
+
     status, result_data, error = await _dispatch_by_type(agent, envelope)
 
     if error:

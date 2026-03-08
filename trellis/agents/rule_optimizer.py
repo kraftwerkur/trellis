@@ -1,3 +1,4 @@
+from trellis.agents.health_auditor import record_task_heartbeat
 """Rule Optimizer Agent — platform housekeeping agent.
 
 Analyzes routing rules for optimization opportunities: dead rules,
@@ -164,6 +165,7 @@ async def rule_optimizer_loop() -> None:
         now = datetime.now(timezone.utc)
         if now.hour == _OPTIMIZER_HOUR and now.day != _last_run_day:
             _last_run_day = now.day
+            record_task_heartbeat("rule_optimizer")
             try:
                 result = await run_analysis()
                 opt = result["result"]["data"]["optimization"]

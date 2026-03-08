@@ -1,3 +1,4 @@
+from trellis.agents.health_auditor import record_task_heartbeat
 """Cost Optimizer Agent — platform FinOps housekeeping agent.
 
 Analyzes cost event data to find optimization opportunities: expensive model
@@ -279,6 +280,7 @@ async def cost_optimizer_loop() -> None:
 
         if due:
             _last_run = now
+            record_task_heartbeat("cost_optimizer")
             try:
                 result = await run_analysis()
                 report = result["result"]["data"]["cost_report"]

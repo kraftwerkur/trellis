@@ -81,6 +81,22 @@ async def health_check():
     return {"status": "healthy", "service": "trellis"}
 
 
+@health_router.get("/health/infra")
+async def infra_health_check():
+    """Full infrastructure health check: LLM providers, DB, background tasks, SMTP, system."""
+    from trellis.agents.health_auditor import run_infra_checks
+    result = await run_infra_checks()
+    return {
+        "status": result.overall_status(),
+        "timestamp": result.timestamp,
+        "llm_providers": result.llm_providers,
+        "database": result.database,
+        "background_tasks": result.background_tasks,
+        "smtp": result.smtp,
+        "system": result.system,
+    }
+
+
 # ── Agents ─────────────────────────────────────────────────────────────────
 
 agents_router = APIRouter(prefix="/agents", tags=["agents"], dependencies=[Depends(require_management_auth)])

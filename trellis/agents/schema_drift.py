@@ -1,3 +1,4 @@
+from trellis.agents.health_auditor import record_task_heartbeat
 """Schema Drift Detector — platform housekeeping agent.
 
 Monitors envelope payload structures per source_type. Detects when payload
@@ -249,6 +250,7 @@ async def schema_drift_loop() -> None:
     """Background loop — runs schema drift analysis every N seconds."""
     while True:
         try:
+            record_task_heartbeat("schema_drift")
             result = await run_analysis()
             report = result["result"]["data"]["drift_report"]
             logger.info(

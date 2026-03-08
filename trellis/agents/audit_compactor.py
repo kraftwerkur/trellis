@@ -1,3 +1,4 @@
+from trellis.agents.health_auditor import record_task_heartbeat
 """Audit Compactor Agent — platform housekeeping.
 
 Prevents unbounded audit log growth by rolling up old events into summaries,
@@ -121,6 +122,7 @@ async def compactor_loop(interval: float | None = None) -> None:
 
     while True:
         try:
+            record_task_heartbeat("audit_compactor")
             async with async_session() as db:
                 stats = await run_compaction(db)
                 logger.info(f"Audit compaction: {stats}")

@@ -260,3 +260,151 @@ def assess_priority(severity: str | None, affected_users: int = 1, system_critic
         "priority": priority,
         "justification": f"Severity={severity}, affected_users={affected_users}, system_criticality={system_criticality or 'unknown'}",
     }
+
+
+# ── SAM-HR Tools ────────────────────────────────────────────────────
+
+_HR_CATEGORY_KEYWORDS = {
+    "benefits": ["benefits", "enrollment", "insurance", "dental", "vision", "medical", "hsa", "fsa", "401k", "cobra", "open enrollment"],
+    "payroll": ["payroll", "paycheck", "salary", "wage", "overtime", "direct deposit", "withholding", "garnishment", "tax", "w2", "discrepancy"],
+    "pto": ["pto", "vacation", "sick", "time off", "leave", "holiday", "paid time", "absence", "ukg"],
+    "onboarding": ["onboarding", "new hire", "new employee", "orientation", "start date", "first day", "servicenow", "provisioning", "badge"],
+    "offboarding": ["offboarding", "termination", "resign", "resignation", "separation", "exit", "last day", "final paycheck"],
+    "policy": ["policy", "handbook", "procedure", "rule", "guideline", "code of conduct", "dress code"],
+    "compliance": ["compliance", "audit", "hipaa", "regulation", "investigation", "ethics", "reporting", "whistleblower"],
+    "workers_comp": ["workers comp", "workers compensation", "work injury", "workplace injury", "accident", "osha", "incident report"],
+    "fmla": ["fmla", "family leave", "medical leave", "maternity", "paternity", "parental leave", "serious health", "caregiver leave"],
+    "ada": ["ada", "accommodation", "disability", "reasonable accommodation", "accessibility", "impairment", "medical restriction"],
+}
+
+_HR_REGULATORY_FLAGS = {
+    "fmla": ["FMLA"],
+    "ada": ["ADA"],
+    "workers_comp": ["Workers Comp", "OSHA"],
+    "compliance": ["HIPAA", "Regulatory"],
+}
+
+_HR_POLICIES = {
+    "pto": {
+        "policy_reference": "HR-301: PTO Policy",
+        "standard_procedure": "Submit via UKG Self-Service. Manager approval required. Policy HR-301.",
+    },
+    "benefits": {
+        "policy_reference": "HR-201: Benefits Enrollment Policy",
+        "standard_procedure": "Open enrollment Oct 15-Nov 15. Mid-year changes require qualifying life event. Policy HR-201.",
+    },
+    "fmla": {
+        "policy_reference": "HR-401: FMLA Leave Policy",
+        "standard_procedure": "12 weeks unpaid leave for eligible employees. Must file with HR within 30 days. Policy HR-401. REGULATORY.",
+    },
+    "ada": {
+        "policy_reference": "HR-402: ADA Accommodation Policy",
+        "standard_procedure": "Reasonable accommodation request process. Interactive dialogue required. Policy HR-402. REGULATORY.",
+    },
+    "payroll": {
+        "policy_reference": "HR-501: Payroll Discrepancy Policy",
+        "standard_procedure": "Submit correction via PeopleSoft. Processed in next pay cycle. Policy HR-501.",
+    },
+    "onboarding": {
+        "policy_reference": "HR-101: Onboarding Policy",
+        "standard_procedure": "Standard 90-day onboarding plan. IT provisioning via ServiceNow. Policy HR-101.",
+    },
+    "workers_comp": {
+        "policy_reference": "HR-403: Workers Compensation Policy",
+        "standard_procedure": "Report within 24 hours to supervisor and HR. File with carrier. Policy HR-403. REGULATORY.",
+    },
+    "offboarding": {
+        "policy_reference": "HR-102: Offboarding Policy",
+        "standard_procedure": "Complete separation checklist. Final paycheck per state law. Return all equipment. Policy HR-102.",
+    },
+    "compliance": {
+        "policy_reference": "HR-601: Compliance & Ethics Policy",
+        "standard_procedure": "Report via ethics hotline or direct to Compliance. Investigations conducted per HR-601. REGULATORY.",
+    },
+    "policy": {
+        "policy_reference": "HR-001: Employee Handbook",
+        "standard_procedure": "Refer to current Employee Handbook. Policy questions routed to HR Generalist. Policy HR-001.",
+    },
+}
+
+_HR_SLA_HOURS = {
+    "CRITICAL": 4,
+    "HIGH": 24,
+    "MEDIUM": 48,
+    "LOW": 72,
+}
+
+# Regulatory categories always get HIGH priority minimum
+_REGULATORY_CATEGORIES = {"fmla", "ada", "workers_comp", "compliance"}
+
+
+def classify_hr_case(description: str, category_hint: str | None = None) -> dict:
+    """Classify an HR case by category based on keyword matching."""
+    desc_lower = description.lower()
+    scores: dict[str, int] = {}
+    matched_keywords: list[str] = []
+
+    for category, keywords in _HR_CATEGORY_KEYWORDS.items():
+        score = sum(1 for kw in keywords if kw in desc_lower)
+        if score > 0:
+            scores[category] = score
+            matched_keywords.extend(kw for kw in keywords if kw in desc_lower)
+
+    if category_hint and category_hint in _HR_CATEGORY_KEYWORDS:
+        scores[category_hint] = scores.get(category_hint, 0) + 3
+
+    if not scores:
+        best = "policy"
+        subcategory = "general"
+    else:
+        best = max(scores, key=scores.get)
+        subcategory = best
+
+    # Determine regulatory flags
+    regulatory_flags = list(_HR_REGULATORY_FLAGS.get(best, []))
+
+    return {
+        "category": best,
+        "subcategory": subcategory,
+        "keywords": list(set(matched_keywords)),
+        "regulatory_flags": regulatory_flags,
+    }
+
+
+def assess_hr_priority(category: str, regulatory_flags: list[str], affected_employees: int = 1) -> dict:
+    """Assess HR case priority based on category, regulatory flags, and employee impact."""
+    # Regulatory cases are always HIGH minimum
+    if regulatory_flags or category in _REGULATORY_CATEGORIES:
+        base_priority = "HIGH"
+        justification = f"{category.upper()} has regulatory compliance requirements"
+    elif affected_employees > 50:
+        base_priority = "HIGH"
+        justification = f"Large employee impact: {affected_employees} employees affected"
+    elif affected_employees > 10:
+        base_priority = "MEDIUM"
+        justification = f"Moderate employee impact: {affected_employees} employees affected"
+    else:
+        base_priority = "LOW"
+        justification = f"Standard HR case, {affected_employees} employee(s) affected"
+
+    # Workers comp gets CRITICAL (24h report requirement)
+    if category == "workers_comp":
+        base_priority = "CRITICAL"
+        justification = "Workers comp must be reported within 24 hours — legal requirement"
+
+    sla_hours = _HR_SLA_HOURS.get(base_priority, 72)
+
+    return {
+        "priority": base_priority,
+        "sla_hours": sla_hours,
+        "justification": justification,
+    }
+
+
+def lookup_hr_policy(category: str, keywords: list[str]) -> dict:
+    """Look up HR policy reference and standard procedure for a case category."""
+    policy = _HR_POLICIES.get(category, _HR_POLICIES["policy"])
+    return {
+        "policy_reference": policy["policy_reference"],
+        "standard_procedure": policy["standard_procedure"],
+    }

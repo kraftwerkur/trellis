@@ -674,16 +674,36 @@ HL7v2 (ADT/ORM/ORU/SIU), FHIR R4 (Patient/Encounter/Observation), Teams adapter 
 ### Phase 8: Real Agents (In Progress)
 **Security Triage Agent** — first tool-calling native agent. Cross-references vulnerabilities against HF tech stack, calculates risk scores, drafts structured advisories. Proves Tier 2 agent capability.
 
-### Phase 9: Classification Engine + Platform Housekeeping (Next)
+Incremental build plan:
+- **Piece 1:** Agent LLM calls through gateway ✅ (cab3a57)
+- **Piece 2:** Tool call audit logging ✅ (cab3a57)
+- **Piece 3:** Email output hook
+- **Piece 4:** Envelope cannon (NVD load generator)
+- **Piece 5:** Upgrade seed agents to native
+
+### Phase 9: Security & HIPAA Hardening
+Address security gaps and technical debt surfaced by code review before broader deployment.
+
+1. PHI shield default `"off"` → `"audit_only"` (one-line fix, safe default)
+2. CORS lockdown — env-var configurable allowed origins
+3. Management plane auth — admin API key required on all `api.py` routers
+4. EnvelopeLog PHI redaction — strip/redact PHI before writing `envelope_data`
+5. Fix test environment — spaCy model fixture, mark Ollama tests as integration
+6. Delete or integrate dead `scorer.py` (843 LOC, unreachable)
+7. Route `dispatch_llm` through budget enforcement
+8. Shared `httpx` client — connection pooling, proper lifecycle
+9. Model pricing single source of truth — one dict, no scattered literals
+
+### Phase 10: Classification Engine + Platform Housekeeping (Next)
 Platform-level enrichment middleware. Every inbound envelope gets auto-classified (department, category, urgency, entities) before hitting the rules engine. Senders don't need to know Trellis's routing structure — they just send raw events. This phase also introduces **Platform Housekeeping Agents** — autonomous agents that maintain Trellis itself (rule optimization, health auditing, cost analysis, schema drift detection, audit compaction). These share the "core platform infrastructure" framing with the classification engine. See [Platform Housekeeping Agents](#platform-housekeeping-agents).
 
-### Phase 10: Agent Identity & Access
+### Phase 11: Agent Identity & Access
 Agent digital identities with scoped permissions, credential vault (managed secrets, auto-rotation), role-based access policies, delegation chains. Required for agents that interact with downstream systems (Epic, PeopleSoft, Ivanti).
 
-### Phase 11: Framework Adapters
+### Phase 12: Framework Adapters
 Dispatch adapters for external agent runtimes — Pi SDK (RPC), Qwen-Agent, OpenClaw sessions, LangChain (HTTP). Trellis is framework-agnostic; each adapter is a thin translation layer between envelopes and the agent's native interface.
 
-### Phase 12: Production Hardening
+### Phase 13: Production Hardening
 PostgreSQL (replace ephemeral SQLite), Azure AD integration, RBAC, persistent storage, CI/CD pipeline, load testing.
 
 ---

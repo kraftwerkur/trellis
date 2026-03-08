@@ -127,6 +127,20 @@ curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "cost_mode": "managed"
 }' -o /dev/null
 
+echo "  → schema-drift-detector agent"
+curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
+  "agent_id": "schema-drift-detector",
+  "name": "Schema Drift Detector",
+  "owner": "Platform",
+  "department": "platform",
+  "framework": "trellis-native",
+  "agent_type": "native",
+  "tools": [],
+  "channels": ["api"],
+  "maturity": "autonomous",
+  "cost_mode": "managed"
+}' -o /dev/null
+
 echo ""
 
 # --- Create Routing Rules ---
@@ -211,6 +225,15 @@ curl -sf -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
   "priority": 75,
   "conditions": {"routing_hints.category": "rule-optimization"},
   "actions": {"route_to": "rule-optimizer"},
+  "active": true
+}' -o /dev/null
+
+echo "  → Schema check requests → Schema Drift Detector"
+curl -sf -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
+  "name": "Schema check requests → Schema Drift Detector",
+  "priority": 75,
+  "conditions": {"routing_hints.category": "schema-check"},
+  "actions": {"route_to": "schema-drift-detector"},
   "active": true
 }' -o /dev/null
 

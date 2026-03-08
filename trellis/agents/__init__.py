@@ -5,6 +5,7 @@ from trellis.agents.health_auditor import HealthAuditorAgent
 from trellis.agents.it_help import ITHelpAgent
 from trellis.agents.rev_cycle import RevCycleAgent
 from trellis.agents.rule_optimizer import RuleOptimizerAgent
+from trellis.agents.schema_drift import SchemaDriftDetectorAgent
 from trellis.agents.sam_hr import SAMHRAgent
 from trellis.agents.security_triage import SecurityTriageAgent
 
@@ -14,6 +15,7 @@ _NATIVE_AGENTS = {
     "health-auditor": HealthAuditorAgent,
     "audit-compactor": AuditCompactorAgent,
     "rule-optimizer": RuleOptimizerAgent,
+    "schema-drift-detector": SchemaDriftDetectorAgent,
     "it-help": ITHelpAgent,
     "sam-hr": SAMHRAgent,
     "rev-cycle": RevCycleAgent,

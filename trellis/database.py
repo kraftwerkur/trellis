@@ -3,6 +3,7 @@
 from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.pool import StaticPool
 
 from trellis.config import settings
 
@@ -10,6 +11,7 @@ engine = create_async_engine(
     settings.database_url,
     echo=False,
     connect_args={"check_same_thread": False},
+    poolclass=StaticPool,
 )
 
 

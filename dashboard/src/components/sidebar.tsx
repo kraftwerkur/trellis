@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Bot, Shield, ShieldCheck, GitBranch, Network, DollarSign, BookOpen, ChevronLeft, ChevronRight } from "lucide-react";
+import { LayoutDashboard, Bot, Shield, ShieldCheck, GitBranch, Network, DollarSign, BookOpen, Wrench, ChevronLeft, ChevronRight } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
   { href: "/agents", label: "Agents", icon: Bot },
   { href: "/audit", label: "Audit", icon: Shield },
+  { href: "/tools", label: "Tools", icon: Wrench },
   { href: "/rules", label: "Rules", icon: GitBranch },
   { href: "/gateway", label: "Gateway", icon: Network },
   { href: "/phi", label: "PHI Shield", icon: ShieldCheck },

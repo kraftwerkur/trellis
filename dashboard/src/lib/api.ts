@@ -12,10 +12,10 @@ async function apiFetch<T>(path: string, options?: RequestInit): Promise<T> {
 // Re-export types from canonical definitions
 export type {
   Agent, AuditEvent, Rule, EnvelopeLog, CostEvent, CostSummary, CostTimeseriesBucket, GatewayStats, GatewayStatsResponse, HealthStatus,
-  PhiTestResponse, PhiStatsResponse, PhiShieldMode, AgentPhiConfig, GatewayProvider, GatewayModel, FinOpsSummary,
+  PhiTestResponse, PhiStatsResponse, PhiShieldMode, AgentPhiConfig, GatewayProvider, GatewayModel, FinOpsSummary, ToolInfo, ToolCallLog,
 } from "../types/trellis";
 
-import type { Agent, AuditEvent, Rule, EnvelopeLog, CostEvent, CostSummary, CostTimeseriesBucket, GatewayStatsResponse, HealthStatus, PhiTestResponse, PhiStatsResponse, PhiShieldMode, AgentPhiConfig, GatewayProvider, GatewayModel, FinOpsSummary } from "../types/trellis";
+import type { Agent, AuditEvent, Rule, EnvelopeLog, CostEvent, CostSummary, CostTimeseriesBucket, GatewayStatsResponse, HealthStatus, PhiTestResponse, PhiStatsResponse, PhiShieldMode, AgentPhiConfig, GatewayProvider, GatewayModel, FinOpsSummary, ToolInfo, ToolCallLog } from "../types/trellis";
 
 // API functions
 export const api = {
@@ -60,6 +60,11 @@ export const api = {
     stats: () => apiFetch<GatewayStatsResponse>("/api/gateway/stats"),
     providers: () => apiFetch<GatewayProvider[]>("/api/gateway/providers"),
     models: () => apiFetch<GatewayModel[]>("/api/gateway/models"),
+  },
+  tools: {
+    list: () => apiFetch<ToolInfo[]>("/api/tools"),
+    get: (name: string) => apiFetch<ToolInfo>(`/api/tools/${name}`),
+    usage: (name: string, limit: number = 50) => apiFetch<ToolCallLog[]>(`/api/tools/${name}/usage?limit=${limit}`),
   },
   phi: {
     test: (text: string) => apiFetch<PhiTestResponse>("/api/phi/test", { method: "POST", body: JSON.stringify({ text }) }),

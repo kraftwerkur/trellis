@@ -173,6 +173,30 @@ export interface PhiRecentEvent {
   mode: string;
 }
 
+// Tool Registry types
+
+export interface ToolInfo {
+  name: string;
+  category: string;
+  description: string;
+  requires_permissions: string[];
+  call_count: number;
+  error_count: number;
+  avg_latency_ms: number;
+}
+
+export interface ToolCallLog {
+  id: number;
+  trace_id: string | null;
+  agent_id: string;
+  params: Record<string, unknown>;
+  result_summary: string | null;
+  status: string;
+  latency_ms: number;
+  error: string | null;
+  timestamp: string | null;
+}
+
 export interface AgentPhiConfig {
   agent_id: string;
   name: string;

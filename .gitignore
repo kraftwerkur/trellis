@@ -37,3 +37,4 @@ static/
 *.db-shm
 *.db-wal
 *.db-journal
+*.db*

@@ -102,6 +102,20 @@ curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "cost_mode": "managed"
 }' -o /dev/null
 
+echo "  → Audit Compactor Agent"
+curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
+  "agent_id": "platform-audit-compactor",
+  "name": "Audit Compactor Agent",
+  "owner": "Platform",
+  "department": "platform",
+  "framework": "trellis-native",
+  "agent_type": "native",
+  "tools": [],
+  "channels": ["api"],
+  "maturity": "autonomous",
+  "cost_mode": "managed"
+}' -o /dev/null
+
 echo ""
 
 # --- Create Routing Rules ---

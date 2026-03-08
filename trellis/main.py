@@ -87,10 +87,13 @@ async def lifespan(app: FastAPI):
     from trellis.agents.health_auditor import health_auditor_loop
     auditor_task = asyncio.create_task(health_auditor_loop())
 
+    from trellis.agents.audit_compactor import compactor_loop
+    compactor_task = asyncio.create_task(compactor_loop())
+
     yield
 
     _hc_stop()
-    for t in (task, auditor_task):
+    for t in (task, auditor_task, compactor_task):
         t.cancel()
         try:
             await t

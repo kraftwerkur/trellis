@@ -157,7 +157,7 @@ if not _providers["nvidia"].api_key:
 MODEL_PROVIDER_MAP: dict[str, str] = {
     "gpt-4o": "openai", "gpt-4o-mini": "openai", "gpt-3.5-turbo": "openai",
     "claude-sonnet-4-5": "anthropic", "claude-3-haiku": "anthropic",
-    "qwen3:8b": "ollama", "llama3.1:8b": "ollama",
+    "qwen3.5:9b": "ollama", "qwen3:8b": "ollama", "llama3.1:8b": "ollama",
     "llama-3.3-70b-versatile": "groq", "llama-3.1-8b-instant": "groq",
     "mixtral-8x7b-32768": "groq", "gemma2-9b-it": "groq",
     "gemini-2.5-flash": "google", "gemini-2.5-pro": "google", "gemini-2.0-flash": "google",
@@ -166,7 +166,7 @@ MODEL_PROVIDER_MAP: dict[str, str] = {
     "mistralai/mistral-large-2-instruct": "nvidia", "deepseek-ai/deepseek-r1": "nvidia",
 }
 
-COMPLEXITY_MODEL_MAP: dict[str, str] = {"simple": "qwen3:8b", "medium": "gpt-4o", "complex": "claude-sonnet-4-5"}
+COMPLEXITY_MODEL_MAP: dict[str, str] = {"simple": "qwen3.5:9b", "medium": "gpt-4o", "complex": "claude-sonnet-4-5"}
 
 _COMPLEX_KEYWORDS = re.compile(
     r"\b(analyze|analyse|compare|reason|reasoning|evaluate|synthesize|"
@@ -176,7 +176,7 @@ _COMPLEX_KEYWORDS = re.compile(
 )
 
 DEFAULT_PROVIDER = "ollama"
-DEFAULT_MODEL = "qwen3:8b"
+DEFAULT_MODEL = "qwen3.5:9b"
 
 
 def _estimate_tokens(text: str) -> int:
@@ -401,6 +401,7 @@ MODEL_PRICING: dict[str, dict[str, float]] = {
     "nvidia/llama-3.1-nemotron-70b-instruct": {"input": 0.40, "output": 0.40},
     "mistralai/mistral-large-2-instruct": {"input": 2.00, "output": 6.00},
     "deepseek-ai/deepseek-r1": {"input": 0.55, "output": 2.19},
+    "qwen3.5:9b": {"input": 0.0, "output": 0.0},
     "qwen3:8b": {"input": 0.0, "output": 0.0},
     "llama3.1:8b": {"input": 0.0, "output": 0.0},
 }

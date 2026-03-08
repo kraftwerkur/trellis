@@ -795,7 +795,7 @@ async def seed_default_routes(db: AsyncSession) -> None:
     COSTS = {
         "gpt-4o": (0.005, 0.015), "gpt-4o-mini": (0.00015, 0.0006),
         "gpt-3.5-turbo": (0.0005, 0.0015), "claude-sonnet-4-5": (0.003, 0.015),
-        "claude-3-haiku": (0.00025, 0.00125), "qwen3:8b": (0.0, 0.0), "llama3.1:8b": (0.0, 0.0),
+        "claude-3-haiku": (0.00025, 0.00125), "qwen3.5:9b": (0.0, 0.0), "qwen3:8b": (0.0, 0.0), "llama3.1:8b": (0.0, 0.0),
         "llama-3.3-70b-versatile": (0.00059, 0.00079), "llama-3.1-8b-instant": (0.00005, 0.00008),
         "mixtral-8x7b-32768": (0.00024, 0.00024), "gemma2-9b-it": (0.0002, 0.0002),
         "meta/llama-3.3-70b-instruct": (0.00059, 0.00079),

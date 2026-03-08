@@ -1,6 +1,7 @@
 """Email output adapter — sends HTML emails from dispatch results via SMTP."""
 
 import asyncio
+from html import escape as esc
 import logging
 import os
 import smtplib
@@ -32,11 +33,11 @@ def _build_security_html(result: dict, priority: str) -> tuple[str, str]:
     data = inner.get("data") or {}
     advisory = data.get("advisory") or {}
 
-    cve_id = advisory.get("cve_id", "N/A")
-    title = advisory.get("title", "Security Advisory")
+    cve_id = esc(str(advisory.get("cve_id", "N/A")))
+    title = esc(str(advisory.get("title", "Security Advisory")))
     risk = advisory.get("risk_score") or {}
     score = risk.get("composite_score", "?")
-    exec_summary = advisory.get("executive_summary", inner.get("text", ""))
+    exec_summary = esc(str(advisory.get("executive_summary", inner.get("text", ""))))
 
     priority_emoji = {"CRITICAL": "🚨", "HIGH": "🔴", "MEDIUM": "🟡", "LOW": "🟢"}.get(priority, "⚠️")
     subject = f"[Trellis] {priority_emoji} {priority}: {title} ({cve_id})"

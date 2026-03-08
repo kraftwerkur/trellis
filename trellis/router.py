@@ -343,7 +343,8 @@ async def _dispatch_single(envelope: Envelope, matched_rule: Rule, db: AsyncSess
 
     # Post-dispatch: fire email outputs if conditions match (non-blocking)
     if status == "success" and result_data:
-        asyncio.ensure_future(_maybe_send_email(dispatch_result, matched_rule, envelope))
+        task = asyncio.create_task(_maybe_send_email(dispatch_result, matched_rule, envelope))
+        task.add_done_callback(lambda t: t.exception() if not t.cancelled() and t.exception() else None)
 
     return dispatch_result
 

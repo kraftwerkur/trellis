@@ -48,10 +48,12 @@ async def require_management_auth(request: Request):
     """Dependency: require management API key if TRELLIS_MANAGEMENT_API_KEY is set."""
     key = os.environ.get("TRELLIS_MANAGEMENT_API_KEY")
     if not key:
+        if os.environ.get("TRELLIS_ENV", "").lower() == "production":
+            raise HTTPException(status_code=503, detail="Management API key not configured in production")
         return  # dev mode — no auth required
     auth = request.headers.get("authorization", "")
     api_key = request.headers.get("x-api-key", "")
-    if auth == f"Bearer {key}" or api_key == key:
+    if secrets.compare_digest(auth, f"Bearer {key}") or secrets.compare_digest(api_key, key):
         return
     raise HTTPException(status_code=401, detail="Invalid or missing management API key")
 
@@ -60,10 +62,12 @@ async def require_ingestion_auth(request: Request):
     """Dependency: require ingestion API key if TRELLIS_INGESTION_API_KEY is set."""
     key = os.environ.get("TRELLIS_INGESTION_API_KEY")
     if not key:
+        if os.environ.get("TRELLIS_ENV", "").lower() == "production":
+            raise HTTPException(status_code=503, detail="Ingestion API key not configured in production")
         return  # dev mode — no auth required
     auth = request.headers.get("authorization", "")
     api_key = request.headers.get("x-api-key", "")
-    if auth == f"Bearer {key}" or api_key == key:
+    if secrets.compare_digest(auth, f"Bearer {key}") or secrets.compare_digest(api_key, key):
         return
     raise HTTPException(status_code=401, detail="Invalid or missing ingestion API key")
 
@@ -352,7 +356,7 @@ async def list_envelopes(limit: int = 50, db: AsyncSession = Depends(get_db)):
 
 # ── API Keys (no plaintext caching!) ──────────────────────────────────────
 
-keys_router = APIRouter(prefix="/keys", tags=["keys"])
+keys_router = APIRouter(prefix="/keys", tags=["keys"], dependencies=[Depends(require_management_auth)])
 
 
 @keys_router.post("", status_code=201, response_model=ApiKeyCreated)

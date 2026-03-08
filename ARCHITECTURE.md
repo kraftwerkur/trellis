@@ -1116,3 +1116,90 @@ The dashboard gets a **Platform Health** tab showing:
 ---
 
 *This architecture was designed during a session with Eric O'Brien on 2026-02-22. Runtime interface added 2026-02-23 per Eric's directive to make Pi the default runtime while keeping the platform runtime-agnostic. Document ingestion adapter added 2026-03-05.*
+
+## Phase 13: Intelligent Routing — Agent-Declared Intake + Scored Matching
+
+**Problem:** Current routing is rigid pattern matching — static rules with hardcoded conditions. Doesn't scale past 20+ agents. Adding a new agent requires manually creating routing rules. Classification Engine infers hints but feeds them into dumb rules.
+
+**Vision:** Agents declare what they handle. The Classification Engine scores incoming envelopes against all agent intake declarations simultaneously. Best match wins. Rules become policy overrides, not primary routing.
+
+### Architecture Change
+
+**Current flow:**
+```
+Envelope → Classification Engine (tag) → Rules Engine (pattern match) → Agent
+```
+
+**New flow:**
+```
+Envelope → Classification Engine (enrich) → Agent Scorer (score all agents) → Policy Layer (enforce constraints) → Agent
+```
+
+### Stories
+
+#### 13.1 — Agent Intake Declarations
+- Each agent declares its intake criteria in its registration:
+  ```json
+  {
+    "agent_id": "security-triage",
+    "intake": {
+      "categories": ["security", "vulnerability", "compliance"],
+      "source_types": ["nvd", "cisa_kev", "nist", "crowdstrike"],
+      "keywords": ["cve", "exploit", "breach", "patch", "firewall"],
+      "systems": ["CrowdStrike", "Sentinel", "Defender"],
+      "priority_range": ["high", "critical"],
+      "description": "Handles security vulnerabilities, threat intelligence, and compliance incidents affecting Health First infrastructure"
+    }
+  }
+  ```
+- Intake declaration stored in Agent model
+- Backward compatible — agents without intake declarations fall back to rules-based routing
+
+#### 13.2 — Agent Scoring Engine
+- Replace pattern-match routing with multi-dimensional scoring:
+  - **Category match** (0-30 points): envelope category vs agent categories
+  - **Source type match** (0-20 points): exact source type match
+  - **Keyword overlap** (0-20 points): payload keywords vs agent keywords (Jaccard similarity)
+  - **System match** (0-15 points): affected systems vs agent declared systems
+  - **Priority alignment** (0-10 points): envelope priority within agent's preferred range
+  - **Semantic similarity** (0-5 points): embedding distance between envelope description and agent description (optional, LLM-enhanced)
+- Score all agents in parallel, return ranked list
+- Configurable threshold — minimum score to route (prevents bad matches)
+- Tie-breaking by agent priority/load
+
+#### 13.3 — Policy Layer (Rules Evolution)
+- Rules transform from routing decisions to policy constraints:
+  - **Blocklist:** "Never send PHI-flagged envelopes to external agents"
+  - **Mandatory CC:** "Always copy compliance team on regulatory items"
+  - **Override:** "All Epic-related issues go to clinical-support regardless of score"
+  - **Fan-out policy:** "Onboarding events always go to BOTH HR and IT"
+  - **Rate limiting:** "Max 10 envelopes/minute to any single agent"
+- Policies evaluated AFTER scoring, can veto or modify the scored result
+- Much simpler to maintain than routing rules — fewer policies needed
+
+#### 13.4 — Self-Learning Feedback Loop
+- Track which agent actually resolved each envelope successfully
+- Feed resolution outcomes back into scoring weights
+- Agents that consistently resolve certain envelope types get higher scores for those types over time
+- Misrouted envelopes (agent returns "not my domain") reduce that agent's score for similar envelopes
+- Weekly optimization report from Rule Optimizer with scoring drift analysis
+
+#### 13.5 — Migration Path
+- Phase 1: Add intake declarations to all existing agents (backward compatible)
+- Phase 2: Run scored routing in shadow mode alongside rules — log what scored routing WOULD have done vs what rules DID
+- Phase 3: Switch primary routing to scored, rules become policy layer
+- Phase 4: Enable self-learning feedback loop
+- Zero downtime migration — both systems run in parallel during transition
+
+### Success Criteria
+- New agent registration requires NO manual rule creation — just declare intake
+- 95%+ routing accuracy from scoring alone (measured against human-verified test set)
+- Policy layer has <10 rules total (vs potentially hundreds of routing rules)
+- Self-learning improves routing accuracy by 5%+ over first month
+- Cold-start problem solved — new agents with good intake declarations route correctly from day one
+
+### Estimate
+- 2-3 days for Stories 13.1-13.3 (core architecture)
+- 1 day for Story 13.4 (feedback loop)
+- 1 day for Story 13.5 (migration + shadow mode)
+- Total: ~1 week

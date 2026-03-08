@@ -184,9 +184,12 @@ from trellis.api import (
     phi_router, tools_router,
 )
 from trellis.gateway import router as gateway_llm_router
+from trellis.observatory import observatory_router
+from trellis.agents.health_auditor import health_auditor_router
 
 api = APIRouter(prefix="/api")
 api.include_router(health_router)
+api.include_router(health_auditor_router)
 api.include_router(agents_router)
 api.include_router(rules_router)
 api.include_router(event_router)
@@ -197,6 +200,7 @@ api.include_router(finops_router)
 api.include_router(gateway_mgmt_router)
 api.include_router(phi_router)
 api.include_router(tools_router)
+api.include_router(observatory_router)
 
 app.include_router(api)
 app.include_router(gateway_llm_router)

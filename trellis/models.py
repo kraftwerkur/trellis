@@ -151,6 +151,19 @@ class ToolCallLog(Base):
     )
 
 
+class HealthCheck(Base):
+    __tablename__ = "health_checks"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    check_name: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    status: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    latency_ms: Mapped[float | None] = mapped_column(Float, nullable=True)
+    details: Mapped[dict] = mapped_column(JSON, default=dict)
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True
+    )
+
+
 class Rule(Base):
     __tablename__ = "rules"
 

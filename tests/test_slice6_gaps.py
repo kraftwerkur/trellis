@@ -1,28 +1,11 @@
 """Tests filling coverage gaps: model router, agent CRUD edge cases, audit filtering, cost endpoints."""
 
 import pytest
-import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
-from trellis.router import set_client_override
 from trellis.gateway import classify_complexity, resolve_model_and_provider
 from trellis.main import app
 from trellis.schemas import ChatCompletionRequest, ChatMessage
-
-
-@pytest_asyncio.fixture
-async def client():
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as c:
-        set_client_override(c)
-        from trellis.database import Base, engine
-
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-        yield c
-        set_client_override(None)
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
 
 
 async def _register_agent(client: AsyncClient, agent_id: str = "mock-echo", department: str = "IT"):
@@ -74,16 +57,16 @@ class TestModelRouter:
         req = ChatCompletionRequest(messages=[ChatMessage(role="user", content="Hi")])
         model, provider, complexity = resolve_model_and_provider("auto", api_key, req)
         assert complexity == "simple"
-        assert model == "qwen3:8b"
+        assert model == "qwen3.5:9b"
 
     def test_resolve_explicit_model(self):
         from unittest.mock import MagicMock
         api_key = MagicMock()
         api_key.preferred_provider = None
         req = ChatCompletionRequest(messages=[ChatMessage(role="user", content="Hi")])
-        model, provider, complexity = resolve_model_and_provider("qwen3:8b", api_key, req)
+        model, provider, complexity = resolve_model_and_provider("qwen3.5:9b", api_key, req)
         assert complexity is None
-        assert model == "qwen3:8b"
+        assert model == "qwen3.5:9b"
 
     def test_resolve_none_model(self):
         from unittest.mock import MagicMock
@@ -142,7 +125,7 @@ class TestAuditFiltering:
         # Generate some audit events via gateway call (will fail but still audits)
         await client.post("/v1/chat/completions",
             headers={"Authorization": f"Bearer {key_data['key']}"},
-            json={"model": "qwen3:8b", "messages": [{"role": "user", "content": "test"}]},
+            json={"model": "qwen3.5:9b", "messages": [{"role": "user", "content": "test"}]},
         )
         resp = await client.get("/api/audit", params={"agent_id": "audit-agent"})
         assert resp.status_code == 200

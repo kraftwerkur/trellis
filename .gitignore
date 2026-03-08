@@ -32,3 +32,8 @@ Thumbs.db
 research/manifest_repo/
 static/
 /static/
+
+*.db
+*.db-shm
+*.db-wal
+*.db-journal

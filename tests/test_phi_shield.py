@@ -282,17 +282,6 @@ class TestFalsePositives:
 # API endpoint tests
 # ═══════════════════════════════════════════════════════════════════════════
 
-@pytest.fixture
-async def client():
-    from trellis.main import app
-    from trellis.database import Base, engine
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as c:
-        yield c
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all)
-
 
 class TestPhiAPI:
     @pytest.mark.asyncio

@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field
 
 class LLMConfig(BaseModel):
     system_prompt: str
-    model: str = "qwen3:8b"
+    model: str = "qwen3.5:9b"
     temperature: float = 0.7
     max_tokens: int = 1024
 

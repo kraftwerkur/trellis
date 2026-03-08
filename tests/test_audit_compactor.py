@@ -7,25 +7,9 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
 from trellis.main import app
-from trellis.router import set_client_override
-
-
-@pytest_asyncio.fixture
-async def client():
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as c:
-        set_client_override(c)
-        from trellis.database import Base, engine
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-        yield c
-        set_client_override(None)
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
 
 
 async def _insert_old_events(count=10, days_old=100, event_type="health_check", agent_id="test-agent"):

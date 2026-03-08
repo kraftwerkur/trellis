@@ -1,28 +1,9 @@
 """End-to-end test for Slice 1: register agent → create rule → post envelope → verify."""
 
 import pytest
-import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
-from trellis.router import set_client_override
 from trellis.main import app
-
-
-@pytest_asyncio.fixture
-async def client():
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as c:
-        # Allow dispatcher to route back through the ASGI app
-        set_client_override(c)
-        # Create tables via SQLAlchemy directly for testing
-        from trellis.database import Base, engine
-
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-        yield c
-        set_client_override(None)
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
 
 
 @pytest.mark.asyncio

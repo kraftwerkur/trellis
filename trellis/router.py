@@ -184,7 +184,7 @@ async def dispatch_llm(
 
     text = envelope.payload.text or "(no text)"
     system_prompt = llm_config.get("system_prompt", "You are a helpful assistant.")
-    model = llm_config.get("model", "qwen3:8b")
+    model = llm_config.get("model", "qwen3.5:9b")
     temperature = llm_config.get("temperature", 0.7)
     max_tokens = llm_config.get("max_tokens", 1024)
 
@@ -213,7 +213,8 @@ async def dispatch_llm(
         prov_name = getattr(provider, "name", provider_name)
 
         choices = result.get("choices", [])
-        response_text = choices[0].get("message", {}).get("content", "") if choices else ""
+        msg = choices[0].get("message", {}) if choices else {}
+        response_text = msg.get("content", "") or msg.get("reasoning", "") or ""
 
         return "success", {
             "status": "completed",

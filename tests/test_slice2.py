@@ -1,26 +1,9 @@
 """Tests for Slice 2: LLM Gateway — auth, proxying, cost tracking, budget caps."""
 
 import pytest
-import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
-from trellis.router import set_client_override
 from trellis.main import app
-
-
-@pytest_asyncio.fixture
-async def client():
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as c:
-        set_client_override(c)
-        from trellis.database import Base, engine
-
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-        yield c
-        set_client_override(None)
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
 
 
 async def _register_agent(client: AsyncClient, agent_id: str = "mock-echo"):
@@ -119,7 +102,7 @@ async def test_gateway_proxy_ollama(client: AsyncClient):
         "/v1/chat/completions",
         headers={"Authorization": f"Bearer {raw_key}"},
         json={
-            "model": "qwen3:8b",
+            "model": "qwen3.5:9b",
             "messages": [{"role": "user", "content": "Say hello in one word."}],
             "temperature": 0.0,
             "max_tokens": 32,
@@ -147,7 +130,7 @@ async def test_cost_events_logged(client: AsyncClient):
         "/v1/chat/completions",
         headers={"Authorization": f"Bearer {raw_key}"},
         json={
-            "model": "qwen3:8b",
+            "model": "qwen3.5:9b",
             "messages": [{"role": "user", "content": "Say hi"}],
             "max_tokens": 8,
         },
@@ -172,7 +155,7 @@ async def test_cost_summary(client: AsyncClient):
         "/v1/chat/completions",
         headers={"Authorization": f"Bearer {raw_key}"},
         json={
-            "model": "qwen3:8b",
+            "model": "qwen3.5:9b",
             "messages": [{"role": "user", "content": "hi"}],
             "max_tokens": 8,
         },
@@ -203,7 +186,7 @@ async def test_budget_cap_enforcement(client: AsyncClient):
         "/v1/chat/completions",
         headers={"Authorization": f"Bearer {raw_key}"},
         json={
-            "model": "qwen3:8b",
+            "model": "qwen3.5:9b",
             "messages": [{"role": "user", "content": "hi"}],
             "max_tokens": 8,
         },
@@ -235,7 +218,7 @@ async def test_budget_cap_enforcement(client: AsyncClient):
         "/v1/chat/completions",
         headers={"Authorization": f"Bearer {raw_key}"},
         json={
-            "model": "qwen3:8b",
+            "model": "qwen3.5:9b",
             "messages": [{"role": "user", "content": "hi"}],
             "max_tokens": 8,
         },

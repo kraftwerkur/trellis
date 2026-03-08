@@ -1,7 +1,6 @@
 """Tests for HL7v2 and FHIR R4 adapters — parsing, envelope construction, and API routes."""
 
 import pytest
-import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
 from trellis.adapters.hl7_adapter import parse_hl7, build_hl7_envelope, HL7ParseError
@@ -10,24 +9,7 @@ from trellis.adapters.fhir_adapter import (
     build_fhir_bundle_envelopes, parse_fhir_subscription_notification,
     FHIRParseError,
 )
-from trellis.router import set_client_override
 from trellis.main import app
-
-
-# ── Fixtures ───────────────────────────────────────────────────────────────
-
-@pytest_asyncio.fixture
-async def client():
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as c:
-        set_client_override(c)
-        from trellis.database import Base, engine
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-        yield c
-        set_client_override(None)
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
 
 
 # ── Sample HL7 Messages ───────────────────────────────────────────────────

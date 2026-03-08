@@ -1,33 +1,12 @@
 """Tests for Slice 4: Enhanced Rules Engine + Audit."""
 
 import pytest
-import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
-from trellis.router import set_client_override
 from trellis.router import _match_condition, _resolve_field, _SENTINEL, match_envelope, match_envelope_all
 from trellis.main import app
 from trellis.models import Rule
 from trellis.schemas import Envelope
-
-
-@pytest_asyncio.fixture
-async def client():
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as c:
-        set_client_override(c)
-        from trellis.database import Base, engine
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-        yield c
-        set_client_override(None)
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
-
-
-# ============================================================
-# Condition Operators
-# ============================================================
 
 
 class TestConditionOperators:

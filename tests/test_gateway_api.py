@@ -1,25 +1,9 @@
 """Tests for Gateway Management API — providers, model routes, per-agent LLM config."""
 
 import pytest
-import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
 
-from trellis.router import set_client_override
 from trellis.main import app
-
-
-@pytest_asyncio.fixture
-async def client():
-    transport = ASGITransport(app=app)
-    async with AsyncClient(transport=transport, base_url="http://test") as c:
-        set_client_override(c)
-        from trellis.database import Base, engine
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-        yield c
-        set_client_override(None)
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.drop_all)
 
 
 async def _create_agent(client, agent_id="test-agent"):

@@ -88,6 +88,22 @@ curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
 
 echo ""
 
+echo "  → Health Auditor Agent"
+curl -sf -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
+  "agent_id": "health-auditor",
+  "name": "Health Auditor Agent",
+  "owner": "Platform",
+  "department": "platform",
+  "framework": "trellis-native",
+  "agent_type": "native",
+  "tools": [],
+  "channels": ["api"],
+  "maturity": "autonomous",
+  "cost_mode": "managed"
+}' -o /dev/null
+
+echo ""
+
 # --- Create Routing Rules ---
 echo "=== Creating Routing Rules ==="
 
@@ -152,6 +168,15 @@ curl -sf -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
   "priority": 80,
   "conditions": {"routing_hints.category": "security"},
   "actions": {"route_to": "security-triage"},
+  "active": true
+}' -o /dev/null
+
+echo "  → Health check requests → Health Auditor"
+curl -sf -X POST "$BASE/api/rules" -H "Content-Type: application/json" -d '{
+  "name": "Health check requests → Health Auditor",
+  "priority": 75,
+  "conditions": {"routing_hints.category": "health-check"},
+  "actions": {"route_to": "health-auditor"},
   "active": true
 }' -o /dev/null
 

@@ -83,13 +83,19 @@ async def lifespan(app: FastAPI):
 
     _hc_start()
     task = asyncio.create_task(health_check_loop(interval=60.0))
+
+    from trellis.agents.health_auditor import health_auditor_loop
+    auditor_task = asyncio.create_task(health_auditor_loop())
+
     yield
+
     _hc_stop()
-    task.cancel()
-    try:
-        await task
-    except asyncio.CancelledError:
-        pass
+    for t in (task, auditor_task):
+        t.cancel()
+        try:
+            await t
+        except asyncio.CancelledError:
+            pass
 
 
 # ── App ────────────────────────────────────────────────────────────────────

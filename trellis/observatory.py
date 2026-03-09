@@ -274,8 +274,11 @@ async def _get_hourly_breakdown(
 
 # ── API Router ─────────────────────────────────────────────────────────────
 
+from trellis.api import require_management_auth
+
 observatory_router = APIRouter(
-    prefix="/observatory", tags=["observatory"]
+    prefix="/observatory", tags=["observatory"],
+    dependencies=[Depends(require_management_auth)]
 )
 
 

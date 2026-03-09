@@ -73,7 +73,7 @@ async def require_ingestion_auth(request: Request):
 
 # ── Health ─────────────────────────────────────────────────────────────────
 
-health_router = APIRouter()
+health_router = APIRouter(dependencies=[Depends(require_management_auth)])
 
 
 @health_router.get("/health/infra")
@@ -752,7 +752,7 @@ async def update_agent_llm_config(agent_id: str, data: LLMConfigSchema, db: Asyn
 
 # ── PHI Shield ─────────────────────────────────────────────────────────
 
-phi_router = APIRouter(prefix="/phi", tags=["phi"])
+phi_router = APIRouter(prefix="/phi", tags=["phi"], dependencies=[Depends(require_management_auth)])
 
 
 class PhiTestRequest(BaseModel):
@@ -822,7 +822,7 @@ async def update_agent_phi_mode(agent_id: str, body: PhiModeUpdate, db: AsyncSes
 
 # ── Tool Registry API ──────────────────────────────────────────────────────
 
-tools_router = APIRouter(prefix="/tools", tags=["tools"])
+tools_router = APIRouter(prefix="/tools", tags=["tools"], dependencies=[Depends(require_management_auth)])
 
 
 @tools_router.get("")

@@ -4,69 +4,13 @@ import asyncio
 import logging
 import os
 from contextlib import asynccontextmanager
-from datetime import datetime, timezone
 
-import httpx
 from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import select
 
 from trellis.database import Base, async_session, engine
 from trellis.models import Agent, ModelRoute
 from trellis.schemas import Envelope
-
-
-# ── Health checker (inlined — was core/health_checker.py) ──────────────────
-
-_health_running = True
-
-
-def _hc_stop():
-    global _health_running
-    _health_running = False
-
-
-def _hc_start():
-    global _health_running
-    _health_running = True
-
-
-async def check_agent_health(agent: Agent, db_session) -> None:
-    now = datetime.now(timezone.utc)
-    if agent.agent_type in ("function", "llm"):
-        agent.status = "healthy"
-        agent.last_health_check = now
-        return
-    if not agent.health_endpoint:
-        return
-    try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            resp = await client.get(agent.health_endpoint)
-            if resp.status_code == 200:
-                data = resp.json()
-                agent.status = data.get("status", "healthy")
-            else:
-                agent.status = "unhealthy"
-    except Exception:
-        agent.status = "unreachable"
-    agent.last_health_check = now
-
-
-async def health_check_loop(interval: float = 60.0) -> None:
-    while _health_running:
-        try:
-            async with async_session() as db:
-                result = await db.execute(select(Agent))
-                agents = list(result.scalars().all())
-                for agent in agents:
-                    await check_agent_health(agent, db)
-                await db.commit()
-        except Exception as e:
-            logging.getLogger("trellis").error(f"Health check error: {e}")
-        for _ in range(int(interval)):
-            if not _health_running:
-                break
-            await asyncio.sleep(1)
 
 
 # ── Lifespan ───────────────────────────────────────────────────────────────
@@ -95,9 +39,6 @@ async def lifespan(app: FastAPI):
             "Set this env var in production!"
         )
 
-    _hc_start()
-    task = asyncio.create_task(health_check_loop(interval=60.0))
-
     from trellis.agents.health_auditor import health_auditor_loop
     auditor_task = asyncio.create_task(health_auditor_loop())
 
@@ -115,8 +56,7 @@ async def lifespan(app: FastAPI):
 
     yield
 
-    _hc_stop()
-    for t in (task, auditor_task, compactor_task, optimizer_task, schema_drift_task, cost_optimizer_task):
+    for t in (auditor_task, compactor_task, optimizer_task, schema_drift_task, cost_optimizer_task):
         t.cancel()
         try:
             await t

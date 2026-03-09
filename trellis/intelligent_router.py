@@ -71,6 +71,7 @@ class ScoredAgent:
     cold_start: bool = False
     selected: bool = False
     dispatch_role: str = ""  # "primary", "co_primary", "cc"
+    categories: list[str] = field(default_factory=list)
 
 
 class RoutingConfidence(str, Enum):
@@ -425,6 +426,7 @@ def score_agent(
                 score=0.0,
                 excluded_by="negative_category",
                 dimension_scores={},
+                categories=list(intake.categories),
             )
 
     # Compute dimensions
@@ -464,6 +466,7 @@ def score_agent(
             "base_score": round(base, 4),
         },
         cold_start=(sample_count < 10),
+        categories=list(intake.categories),
     )
 
 
@@ -539,10 +542,10 @@ def make_routing_decision(scores: list[ScoredAgent]) -> RoutingDecision:
 
 
 def _primary_category(scored: ScoredAgent) -> str:
-    """Extract the primary category root from a scored agent (best effort)."""
-    # We don't have intake here directly, but we can infer from agent_id patterns
-    # This is a simplification; in full impl, we'd pass intake data through
-    return scored.agent_id.split("-")[0] if scored.agent_id else ""
+    """Extract the primary category from a scored agent's intake declaration."""
+    if scored.categories:
+        return scored.categories[0]
+    return ""
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -628,8 +631,9 @@ class IntakeResponse(BaseModel):
 
 from fastapi import APIRouter, Depends, HTTPException
 from trellis.database import get_db
+from trellis.api import require_management_auth
 
-intelligent_router = APIRouter(tags=["intelligent-routing"])
+intelligent_router = APIRouter(tags=["intelligent-routing"], dependencies=[Depends(require_management_auth)])
 
 
 @intelligent_router.post("/route/intelligent", response_model=RoutingDecisionResponse)

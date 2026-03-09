@@ -2,7 +2,7 @@
 
 > **"Kubernetes for AI agents."** Deploy, route, govern, and track costs for hundreds of AI agents across the enterprise — regardless of framework.
 
-[![Tests](https://img.shields.io/badge/tests-438%20passed-brightgreen)](#tests)
+[![Tests](https://img.shields.io/badge/tests-447%20passed-brightgreen)](#tests)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](#quick-start)
 [![License](https://img.shields.io/badge/license-proprietary-lightgrey)](#)
 
@@ -281,7 +281,7 @@ uv sync
 uv run pytest tests/ -v
 ```
 
-**438 tests** covering: platform core, LLM gateway, agent onboarding, rules engine, audit trail, FinOps engine, PHI shield, HL7/FHIR adapters, Teams adapter, document adapter, LLM observatory, health auditor, intelligent router, tool registry, audit compactor, and classification engine.
+**447 tests** covering: platform core, LLM gateway, agent onboarding, rules engine, audit trail, FinOps engine, PHI shield, HL7/FHIR adapters, Teams adapter, document adapter, LLM observatory, health auditor, intelligent router, tool registry, audit compactor, and classification engine.
 
 ---
 
@@ -340,7 +340,7 @@ trellis/
 ├── dashboard/                  # Next.js dashboard (11 pages)
 ├── deploy/                     # Azure deployment (Bicep + scripts)
 ├── alembic/                    # Database migrations
-└── tests/                      # 438 tests
+└── tests/                      # 447 tests
 ```
 
 ---

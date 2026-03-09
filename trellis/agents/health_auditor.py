@@ -561,7 +561,9 @@ class HealthAuditorAgent:
 
 # ── API Router ─────────────────────────────────────────────────────────────
 
-health_auditor_router = APIRouter(prefix="/health", tags=["health-auditor"])
+from trellis.api import require_management_auth
+
+health_auditor_router = APIRouter(prefix="/health", tags=["health-auditor"], dependencies=[Depends(require_management_auth)])
 
 
 class HealthQuickResponse(BaseModel):

@@ -127,6 +127,7 @@ from trellis.intelligent_router import intelligent_router as intelligent_routing
 from trellis.gateway import router as gateway_llm_router
 from trellis.observatory import observatory_router
 from trellis.agents.health_auditor import health_auditor_router
+from trellis.bot_service import bot_router
 
 api = APIRouter(prefix="/api")
 api.include_router(health_router)
@@ -147,6 +148,7 @@ api.include_router(intelligent_routing_router)
 app.include_router(api)
 app.include_router(gateway_llm_router)
 app.include_router(mock_router)
+app.include_router(bot_router)
 
 
 @app.get("/health")

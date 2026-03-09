@@ -1,0 +1,119 @@
+{
+  "total": 15,
+  "correct_category": 14,
+  "correct_department": 14,
+  "correct_severity": 10,
+  "correct_all": 10,
+  "failures": [
+    {
+      "index": 0,
+      "text": "Critical vulnerability CVE-2026-1234 in CrowdStrike Falcon agent allows remote c",
+      "expected": {
+        "category": "security",
+        "department": "Information Security",
+        "severity": "critical"
+      },
+      "actual": {
+        "category": "security",
+        "department": "Information Security",
+        "severity": "normal"
+      },
+      "cat_ok": true,
+      "dept_ok": true,
+      "sev_ok": false
+    },
+    {
+      "index": 4,
+      "text": "Patient portal vulnerability found. PHI exposure risk for 2000 patients through ",
+      "expected": {
+        "category": "security",
+        "department": "Information Security",
+        "severity": "critical"
+      },
+      "actual": {
+        "category": "security",
+        "department": "Information Security",
+        "severity": "normal"
+      },
+      "cat_ok": true,
+      "dept_ok": true,
+      "sev_ok": false
+    },
+    {
+      "index": 5,
+      "text": "Epic Hyperspace crashing on nurse workstations in ICU. Cannot access patient med",
+      "expected": {
+        "category": "incident",
+        "department": "IT",
+        "severity": "critical"
+      },
+      "actual": {
+        "category": "clinical",
+        "department": "Clinical",
+        "severity": "normal"
+      },
+      "cat_ok": false,
+      "dept_ok": false,
+      "sev_ok": false
+    },
+    {
+      "index": 6,
+      "text": "HIPAA training completion rates below 80% threshold. HR needs to send reminders.",
+      "expected": {
+        "category": "compliance",
+        "department": "Compliance",
+        "severity": "high"
+      },
+      "actual": {
+        "category": "compliance",
+        "department": "Compliance",
+        "severity": "normal"
+      },
+      "cat_ok": true,
+      "dept_ok": true,
+      "sev_ok": false
+    },
+    {
+      "index": 13,
+      "text": "Lab results interface between Quest Diagnostics and Epic showing 4-hour delay. P",
+      "expected": {
+        "category": "clinical",
+        "department": "Clinical",
+        "severity": "high"
+      },
+      "actual": {
+        "category": "clinical",
+        "department": "Clinical",
+        "severity": "normal"
+      },
+      "cat_ok": true,
+      "dept_ok": true,
+      "sev_ok": false
+    }
+  ],
+  "latency_ms": [
+    0.1039230264723301,
+    0.035611039493232965,
+    0.05405204137787223,
+    0.030750001315027475,
+    0.02239999594166875,
+    0.01964002149179578,
+    0.016370962839573622,
+    0.010640011169016361,
+    0.017599959392100573,
+    0.019701023120433092,
+    0.018810969777405262,
+    0.018550024833530188,
+    0.01631100894883275,
+    0.015361001715064049,
+    0.009720039088279009
+  ],
+  "accuracy": {
+    "category": 0.9333333333333333,
+    "department": 0.9333333333333333,
+    "severity": 0.6666666666666666,
+    "all": 0.6666666666666666
+  },
+  "avg_latency_ms": 0.027296075131744146,
+  "max_latency_ms": 0.1039230264723301
+}

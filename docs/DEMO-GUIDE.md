@@ -16,6 +16,9 @@
   - [Act 4: FinOps — Every Dollar Tracked](#act-4-finops--every-dollar-tracked)
   - [Act 5: Dashboard — The Command Center](#act-5-dashboard--the-command-center)
   - [Act 6: Azure — Production Ready](#act-6-azure--production-ready)
+- [Act 7: Intelligent Routing — Self-Organizing Agents](#act-7-intelligent-routing--self-organizing-agents)
+  - [Act 8: LLM Observatory — Model Intelligence](#act-8-llm-observatory--model-intelligence)
+  - [Act 9: Health Auditor & Platform Housekeeping](#act-9-health-auditor--platform-housekeeping)
 - [Appendix: Setup Instructions](#appendix-setup-instructions)
 
 ---
@@ -26,7 +29,7 @@
 
 ### Talking Points (with commands)
 
-**1. "We have no idea how many AI agents we're running, what they cost, or what data they touch."** *(30 sec)*
+**1. "We have no idea how many AI agents we're running, what they cost, or what data they touch."** *(20 sec)*
 
 ```bash
 # Show all registered agents — every AI agent in the enterprise, one registry
@@ -75,7 +78,16 @@ curl -s http://localhost:8100/api/finops/summary | python3 -m json.tool
 
 [SCREENSHOT: Dashboard overview — agent health tiles, cost chart, recent activity feed]
 
-> *"One platform. Every agent registered, every PHI element shielded, every dollar tracked. That's Trellis."*
+**5. "Agents route themselves — no manual rules needed."** *(30 sec)*
+
+```bash
+# Intelligent routing scores every agent for every envelope
+curl -s http://localhost:8100/api/health/detailed | python3 -m json.tool
+```
+
+> *"Agents declare what they handle — categories, source types, keywords. The platform scores every envelope against every agent across 5 dimensions. A feedback loop learns from outcomes. When we go from 5 agents to 50, we don't need 200 routing rules. And 7 infrastructure health checks run every 15 minutes — the platform maintains itself."*
+
+> *"One platform. Every agent registered, every PHI element shielded, every dollar tracked, every route scored. That's Trellis."*
 
 ---
 
@@ -518,6 +530,106 @@ curl -s "$TRELLIS_URL/health" | python3 -m json.tool
 
 ---
 
+### Act 7: Intelligent Routing — Self-Organizing Agents
+*(2 minutes)*
+
+> *"Static rules don't scale past 20 agents. Intelligent routing lets agents declare what they handle — no manual rule creation."*
+
+#### Agent Intake Declarations
+
+```bash
+# Register an agent with intake declaration — it declares what it handles
+curl -s -X POST http://localhost:8100/api/routing/intake/bed-manager \
+  -H "Content-Type: application/json" \
+  -d '{
+    "categories": ["clinical.admission", "clinical.transfer", "clinical.discharge"],
+    "source_types": ["hl7", "fhir"],
+    "keywords": ["adt", "bed", "icu", "transfer", "admit"],
+    "systems": ["epic"],
+    "priority_range": {"min": "normal", "max": "critical"}
+  }' | python3 -m json.tool
+```
+
+#### Scored Routing in Action
+
+```bash
+# Score an envelope against all agents — 5 dimensions
+curl -s -X POST http://localhost:8100/api/routing/score \
+  -H "Content-Type: application/json" \
+  -d '{
+    "source_type": "hl7",
+    "routing_hints": {"category": "clinical.admission", "tags": ["adt", "epic"]},
+    "metadata": {"priority": "high"}
+  }' | python3 -m json.tool
+```
+
+> *"Five scoring dimensions — category affinity, source type, keyword overlap, system match, priority alignment — weighted and configurable. Historical feedback adjusts weights over time. Shadow mode lets you run scored routing alongside rules to build confidence before switching."*
+
+#### Overlap Detection
+
+```bash
+# Check for agent intake overlaps — find routing ambiguity
+curl -s http://localhost:8100/api/routing/overlaps | python3 -m json.tool
+```
+
+> 💡 **Health First value:** *"When we go from 5 agents to 50, we don't need 200 routing rules. Each new agent declares its intake and starts routing correctly from day one. The feedback loop learns from outcomes — routing accuracy improves automatically."*
+
+[SCREENSHOT: Dashboard Routing page — agent scores visualization, overlap warnings]
+
+---
+
+### Act 8: LLM Observatory — Model Intelligence
+*(1 minute)*
+
+> *"Which models are fast? Which are expensive? Which are failing? The observatory tracks every inference call."*
+
+```bash
+# Model performance overview
+curl -s http://localhost:8100/api/observatory/models | python3 -m json.tool
+
+# Detailed metrics for a specific model
+curl -s http://localhost:8100/api/observatory/models/qwen3:8b/metrics | python3 -m json.tool
+
+# Cross-model summary
+curl -s http://localhost:8100/api/observatory/summary | python3 -m json.tool
+```
+
+> *"Latency percentiles, token efficiency, error rates, cost per request — broken down by model and by hour. When Azure OpenAI has a bad day, you see it here before your agents start failing."*
+
+[SCREENSHOT: Dashboard Observatory page — model comparison charts, latency trends]
+
+---
+
+### Act 9: Health Auditor & Platform Housekeeping
+*(1 minute)*
+
+> *"Trellis manages your agents. But who manages Trellis? These platform agents do."*
+
+```bash
+# Quick health check — 7 infrastructure checks
+curl -s http://localhost:8100/api/health/detailed | python3 -m json.tool
+
+# Health history
+curl -s http://localhost:8100/api/health/history | python3 -m json.tool
+
+# Tool registry — what tools are available and who can use them
+curl -s http://localhost:8100/api/tools | python3 -m json.tool
+```
+
+> *"Seven checks: agent health, database, background tasks, SMTP, system resources, and adapter status for HTTP, Teams, and FHIR. The Health Auditor runs every 15 minutes. The Rule Optimizer finds dead rules nightly. The Audit Compactor archives old events weekly. The platform maintains itself."*
+
+| Housekeeping Agent | Schedule | Purpose |
+|-------------------|----------|---------|
+| **Health Auditor** | Every 15 min | Agent degradation detection, trend analysis |
+| **Rule Optimizer** | Nightly | Dead rule cleanup, overlap detection, suggestions |
+| **Cost Optimizer** | Daily | Model downgrade recommendations, cost trends |
+| **Schema Drift Detector** | Inline + daily | Payload structure change monitoring |
+| **Audit Compactor** | Weekly | Log rollup, cold storage archival |
+
+[SCREENSHOT: Dashboard Health page — infrastructure check grid with status indicators]
+
+---
+
 ## Key Differentiators for Health First
 
 | Capability | Why It Matters Here |
@@ -527,7 +639,11 @@ curl -s "$TRELLIS_URL/health" | python3 -m json.tool
 | **FinOps** | Michael Carr gets a single dashboard for all AI spend across departments. Budget caps prevent runaway costs. |
 | **Rules Engine** | Department admins manage routing without code deployments. Clinical, HR, Revenue Cycle — each manages their own rules. |
 | **Teams Adapter** | Agents are accessible where staff already work — Microsoft Teams. No new app to learn. |
-| **Framework Agnostic** | SAM (HR) runs on Pi SDK. Next agent could be LangChain, OpenAI SDK, or a vendor black-box. All governed the same way. |
+| **Intelligent Routing** | Agents declare intake, platform scores and routes. No manual rules for new agents. Feedback loop learns from outcomes. |
+| **LLM Observatory** | Model performance visibility — latency, errors, cost per request. Catch provider degradation before agents fail. |
+| **Platform Housekeeping** | Self-maintaining — Health Auditor, Rule Optimizer, Cost Optimizer, Audit Compactor run autonomously. |
+| **Tool Registry** | Centralized tool governance with permission policies. Agents get scoped tool access, every call logged. |
+| **Framework Agnostic** | SAM (HR) runs natively. Next agent could be LangChain, OpenAI SDK, or a vendor black-box. All governed the same way. |
 | **Self-Hosted** | Runs in our Azure tenant. No vendor data traversal. Our infrastructure, our audit trail, our control. |
 | **$5-10/mo Demo** | Proves the concept at negligible cost. Scales to production without rearchitecting. |
 

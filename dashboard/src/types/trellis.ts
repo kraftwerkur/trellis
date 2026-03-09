@@ -95,6 +95,59 @@ export interface HealthStatus {
   service?: string;
 }
 
+/* ─── Health Auditor Types ─── */
+
+export interface HealthQuickResponse {
+  status: string;
+  timestamp: string | null;
+  agents: {
+    total: number;
+    healthy: number;
+    degraded: number;
+    unreachable: number;
+  } | null;
+}
+
+export interface HealthCheckResult {
+  name: string;
+  status: string;
+  latency_ms: number | null;
+  details: Record<string, unknown>;
+}
+
+export interface HealthAgentCheck {
+  agent_id: string;
+  status: string;
+  latency_ms: number | null;
+  baseline_ms: number | null;
+  note?: string;
+  degraded?: boolean;
+}
+
+export interface HealthDetailedResponse {
+  status: string;
+  timestamp: string;
+  agents: {
+    summary: { total: number; healthy: number; degraded: number; unreachable: number };
+    checks: HealthAgentCheck[];
+  };
+  llm_providers: HealthCheckResult[];
+  database: HealthCheckResult;
+  background_tasks: HealthCheckResult[];
+  smtp: HealthCheckResult;
+  system: HealthCheckResult;
+  adapters: HealthCheckResult[];
+}
+
+export interface HealthCheckRecord {
+  id: number;
+  check_name: string;
+  status: string;
+  latency_ms: number | null;
+  details: Record<string, unknown>;
+  timestamp: string;
+}
+
 export interface CostTimeseriesBucket {
   bucket: string;
   total_cost_usd: number;
@@ -253,4 +306,51 @@ export interface ObservatoryModelMetrics {
     hour: string;
     cost_per_request: number;
   }>;
+}
+
+/* ─── Intelligent Routing Types ─── */
+
+export interface AgentIntake {
+  agent_id: string;
+  categories: string[];
+  source_types: string[];
+  keywords: string[];
+  systems: string[];
+  priority_range: [number, number];
+  phi_authorized: boolean;
+}
+
+export interface RoutingScoreBreakdown {
+  category: number;
+  source_type: number;
+  keyword: number;
+  system: number;
+  priority: number;
+}
+
+export interface RoutingResult {
+  agent_id: string;
+  agent_name: string;
+  score: number;
+  confidence: number;
+  breakdown: RoutingScoreBreakdown;
+}
+
+export interface IntelligentRouteResponse {
+  winner: RoutingResult;
+  candidates: RoutingResult[];
+  envelope_id: string;
+  routed_at: string;
+}
+
+export interface RoutingDecision {
+  id: string;
+  envelope_id: string;
+  envelope_summary: string;
+  winner_agent_id: string;
+  winner_agent_name: string;
+  score: number;
+  confidence: number;
+  candidates_count: number;
+  routed_at: string;
 }

@@ -28,6 +28,7 @@ class Agent(Base):
     llm_config: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     function_ref: Mapped[str | None] = mapped_column(String, nullable=True)
     phi_shield_mode: Mapped[str] = mapped_column(String, default="audit_only")
+    intake: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     created: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=lambda: datetime.now(timezone.utc)
     )
@@ -174,3 +175,34 @@ class Rule(Base):
     actions: Mapped[dict] = mapped_column(JSON, nullable=False)
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     fan_out: Mapped[bool] = mapped_column(Boolean, default=False)
+
+
+class RoutingFeedback(Base):
+    __tablename__ = "routing_feedback"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    envelope_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    agent_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    outcome: Mapped[str] = mapped_column(String, nullable=False)  # "success", "failure", "partial"
+    response_time_ms: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    notes: Mapped[str | None] = mapped_column(Text, nullable=True)
+    category: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True
+    )
+
+
+class ShadowComparison(Base):
+    __tablename__ = "shadow_comparisons"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    envelope_id: Mapped[str] = mapped_column(String, nullable=False, index=True)
+    rule_based_agent: Mapped[str | None] = mapped_column(String, nullable=True)
+    intelligent_agent: Mapped[str | None] = mapped_column(String, nullable=True)
+    intelligent_confidence: Mapped[str] = mapped_column(String, nullable=False)
+    intelligent_score: Mapped[float | None] = mapped_column(Float, nullable=True)
+    agreed: Mapped[bool] = mapped_column(Boolean, nullable=False)
+    scores_snapshot: Mapped[dict] = mapped_column(JSON, default=dict)
+    timestamp: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=lambda: datetime.now(timezone.utc), index=True
+    )

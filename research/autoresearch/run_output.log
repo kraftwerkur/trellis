@@ -1,0 +1,45 @@
+=== Iteration 1 / 5 ===
+
+============================================================
+CLASSIFICATION ENGINE BENCHMARK
+============================================================
+Total test cases: 15
+Category accuracy:   93.3% (14/15)
+Department accuracy: 93.3% (14/15)
+Severity accuracy:   66.7% (10/15)
+All-correct:         66.7% (10/15)
+Avg latency: 0.027ms
+Max latency: 0.104ms
+
+────────────────────────────────────────────────────────────
+FAILURES (5):
+
+  #0: Critical vulnerability CVE-2026-1234 in CrowdStrike Falcon agent allows remote c...
+    Expected: {'category': 'security', 'department': 'Information Security', 'severity': 'critical'}
+    Actual:   {'category': 'security', 'department': 'Information Security', 'severity': 'normal'}
+    Wrong: SEV
+
+  #4: Patient portal vulnerability found. PHI exposure risk for 2000 patients through ...
+    Expected: {'category': 'security', 'department': 'Information Security', 'severity': 'critical'}
+    Actual:   {'category': 'security', 'department': 'Information Security', 'severity': 'normal'}
+    Wrong: SEV
+
+  #5: Epic Hyperspace crashing on nurse workstations in ICU. Cannot access patient med...
+    Expected: {'category': 'incident', 'department': 'IT', 'severity': 'critical'}
+    Actual:   {'category': 'clinical', 'department': 'Clinical', 'severity': 'normal'}
+    Wrong: CAT, DEPT, SEV
+
+  #6: HIPAA training completion rates below 80% threshold. HR needs to send reminders....
+    Expected: {'category': 'compliance', 'department': 'Compliance', 'severity': 'high'}
+    Actual:   {'category': 'compliance', 'department': 'Compliance', 'severity': 'normal'}
+    Wrong: SEV
+
+  #13: Lab results interface between Quest Diagnostics and Epic showing 4-hour delay. P...
+    Expected: {'category': 'clinical', 'department': 'Clinical', 'severity': 'high'}
+    Actual:   {'category': 'clinical', 'department': 'Clinical', 'severity': 'normal'}
+    Wrong: SEV
+
+============================================================
+
+Results saved to baseline_results.json
+Calling Qwopus for iteration 1...

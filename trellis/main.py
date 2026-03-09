@@ -183,6 +183,7 @@ from trellis.api import (
     finops_router, gateway_mgmt_router, health_router, keys_router, rules_router,
     phi_router, tools_router,
 )
+from trellis.intelligent_router import intelligent_router as intelligent_routing_router
 from trellis.gateway import router as gateway_llm_router
 from trellis.observatory import observatory_router
 from trellis.agents.health_auditor import health_auditor_router
@@ -201,6 +202,7 @@ api.include_router(gateway_mgmt_router)
 api.include_router(phi_router)
 api.include_router(tools_router)
 api.include_router(observatory_router)
+api.include_router(intelligent_routing_router)
 
 app.include_router(api)
 app.include_router(gateway_llm_router)

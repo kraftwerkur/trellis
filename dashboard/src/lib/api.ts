@@ -14,9 +14,11 @@ export type {
   Agent, AuditEvent, Rule, EnvelopeLog, CostEvent, CostSummary, CostTimeseriesBucket, GatewayStats, GatewayStatsResponse, HealthStatus,
   PhiTestResponse, PhiStatsResponse, PhiShieldMode, AgentPhiConfig, GatewayProvider, GatewayModel, FinOpsSummary, ToolInfo, ToolCallLog,
   ObservatorySummary, ObservatoryModel, ObservatoryModelMetrics,
+  HealthQuickResponse, HealthDetailedResponse, HealthCheckRecord,
+  AgentIntake, IntelligentRouteResponse, RoutingDecision,
 } from "../types/trellis";
 
-import type { Agent, AuditEvent, Rule, EnvelopeLog, CostEvent, CostSummary, CostTimeseriesBucket, GatewayStatsResponse, HealthStatus, PhiTestResponse, PhiStatsResponse, PhiShieldMode, AgentPhiConfig, GatewayProvider, GatewayModel, FinOpsSummary, ToolInfo, ToolCallLog, ObservatorySummary, ObservatoryModel, ObservatoryModelMetrics } from "../types/trellis";
+import type { Agent, AuditEvent, Rule, EnvelopeLog, CostEvent, CostSummary, CostTimeseriesBucket, GatewayStatsResponse, HealthStatus, PhiTestResponse, PhiStatsResponse, PhiShieldMode, AgentPhiConfig, GatewayProvider, GatewayModel, FinOpsSummary, ToolInfo, ToolCallLog, ObservatorySummary, ObservatoryModel, ObservatoryModelMetrics, HealthQuickResponse, HealthDetailedResponse, HealthCheckRecord, AgentIntake, IntelligentRouteResponse, RoutingDecision } from "../types/trellis";
 
 // API functions
 export const api = {
@@ -71,6 +73,24 @@ export const api = {
     summary: () => apiFetch<ObservatorySummary>("/api/observatory/summary"),
     models: () => apiFetch<ObservatoryModel[]>("/api/observatory/models"),
     modelMetrics: (modelId: string) => apiFetch<ObservatoryModelMetrics>(`/api/observatory/models/${encodeURIComponent(modelId)}/metrics`),
+  },
+  healthAuditor: {
+    quick: () => apiFetch<HealthQuickResponse>("/api/health"),
+    detailed: () => apiFetch<HealthDetailedResponse>("/api/health/detailed"),
+    history: (checkName?: string, limit: number = 100) => {
+      const qs = new URLSearchParams();
+      if (checkName) qs.set("check_name", checkName);
+      qs.set("limit", String(limit));
+      return apiFetch<HealthCheckRecord[]>(`/api/health/history?${qs.toString()}`);
+    },
+  },
+  routing: {
+    intelligent: (envelope: Record<string, unknown>) =>
+      apiFetch<IntelligentRouteResponse>("/api/route/intelligent", { method: "POST", body: JSON.stringify(envelope) }),
+    agentIntake: (agentId: string) => apiFetch<AgentIntake>(`/api/agents/${agentId}/intake`),
+    updateIntake: (agentId: string, data: Partial<AgentIntake>) =>
+      apiFetch<AgentIntake>(`/api/agents/${agentId}/intake`, { method: "PUT", body: JSON.stringify(data) }),
+    recentDecisions: () => apiFetch<RoutingDecision[]>("/api/route/decisions"),
   },
   phi: {
     test: (text: string) => apiFetch<PhiTestResponse>("/api/phi/test", { method: "POST", body: JSON.stringify({ text }) }),

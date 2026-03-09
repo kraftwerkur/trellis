@@ -12,6 +12,7 @@ const PAGE_TITLES: Record<string, { title: string; desc: string }> = {
   "/": { title: "Command Center", desc: "System health and activity at a glance" },
   "/agents": { title: "Agents", desc: "Registered agents, status, and performance" },
   "/audit": { title: "Audit Log", desc: "Event stream — what happened and when" },
+  "/routing": { title: "Routing", desc: "Intelligent routing, agent intake, and overlap analysis" },
   "/rules": { title: "Rules", desc: "Routing rules that determine agent dispatch" },
   "/gateway": { title: "Gateway", desc: "LLM gateway providers, routes, and stats" },
   "/phi": { title: "PHI Shield", desc: "Protected health information detection and redaction" },

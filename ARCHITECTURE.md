@@ -1,7 +1,7 @@
 # Trellis — Enterprise AI Agent Orchestration
 
-**Date:** 2026-02-22
-**Status:** Architecture defined. Pre-implementation.
+**Date:** 2026-02-22 (updated 2026-03-09)
+**Status:** Implemented. 438 tests passing.
 **Owner:** Eric O'Brien, SVP Enterprise Technology
 **One-liner:** Kubernetes for AI agents — manage, route, and govern hundreds of agents across a healthcare system, regardless of framework.
 
@@ -28,12 +28,14 @@ graph TD
     end
 
     subgraph "Layer 2: Platform Core"
-        ENV --> ER[Event Router]
-        ER --> RE[Rules Engine]
-        ER --> AR[Agent Registry]
-        ER --> TR[Tool Registry]
-        ER --> AU[Audit Log]
-        ER --> FE[FinOps Engine]
+        ENV --> CL[Classification Engine]
+        CL --> IR[Intelligent Router]
+        IR --> RE[Rules Engine]
+        IR --> AR[Agent Registry]
+        IR --> TR[Tool Registry]
+        IR --> PS[PHI Shield]
+        IR --> AU[Audit Log]
+        IR --> FE[FinOps Engine]
     end
 
     subgraph "Layer 3: Agents"
@@ -51,6 +53,7 @@ graph TD
         MR --> LLM1[Azure OpenAI]
         MR --> LLM2[Ollama]
         MR --> LLM3[Anthropic]
+        GW --> OB[LLM Observatory]
         GW --> FE
     end
 ```
@@ -277,6 +280,105 @@ Data model:
   "timestamp": "ISO-8601"
 }
 ```
+
+### Classification Engine
+
+**Status:** Implemented (`trellis/classification.py`, 51 tests)
+
+Auto-classifies every inbound envelope before routing. Enriches envelopes with department, category, severity, and entity tags without requiring senders to understand Trellis's routing structure.
+
+**Classification pipeline:**
+1. **Source-type mapping** — known sources (e.g., `epic` → Clinical, `ukg` → HR) get high-confidence classification
+2. **Keyword analysis** — scans payload text and data for domain-specific keywords (security, clinical, HR, revenue, compliance)
+3. **Severity inference** — CVSS scores ≥9, exploit flags, outage/breach/ransomware keywords trigger critical severity; escalation keywords trigger high
+4. **Tag extraction** — CVE IDs, tech stack systems, payer names, denial codes extracted as structured tags
+5. **Merge** — sender-provided hints take priority; inferred values fill gaps
+
+### Intelligent Router
+
+**Status:** Implemented (`trellis/intelligent_router.py`, 60+ tests)
+
+Replaces static rule matching with multi-dimensional scoring. Agents declare what they handle via intake declarations; the router scores every envelope against every declared agent.
+
+**5 scoring dimensions:**
+- Category affinity (30%) — hierarchical dot-notation matching with parent/child scoring
+- Source type (25%) — exact match on declared source types
+- Keyword overlap (20%) — Jaccard similarity with CVE bonus scoring
+- System match (15%) — technology stack alignment
+- Priority alignment (10%) — priority range matching
+
+**Additional multipliers:**
+- **Historical multiplier** [0.70–1.30] — per-agent, per-category success rate via EMA (α=0.15)
+- **Load multiplier** — penalizes agents above 50% in-flight capacity, zeros at 100%
+
+**Routing modes:** `shadow` (log scores alongside rules), `hybrid` (scored with rule fallback), `scored` (full intelligent routing)
+
+**Feedback loop:** Agents submit outcome feedback (success/failure/partial). Daily weight updater adjusts dimension weights based on which dimensions best predicted success.
+
+### PHI Shield
+
+**Status:** Implemented (`trellis/phi_shield.py`, 30+ tests)
+
+HIPAA-compliant PHI/PII detection and redaction integrated into the LLM Gateway pipeline.
+
+- **18 HIPAA Safe Harbor identifiers** plus healthcare-specific types: MRN, NPI, ICD-10, CPT, Health Plan ID, Device ID, Account Number
+- **Dual detection:** regex patterns for structured data + Presidio NLP for unstructured names and addresses
+- **Per-agent modes:** `full` (redact → LLM → rehydrate), `redact_only`, `audit_only`, `off`
+- **Ephemeral token vault:** PHI mapped to reversible tokens in memory; never persisted, never logged
+- **False-positive suppression:** drug names and facility names filtered from Presidio PERSON detections
+
+### LLM Observatory
+
+**Status:** Implemented (`trellis/observatory.py`, 16 tests)
+
+Per-model performance tracking for all inference calls through the LLM Gateway.
+
+- Model-level metrics: request count, total tokens, latency (avg, p50, p95), error count, cost
+- Hourly breakdown for trend analysis
+- Multi-agent aggregation (same model used by different agents)
+- Token efficiency metrics (output/input ratio)
+- Cross-model summary endpoint for comparison
+
+### Health Auditor
+
+**Status:** Implemented (`trellis/agents/health_auditor.py`, 20 tests)
+
+Platform infrastructure health monitoring with 7 check categories:
+
+1. **Agent health** — polls registered agents, detects unreachable or degraded endpoints
+2. **Database** — verifies SQLite/PostgreSQL connectivity
+3. **Background tasks** — heartbeat tracking for scheduled jobs
+4. **SMTP** — email output configuration status
+5. **System resources** — disk and memory utilization
+6. **Adapter status** — HTTP (always healthy), Teams (configuration check), FHIR (configuration check)
+7. **Native agent status** — auto-healthy for in-process agents
+
+Results cached for quick-check endpoint. Full history persisted with filtering and retention.
+
+### Tool Registry
+
+**Status:** Implemented (`trellis/tool_registry.py`, 14 tests)
+
+Centralized tool governance with permission-based access control.
+
+- JSON schema definitions for tool inputs/outputs
+- Per-agent tool allowlists with wildcard support
+- Execution logging with call counts and error tracking
+- Built-in tools: `echo`, `ticket_logger`
+- Decorator-style registration for custom tools
+- REST API for tool discovery and usage stats
+
+### Audit Compactor
+
+**Status:** Implemented (`trellis/agents/audit_compactor.py`, 5 tests)
+
+Automated audit log lifecycle management.
+
+- Groups events by hour + event_type + agent_id + department into summary records
+- Archives raw events to cold storage before deletion
+- Configurable retention window (default 90 days)
+- Transaction-safe: archive write must succeed before any deletion
+- Designed for weekly scheduled execution
 
 ### Audit
 
@@ -671,7 +773,7 @@ Next.js command center — live event flow, agent health, cost metrics, rule CRU
 ### Phase 7: Healthcare Adapters ✅
 HL7v2 (ADT/ORM/ORU/SIU), FHIR R4 (Patient/Encounter/Observation), Teams adapter (Bot Framework).
 
-### Phase 8: Real Agents (In Progress)
+### Phase 8: Real Agents ✅
 **Security Triage Agent** — first tool-calling native agent. Cross-references vulnerabilities against HF tech stack, calculates risk scores, drafts structured advisories. Proves Tier 2 agent capability.
 
 Incremental build plan:
@@ -694,7 +796,7 @@ Address security gaps and technical debt surfaced by code review before broader 
 8. Shared `httpx` client — connection pooling, proper lifecycle
 9. Model pricing single source of truth — one dict, no scattered literals
 
-### Phase 10: Classification Engine + Platform Housekeeping (Next)
+### Phase 10: Classification Engine + Platform Housekeeping ✅
 Platform-level enrichment middleware. Every inbound envelope gets auto-classified (department, category, urgency, entities) before hitting the rules engine. Senders don't need to know Trellis's routing structure — they just send raw events. This phase also introduces **Platform Housekeeping Agents** — autonomous agents that maintain Trellis itself (rule optimization, health auditing, cost analysis, schema drift detection, audit compaction). These share the "core platform infrastructure" framing with the classification engine. See [Platform Housekeeping Agents](#platform-housekeeping-agents).
 
 ### Phase 11: Agent Identity & Access
@@ -1117,9 +1219,9 @@ The dashboard gets a **Platform Health** tab showing:
 
 *This architecture was designed during a session with Eric O'Brien on 2026-02-22. Runtime interface added 2026-02-23 per Eric's directive to make Pi the default runtime while keeping the platform runtime-agnostic. Document ingestion adapter added 2026-03-05.*
 
-## Phase 13: Intelligent Routing — Agent-Declared Intake + Scored Matching
+## Phase 13: Intelligent Routing — Agent-Declared Intake + Scored Matching ✅
 
-**Status:** Full design complete — see [`docs/INTELLIGENT-ROUTING-DESIGN.md`](docs/INTELLIGENT-ROUTING-DESIGN.md)
+**Status:** Implemented (60+ tests passing) — see [`docs/INTELLIGENT-ROUTING-DESIGN.md`](docs/INTELLIGENT-ROUTING-DESIGN.md)
 
 **Problem:** Current routing is rigid pattern matching — static rules with hardcoded conditions. Doesn't scale past 20+ agents. Adding a new agent requires manually creating routing rules. Classification Engine infers hints but feeds them into dumb rules. See §2 of the design doc for concrete Health First examples.
 

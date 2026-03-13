@@ -26,21 +26,39 @@ _MOCK_LLM_RESPONSE = {
     "object": "chat.completion",
 }
 
+def _make_mock_llm_health():
+    from trellis.agents.health_auditor import CheckResult
+    return [CheckResult(name="llm:ollama", status="healthy", latency_ms=1.0, details={"url": "mock", "model_count": 3})]
+
+
+def _make_mock_smtp():
+    from trellis.agents.health_auditor import CheckResult
+    return CheckResult(name="smtp", status="warning", details={"note": "TRELLIS_SMTP_HOST not configured"})
+
 @pytest.fixture(autouse=True)
 def mock_llm_provider(request):
-    """Patch OllamaProvider.chat_completion with a fast mock for all tests.
+    """Patch LLM HTTP calls with fast mocks for all tests.
 
-    Skip patching for tests marked @pytest.mark.no_llm_mock (real integration tests).
-    This converts ~90s of Ollama wall time into <0.1s per test.
+    Mocks:
+    - OpenAICompatibleProvider.chat_completion → fast fake completion
+    - check_llm_providers → skips real HTTP probes to LLM endpoints
+    - check_smtp → skips real socket connection attempt
+
+    Skip all mocks for tests marked @pytest.mark.no_llm_mock.
     """
     if request.node.get_closest_marker("no_llm_mock"):
         yield
         return
 
     mock_chat = AsyncMock(return_value=_MOCK_LLM_RESPONSE)
-    # _providers["ollama"] is an OpenAICompatibleProvider instance (always_available=True)
-    # Patch the instance method directly so no real HTTP calls go to Ollama.
-    with patch("trellis.gateway.OpenAICompatibleProvider.chat_completion", mock_chat):
+    mock_health = AsyncMock(side_effect=lambda: _make_mock_llm_health())
+    mock_smtp = lambda: _make_mock_smtp()  # noqa: E731
+
+    with (
+        patch("trellis.gateway.OpenAICompatibleProvider.chat_completion", mock_chat),
+        patch("trellis.agents.health_auditor.check_llm_providers", mock_health),
+        patch("trellis.agents.health_auditor.check_smtp", mock_smtp),
+    ):
         yield mock_chat
 
 

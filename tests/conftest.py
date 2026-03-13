@@ -46,19 +46,15 @@ def mock_llm_provider(request):
 
 @pytest_asyncio.fixture
 async def client():
-    """Shared async test client with clean DB per test."""
-    from sqlalchemy import text
-
+    """Shared async test client — truncates data between tests (schema created once)."""
+    # Create tables if not exist, truncate rows for isolation — skip expensive drop_all
     async with engine.begin() as conn:
-        # Use checkfirst to handle missing/stale tables gracefully
-        await conn.run_sync(Base.metadata.drop_all, checkfirst=True)
         await conn.run_sync(Base.metadata.create_all, checkfirst=True)
+        for table in reversed(Base.metadata.sorted_tables):
+            await conn.execute(table.delete())
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as c:
         set_client_override(c)
         yield c
         set_client_override(None)
-
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.drop_all, checkfirst=True)

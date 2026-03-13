@@ -18,6 +18,7 @@ from trellis.adapters.teams_adapter import (
     ACTIVITY_TYPE_MESSAGE,
     TeamsClient,
     _jwks_cache,
+    _validate_service_url,
     build_teams_envelope,
     parse_activity,
     validate_bot_token,
@@ -381,6 +382,34 @@ class TestCards:
 
 
 # ── TeamsClient tests ──────────────────────────────────────────────────────
+
+# ── Service URL validation tests ──────────────────────────────────────────
+
+class TestServiceUrlValidation:
+    def test_valid_teams_url(self):
+        _validate_service_url("https://smba.trafficmanager.net/teams/")
+
+    def test_valid_webchat_url(self):
+        _validate_service_url("https://webchat.botframework.com/")
+
+    def test_valid_localhost(self):
+        _validate_service_url("http://localhost:3978/")
+
+    def test_valid_gcc_url(self):
+        _validate_service_url("https://smba.infra.gcc.teams.microsoft.com/us/")
+
+    def test_empty_url(self):
+        with pytest.raises(ValueError, match="Empty"):
+            _validate_service_url("")
+
+    def test_untrusted_url(self):
+        with pytest.raises(ValueError, match="Untrusted"):
+            _validate_service_url("https://evil.example.com/")
+
+    def test_http_non_localhost(self):
+        with pytest.raises(ValueError, match="Untrusted"):
+            _validate_service_url("http://evil.com/")
+
 
 class TestTeamsClient:
     @pytest.mark.asyncio

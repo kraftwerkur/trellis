@@ -14,7 +14,7 @@ import {
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, ScatterChart, Scatter, Cell,
-} from "recharts";
+} from "@/lib/charts";
 
 /* ─── Mock Data (demo mode fallback) ─── */
 

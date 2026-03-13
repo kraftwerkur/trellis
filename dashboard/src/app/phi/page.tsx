@@ -8,7 +8,7 @@ import { ShieldCheck, Scan, Eye, ShieldAlert, FlaskConical, Send } from "lucide-
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Cell,
-} from "recharts";
+} from "@/lib/charts";
 
 const COLORS = ["#06b6d4", "#8b5cf6", "#f59e0b", "#10b981", "#ef4444", "#ec4899", "#3b82f6", "#f97316"];
 

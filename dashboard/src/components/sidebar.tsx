@@ -2,19 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Bot, Shield, ShieldCheck, GitBranch, Network, DollarSign, BookOpen, Wrench, Telescope, HeartPulse, ChevronLeft, ChevronRight, Route } from "lucide-react";
+import { LayoutDashboard, Bot, Shield, ShieldCheck, GitBranch, Network, DollarSign, BookOpen, Wrench, Telescope, HeartPulse, ChevronLeft, ChevronRight, Route, FileText, Bell } from "lucide-react";
 
 const NAV_ITEMS = [
   { href: "/", label: "Overview", icon: LayoutDashboard },
   { href: "/agents", label: "Agents", icon: Bot },
   { href: "/audit", label: "Audit", icon: Shield },
   { href: "/tools", label: "Tools", icon: Wrench },
+  { href: "/documents", label: "Documents", icon: FileText },
   { href: "/routing", label: "Routing", icon: Route },
   { href: "/rules", label: "Rules", icon: GitBranch },
   { href: "/gateway", label: "Gateway", icon: Network },
   { href: "/phi", label: "PHI Shield", icon: ShieldCheck },
   { href: "/finops", label: "FinOps", icon: DollarSign },
   { href: "/observatory", label: "Observatory", icon: Telescope },
+  { href: "/alerts", label: "Alerts", icon: Bell },
   { href: "/health", label: "Health", icon: HeartPulse },
   { href: "/docs", label: "Docs", icon: BookOpen },
 ];

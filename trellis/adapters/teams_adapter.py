@@ -281,6 +281,40 @@ def build_teams_envelope(activity: dict[str, Any]) -> Envelope:
 
 # ── Proactive messaging (send back to Teams) ──────────────────────────────
 
+# ── Service URL validation (SSRF prevention) ──────────────────────────────
+
+# Bot Framework only sends activities from these domains.
+# Reject anything else to prevent SSRF via crafted serviceUrl.
+ALLOWED_SERVICE_URL_PREFIXES = [
+    "https://smba.trafficmanager.net/",
+    "https://webchat.botframework.com/",
+    "https://directline.botframework.com/",
+    "https://europe.directline.botframework.com/",
+    "https://asia.directline.botframework.com/",
+    "https://smba.infra.gcc.teams.microsoft.com/",  # GCC
+    "https://smba.infra.gcch.teams.microsoft.com/",  # GCC-H
+    "https://smba.infra.dod.teams.microsoft.com/",  # DoD
+    # Allow localhost for dev/emulator
+    "http://localhost:",
+    "http://127.0.0.1:",
+]
+
+
+def _validate_service_url(service_url: str) -> None:
+    """Ensure the service URL is a known Bot Framework endpoint.
+
+    Raises:
+        ValueError: If the URL doesn't match any allowed prefix.
+    """
+    if not service_url:
+        raise ValueError("Empty service URL")
+    if not any(service_url.startswith(prefix) for prefix in ALLOWED_SERVICE_URL_PREFIXES):
+        raise ValueError(
+            f"Untrusted service URL: {service_url}. "
+            "Only Bot Framework endpoints are allowed."
+        )
+
+
 class TeamsClient:
     """Send messages and cards back to Teams conversations.
 
@@ -351,21 +385,43 @@ class TeamsClient:
         conversation_id: str,
         activity: dict[str, Any],
     ) -> dict[str, Any]:
-        """POST an activity to the Bot Framework conversation endpoint."""
+        """POST an activity to the Bot Framework conversation endpoint.
+
+        Validates service_url against known Bot Framework domains and
+        retries once on 401 (token refresh) or 429/5xx (transient).
+        """
+        _validate_service_url(service_url)
         token = await self._get_token()
         url = (
             f"{service_url.rstrip('/')}/v3/conversations/"
             f"{conversation_id}/activities"
         )
 
-        async with httpx.AsyncClient(timeout=15.0) as client:
-            resp = await client.post(
-                url,
-                json=activity,
-                headers={
-                    "Authorization": f"Bearer {token}",
-                    "Content-Type": "application/json",
-                },
-            )
-            resp.raise_for_status()
-            return resp.json()
+        for attempt in range(2):
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                resp = await client.post(
+                    url,
+                    json=activity,
+                    headers={
+                        "Authorization": f"Bearer {token}",
+                        "Content-Type": "application/json",
+                    },
+                )
+                if resp.status_code == 401 and attempt == 0:
+                    # Token may have expired; force refresh and retry
+                    self._token = None
+                    self._token_expires = 0
+                    token = await self._get_token()
+                    continue
+                if resp.status_code == 429 and attempt == 0:
+                    # Rate limited; wait briefly and retry once
+                    import asyncio
+                    retry_after = float(resp.headers.get("Retry-After", "2"))
+                    await asyncio.sleep(min(retry_after, 10))
+                    continue
+                resp.raise_for_status()
+                return resp.json()
+
+        # Should not reach here, but just in case
+        resp.raise_for_status()
+        return resp.json()

@@ -12,7 +12,7 @@ import {
 import {
   AreaChart as RechartsAreaChart, Area, ResponsiveContainer, Tooltip, XAxis, YAxis,
   PieChart, Pie, Cell, CartesianGrid,
-} from "recharts";
+} from "@/lib/charts";
 import {
   Card, CardContent, CardHeader, CardTitle,
 } from "@/components/ui/card";

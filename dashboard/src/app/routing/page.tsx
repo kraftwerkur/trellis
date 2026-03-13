@@ -11,7 +11,7 @@ import {
 import {
   RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis,
   ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell,
-} from "recharts";
+} from "@/lib/charts";
 
 /* ─── Mock Data ─── */
 

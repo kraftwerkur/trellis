@@ -317,7 +317,41 @@ async def test_proactive_sends_card(monkeypatch):
 # ── /api/proactive endpoint ──────────────────────────────────────────────
 
 @pytest.mark.asyncio
-async def test_proactive_endpoint_no_conv_id():
+async def test_messages_rejects_untrusted_service_url(_bot_env):
+    """Activities with untrusted serviceUrl should not store conversation ref."""
+    app = _make_test_app()
+    refs = get_conversation_refs()
+    refs.clear()
+
+    activity = _make_activity(activity_type="conversationUpdate", conv_id="evil-conv")
+    activity["serviceUrl"] = "https://evil.example.com/"
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        resp = await client.post("/api/messages", json=activity)
+        assert resp.status_code == 200  # Activity still processed
+
+    assert "evil-conv" not in refs  # But ref NOT stored
+
+
+@pytest.mark.asyncio
+async def test_proactive_endpoint_requires_bot_config(monkeypatch):
+    """Proactive endpoint should 503 when bot is not configured."""
+    monkeypatch.delenv("TEAMS_APP_ID", raising=False)
+    monkeypatch.delenv("TEAMS_APP_PASSWORD", raising=False)
+    app = _make_test_app()
+    async with AsyncClient(
+        transport=ASGITransport(app=app), base_url="http://test"
+    ) as client:
+        resp = await client.post(
+            "/api/proactive",
+            json={"conversation_id": "conv-1", "text": "hi"},
+        )
+        assert resp.status_code == 503
+
+
+@pytest.mark.asyncio
+async def test_proactive_endpoint_no_conv_id(_bot_env):
     app = _make_test_app()
     async with AsyncClient(
         transport=ASGITransport(app=app), base_url="http://test"
@@ -327,7 +361,7 @@ async def test_proactive_endpoint_no_conv_id():
 
 
 @pytest.mark.asyncio
-async def test_proactive_endpoint_missing_ref():
+async def test_proactive_endpoint_missing_ref(_bot_env):
     app = _make_test_app()
     refs = get_conversation_refs()
     refs.clear()

@@ -372,9 +372,18 @@ async def check_budget(db: AsyncSession, api_key: ApiKey) -> str | None:
 
 async def check_budget_alerts(db: AsyncSession, api_key: ApiKey) -> None:
     from trellis.router import emit_audit
+    from trellis.alerts import fire_alert
     if api_key.budget_daily_usd is not None:
         daily_spend = await _get_daily_spend(db, api_key.agent_id)
         ratio = daily_spend / api_key.budget_daily_usd
+        if ratio >= BUDGET_WARNING_THRESHOLD:
+            try:
+                await fire_alert("finops", "budget_pct", ratio * 100,
+                                 agent_id=api_key.agent_id,
+                                 details={"period": "daily", "spend": round(daily_spend, 6),
+                                          "budget": api_key.budget_daily_usd})
+            except Exception:
+                pass
         if BUDGET_WARNING_THRESHOLD <= ratio < 1.0:
             await emit_audit(db, "budget_warning", agent_id=api_key.agent_id, details={
                 "period": "daily", "spend": round(daily_spend, 6),
@@ -383,6 +392,14 @@ async def check_budget_alerts(db: AsyncSession, api_key: ApiKey) -> None:
     if api_key.budget_monthly_usd is not None:
         monthly_spend = await _get_monthly_spend(db, api_key.agent_id)
         ratio = monthly_spend / api_key.budget_monthly_usd
+        if ratio >= BUDGET_WARNING_THRESHOLD:
+            try:
+                await fire_alert("finops", "budget_pct", ratio * 100,
+                                 agent_id=api_key.agent_id,
+                                 details={"period": "monthly", "spend": round(monthly_spend, 6),
+                                          "budget": api_key.budget_monthly_usd})
+            except Exception:
+                pass
         if BUDGET_WARNING_THRESHOLD <= ratio < 1.0:
             await emit_audit(db, "budget_warning", agent_id=api_key.agent_id, details={
                 "period": "monthly", "spend": round(monthly_spend, 6),

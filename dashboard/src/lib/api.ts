@@ -99,4 +99,14 @@ export const api = {
     updateAgentMode: (agentId: string, mode: PhiShieldMode) =>
       apiFetch<AgentPhiConfig>(`/api/agents/${agentId}/phi`, { method: "PUT", body: JSON.stringify({ phi_shield_mode: mode }) }),
   },
+  alerts: {
+    rules: () => apiFetch<any[]>("/api/alerts/rules"),
+    history: (limit = 100) => apiFetch<any[]>(`/api/alerts/history?limit=${limit}`),
+    summary: () => apiFetch<any>("/api/alerts/summary"),
+    createRule: (data: any) => apiFetch<any>("/api/alerts/rules", { method: "POST", body: JSON.stringify(data) }),
+    updateRule: (id: number, data: any) => apiFetch<any>(`/api/alerts/rules/${id}`, { method: "PUT", body: JSON.stringify(data) }),
+    deleteRule: (id: number) => apiFetch<void>(`/api/alerts/rules/${id}`, { method: "DELETE" }),
+    toggleRule: (id: number) => apiFetch<any>(`/api/alerts/rules/${id}/toggle`, { method: "PUT" }),
+    testRule: (ruleId: number) => apiFetch<any>("/api/alerts/test", { method: "POST", body: JSON.stringify({ rule_id: ruleId }) }),
+  },
 };

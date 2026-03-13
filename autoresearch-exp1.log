@@ -1,0 +1,20 @@
+╔══════════════════════════════════════════════════════════╗
+║       Trellis Autoresearch — Benchmark Run               ║
+║       2026-03-13 02:09:48 UTC                        ║
+╚══════════════════════════════════════════════════════════╝
+
+Results will append to: /home/reef/projects/trellis/autoresearch.jsonl
+
+
+── Test Suite Speed ─────────────────────────────────────────────
+Running 525-test suite (this takes ~30-60s)...
+  Enable tracemalloc to get traceback where the object was allocated.
+  See https://docs.pytest.org/en/stable/how-to/capture-warnings.html#resource-warnings for more info.
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+534 passed, 3 warnings in 16.02s
+METRIC name=test_suite_seconds value=16.834 unit=seconds direction=lower
+(install pytest-json-report for per-file breakdown)
+
+── Done ────────────────────────────────────────────────────
+JSONL results: 2 total records in autoresearch.jsonl

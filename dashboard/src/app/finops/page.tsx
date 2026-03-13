@@ -8,7 +8,7 @@ import { DollarSign, TrendingUp, Users, Cpu, Target } from "lucide-react";
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, Cell, PieChart, Pie,
-} from "recharts";
+} from "@/lib/charts";
 
 const COLORS = ["#06b6d4", "#8b5cf6", "#f59e0b", "#10b981", "#ef4444", "#ec4899"];
 const BUDGET_CAP_DAILY = 25.0;

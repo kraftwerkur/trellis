@@ -370,6 +370,22 @@ async def get_model_metrics(
     efficiency = await _get_token_efficiency(db, model_id, hours)
     hourly = await _get_hourly_breakdown(db, model_id, hours)
 
+    # Fire alerts for high error rate and high latency
+    try:
+        from trellis.alerts import fire_alert
+        error_rate = round(total_errors / total_requests, 4) if total_requests > 0 else 0.0
+        await fire_alert("observatory", "error_rate", error_rate,
+                         details={"model": model_id, "total_requests": total_requests,
+                                  "total_errors": total_errors})
+        if latency.p95 > 0:
+            await fire_alert("observatory", "latency_p95", latency.p95,
+                             details={"model": model_id})
+        if latency.p99 > 0:
+            await fire_alert("observatory", "latency_p99", latency.p99,
+                             details={"model": model_id})
+    except Exception:
+        pass
+
     return ModelMetrics(
         model=model_id,
         provider=provider,

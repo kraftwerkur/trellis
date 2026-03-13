@@ -507,6 +507,16 @@ async def shield_request(
         phi_stats.record(agent_id, detections, phi_shield_mode)
         if db is not None:
             await emit_phi_audit(db, agent_id, trace_id, phi_shield_mode, detections)
+        # Fire alert for PHI detection
+        try:
+            from trellis.alerts import fire_alert_event
+            categories = sorted(set(d.phi_type for d in detections))
+            await fire_alert_event("phi_shield", "phi_detected",
+                                   f"PHI detected: {len(detections)} instance(s), categories: {categories}",
+                                   agent_id=agent_id,
+                                   details={"count": len(detections), "categories": categories})
+        except Exception as e:
+            logger.debug(f"Alert dispatch failed (non-fatal): {e}")
 
     if phi_shield_mode == "audit_only":
         # Don't modify messages, just log

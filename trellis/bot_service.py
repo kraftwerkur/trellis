@@ -22,6 +22,7 @@ from fastapi import APIRouter, Header, HTTPException, Request
 
 from trellis.adapters.teams_adapter import (
     TeamsClient,
+    _validate_service_url,
     build_teams_envelope,
     validate_bot_token,
 )
@@ -111,11 +112,15 @@ async def handle_bot_message(
     conv_id = conversation.get("id", "")
     service_url = activity.get("serviceUrl", "")
     if conv_id and service_url:
-        _conversation_refs[conv_id] = {
-            "service_url": service_url,
-            "conversation_id": conv_id,
-            "tenant_id": conversation.get("tenantId", ""),
-        }
+        try:
+            _validate_service_url(service_url)
+            _conversation_refs[conv_id] = {
+                "service_url": service_url,
+                "conversation_id": conv_id,
+                "tenant_id": conversation.get("tenantId", ""),
+            }
+        except ValueError:
+            logger.warning("Rejected untrusted serviceUrl: %s", service_url)
 
     # Only route message activities through Trellis
     if activity_type != "message":
@@ -220,7 +225,18 @@ async def proactive_endpoint(request: Request):
     """Send a proactive message to a Teams conversation.
 
     Body: {"conversation_id": "...", "text": "...", "card": {...}}
+
+    NOTE: This endpoint should be behind an internal network or API key
+    in production. It allows sending messages to any stored conversation.
     """
+    # Basic guard: only allow if bot is configured (prevents use on misconfigured instances)
+    app_id, app_password = _get_credentials()
+    if not app_id or not app_password:
+        raise HTTPException(
+            status_code=503,
+            detail="Bot not configured. Set TEAMS_APP_ID and TEAMS_APP_PASSWORD.",
+        )
+
     try:
         body = await request.json()
     except Exception:

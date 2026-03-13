@@ -349,6 +349,96 @@ async def fhir_subscription_webhook(payload: dict, db: AsyncSession = Depends(ge
     }
 
 
+@event_router.post("/documents/ingest")
+async def document_ingest(
+    request: "Request",
+    db: AsyncSession = Depends(get_db),
+):
+    """Accept a document upload (PDF, text, HL7 CDA/CCD) and route as events.
+
+    Accepts multipart/form-data with:
+      - file: the document file (required)
+      - document_type: policy|procedure|guideline|protocol|compliance|form (optional)
+      - department: originating department (optional)
+      - effective_date: ISO-8601 date (optional)
+      - author: document author (optional)
+      - version: document version (optional)
+      - chunk_size: max chars per chunk, default 1000 (optional)
+      - overlap: overlap chars between chunks, default 200 (optional)
+
+    Size limit: configurable via TRELLIS_MAX_DOCUMENT_SIZE_MB env var (default 10MB).
+    """
+    from fastapi import UploadFile
+    import json
+
+    max_size_mb = int(os.environ.get("TRELLIS_MAX_DOCUMENT_SIZE_MB", "10"))
+    max_size_bytes = max_size_mb * 1024 * 1024
+
+    # Parse multipart form
+    form = await request.form()
+    file = form.get("file")
+    if file is None or not hasattr(file, "read"):
+        raise HTTPException(400, "Missing required 'file' field in multipart form data")
+
+    # Read file data
+    data = await file.read()
+    if len(data) > max_size_bytes:
+        raise HTTPException(
+            413, f"File exceeds maximum size of {max_size_mb}MB ({len(data)} bytes)"
+        )
+    if len(data) == 0:
+        raise HTTPException(400, "Empty file uploaded")
+
+    filename = getattr(file, "filename", "unknown") or "unknown"
+    content_type = getattr(file, "content_type", None)
+
+    # Extract optional metadata from form fields
+    doc_metadata = {}
+    for key in ("document_type", "department", "effective_date", "author", "version"):
+        val = form.get(key)
+        if val is not None:
+            doc_metadata[key] = str(val)
+
+    chunk_size = int(form.get("chunk_size", "1000"))
+    overlap = int(form.get("overlap", "200"))
+
+    from trellis.adapters.document_adapter import build_document_envelopes
+    from trellis.adapters.document_utils import ExtractionError
+
+    try:
+        envelopes = build_document_envelopes(
+            filename=filename,
+            data=data,
+            content_type=content_type,
+            chunk_size=chunk_size,
+            overlap=overlap,
+            doc_metadata=doc_metadata if doc_metadata else None,
+        )
+    except ExtractionError as e:
+        raise HTTPException(400, f"Document extraction error: {e}")
+
+    # Route all envelopes through the event system
+    results = []
+    for env in envelopes:
+        result = await route_envelope(env, db)
+        results.append(result)
+
+    # Build extraction summary
+    first_env = envelopes[0] if envelopes else None
+    summary = {
+        "status": "ok",
+        "filename": filename,
+        "content_type": content_type,
+        "format": first_env.payload.data.get("format") if first_env else None,
+        "size_bytes": len(data),
+        "total_chunks": len(envelopes),
+        "envelope_ids": [str(e.envelope_id) for e in envelopes],
+        "routing_results": results,
+    }
+
+    return summary
+
+
 @event_router.get("/envelopes", response_model=list[EnvelopeLogRead])
 async def list_envelopes(limit: int = 50, db: AsyncSession = Depends(get_db)):
     result = await db.execute(

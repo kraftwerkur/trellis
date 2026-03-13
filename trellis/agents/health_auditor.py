@@ -476,6 +476,23 @@ async def run_all_checks() -> dict[str, Any]:
     except Exception as e:
         logger.error(f"Failed to persist health checks: {e}")
 
+    # Fire alerts for failed checks
+    try:
+        from trellis.alerts import fire_alert_event
+        for cr in all_check_results:
+            if cr.status in ("unreachable", "degraded"):
+                await fire_alert_event("health", "check_failed",
+                                       f"Health check failed: {cr.name} is {cr.status}",
+                                       details={"check_name": cr.name, "status": cr.status, **cr.details})
+        for ac in agent_checks:
+            if ac["status"] in ("unreachable", "degraded"):
+                await fire_alert_event("health", "check_failed",
+                                       f"Agent health check failed: {ac['agent_id']} is {ac['status']}",
+                                       agent_id=ac["agent_id"],
+                                       details=ac)
+    except Exception as e:
+        logger.debug(f"Alert dispatch failed (non-fatal): {e}")
+
     # Determine overall status
     all_statuses = [cr.status for cr in all_check_results] + [ac["status"] for ac in agent_checks]
     if "unreachable" in all_statuses:

@@ -17,6 +17,8 @@ const PAGE_TITLES: Record<string, { title: string; desc: string }> = {
   "/gateway": { title: "Gateway", desc: "LLM gateway providers, routes, and stats" },
   "/phi": { title: "PHI Shield", desc: "Protected health information detection and redaction" },
   "/finops": { title: "FinOps", desc: "Cost tracking, budgets, and model usage analytics" },
+  "/documents": { title: "Documents", desc: "Document ingestion and text extraction" },
+  "/alerts": { title: "Alerts", desc: "Alert rules, notification channels, and event history" },
   "/docs": { title: "Docs", desc: "Architecture, API reference, and quick start guides" },
 };
 

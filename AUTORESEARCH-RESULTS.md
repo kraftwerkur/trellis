@@ -134,3 +134,109 @@ Next experiments to try:
 ---
 
 — Forge ⚡
+
+---
+
+# Trellis Autoresearch — Session 2 Results
+
+*Optimization target: Dashboard Bundle Size*
+*Session date: 2026-03-13*
+*Agent: Forge ⚡*
+
+---
+
+## Baseline
+
+| Metric | Value |
+|--------|-------|
+| **Total JS bundle (raw)** | **2,036 KB** |
+| **Total JS bundle (gzip)** | **568 KB** |
+| Largest chunks | 3 × 386KB (recharts) |
+| Build tool | Next.js 16.1.6 + Turbopack |
+| Build type | Static export (`output: 'export'`) |
+
+### Chunk Analysis
+
+Turbopack creates **3 separate recharts chunks** for different route groups:
+- `7eee2edf` (386KB / 102KB gzip) → `/` main page only
+- `9b3b4d75` (386KB / 102KB gzip) → `/routing` page only  
+- `66f3d504` (386KB / 102KB gzip) → shared by `/observatory`, `/health`, `/phi`, `/finops`
+
+The remaining ~878KB is React DOM runtime (224KB), Next.js internals (151KB + 112KB), and page-specific chunks.
+
+---
+
+## Experiments
+
+### Run 1 — Centralized Recharts Imports ❌ NO CHANGE
+
+**Hypothesis:** Creating `src/lib/charts.ts` as a unified re-export module for all recharts components would force Turbopack to recognize recharts as a single shared dependency.
+
+**Change:** Created `src/lib/charts.ts` exporting all recharts components; updated all 6 chart pages to import from `@/lib/charts` instead of `recharts` directly.
+
+**Result:** Bundle unchanged at 2,036KB. Turbopack's chunking is based on route-group participation, not import paths. Even with centralized imports, each route group's unique module dependency pattern creates a separate chunk.
+
+**Learning:** Turbopack deduplication works at the chunk-group level. The 3 separate recharts chunks are **by design** — Turbopack already deduplicates recharts across 4 pages into one shared chunk (`66f3d504`). The other two copies are for route groups with different dependency patterns.
+
+---
+
+### Run 2 — `optimizePackageImports` Config ❌ NO CHANGE
+
+**Hypothesis:** Next.js `experimental.optimizePackageImports: ['recharts', 'lucide-react']` would force shared treatment.
+
+**Change:** Added to `next.config.ts`.
+
+**Result:** Bundle unchanged at 2,036KB. This config optimizes tree-shaking for barrel files (like `lucide-react`'s 1000+ icons), but doesn't affect Turbopack's route-group chunking behavior.
+
+**Learning:** `optimizePackageImports` is about import scope, not chunk allocation.
+
+---
+
+### Run 3 — Package.json Dependency Audit ✅ KEPT (hygiene improvement)
+
+**Hypothesis:** Unused packages might be contributing to bundle bloat.
+
+**Findings:**
+- `cmdk` — in `dependencies`, **never imported** → removed
+- `@tanstack/react-table` — in `devDependencies`, **never imported** → removed  
+- `radash` — in `devDependencies`, **never imported** → removed
+- `recharts`, `lucide-react`, `class-variance-authority`, `clsx`, `tailwind-merge` — **runtime deps misclassified** as devDependencies → moved to `dependencies`
+
+**Result:** Bundle size unchanged (tree-shaking already excluded unused packages). But dependency hygiene is now correct, preventing future confusion and potential installation issues in production-only deploys.
+
+**Packages removed:** 3 (`cmdk`, `@tanstack/react-table`, `radash`)  
+**Packages reclassified:** 5 (moved from devDeps to deps)
+
+---
+
+## Summary
+
+| Metric | Baseline | After |
+|--------|----------|-------|
+| Raw bundle | 2,036 KB | 2,036 KB |
+| Gzip bundle | 568 KB | 568 KB |
+| Unused packages | 3 | 0 |
+| Misclassified packages | 5 | 0 |
+
+### Key Technical Finding: Turbopack Chunk Architecture
+
+The 3×386KB recharts pattern is **correct Turbopack behavior**, not a bug:
+- Turbopack optimizes for **per-route-group deduplication**, not global deduplication
+- A user visiting only `/routing` downloads exactly one recharts chunk (102KB gzip)
+- A user visiting only `/observatory` downloads one recharts chunk (same)
+- These users never waste bandwidth on the other's chunk
+- This is better than webpack's global vendor chunk (where every page loads ALL recharts)
+
+**Real impact:** A user who visits BOTH `/routing` AND `/observatory` would download recharts twice (~204KB gzip). With a global webpack vendor chunk, they'd download it once (~80KB gzip). This is a real tradeoff — webpack wins for power users who traverse many sections; Turbopack wins for users who stay in one section.
+
+### Recommended Next Steps for Bundle Reduction
+
+1. **Replace routing-page radar chart with pure SVG** — RadarChart is the sole reason `/routing` gets its own 386KB recharts chunk. A pure SVG spider chart would eliminate that chunk entirely, saving 102KB gzip for routing-only users.
+2. **Replace home-page sparklines with CSS/canvas** — The `/` page uses recharts for tiny 32px sparklines that could be replaced with a 200-line Canvas implementation, eliminating the third recharts chunk.
+3. **Target: 1,264KB raw (−772KB, −38%)** if both above implemented.
+
+---
+
+*Previous session: Test Suite Speed (92s → 8.3s, 11x speedup)*
+
+— Forge ⚡

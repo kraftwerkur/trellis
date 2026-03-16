@@ -391,7 +391,7 @@ async def route_envelope(envelope: Envelope, db: AsyncSession) -> dict:
         envelope_id=envelope.envelope_id,
         details={"source_type": envelope.source_type, "source_id": envelope.source_id})
 
-    result = await db.execute(select(Rule).where(Rule.active == True))
+    result = await db.execute(select(Rule).where(Rule.active))
     rules = list(result.scalars().all())
     matched_rules = match_envelope_all(envelope, rules)
 

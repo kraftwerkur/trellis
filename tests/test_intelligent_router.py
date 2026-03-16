@@ -1,12 +1,10 @@
 """Tests for intelligent routing — scored matching with agent intake declarations."""
 
 import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 
 from trellis.intelligent_router import (
     AgentIntake,
     ScoredAgent,
-    RoutingDecision,
     category_match_score,
     source_type_score,
     keyword_score,
@@ -27,10 +25,7 @@ from trellis.intelligent_router import (
     _stats_cache,
     _tokenize_significant,
     _dimension_success_counts,
-    _adaptive_weights,
     DEFAULT_WEIGHTS,
-    SCORE_THRESHOLD_LOW,
-    EMA_ALPHA,
     update_ema,
     record_dimension_success,
     compute_adaptive_weights,
@@ -314,7 +309,7 @@ class TestLoadTracking:
 class TestScoreAgent:
     def test_score_exact_category_match(self):
         intake = _security_intake()
-        envelope = _make_envelope(
+        _make_envelope(
             category="security",
             source_type="nvd",
             priority="critical",

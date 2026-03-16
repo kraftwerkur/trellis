@@ -1,9 +1,8 @@
 """End-to-end test for Slice 1: register agent → create rule → post envelope → verify."""
 
 import pytest
-from httpx import ASGITransport, AsyncClient
+from httpx import AsyncClient
 
-from trellis.main import app
 
 
 @pytest.mark.asyncio

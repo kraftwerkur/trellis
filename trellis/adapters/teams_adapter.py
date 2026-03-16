@@ -9,14 +9,11 @@ Dependencies: PyJWT (for token validation), httpx (already in project).
 
 from __future__ import annotations
 
-import hashlib
-import hmac
 import json
 import logging
 import time
 from datetime import datetime, timezone
 from typing import Any
-from uuid import uuid4
 
 import httpx
 import jwt

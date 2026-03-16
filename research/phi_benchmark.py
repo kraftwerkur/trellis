@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """PHI/PII Detection Method Benchmark for Trellis Gateway."""
 
-import json, re, time, sys, os
+import json
+import re
+import time
+import sys
+import os
 from dataclasses import dataclass, field
 import requests
 
@@ -167,12 +171,17 @@ def evaluate(detected, sample):
     for phi in sample.phi_items:
         found = any(phi.text.lower() in d.lower() or d.lower() in phi.text.lower()
                      for d in detected if len(d) >= 3 or len(phi.text) <= 4)
-        if found: tp += 1
-        else: fn += 1; missed.append(f"{phi.category}: {phi.text}")
-    fp = 0; fp_items = []
+        if found:
+            tp += 1
+        else:
+            fn += 1
+            missed.append(f"{phi.category}: {phi.text}")
+    fp = 0
+    fp_items = []
     for trap in sample.false_positive_traps:
         if any(trap.lower() in d.lower() or d.lower() in trap.lower() for d in detected):
-            fp += 1; fp_items.append(trap)
+            fp += 1
+            fp_items.append(trap)
     return {"tp":tp,"fn":fn,"fp":fp,"missed":missed,"fp_items":fp_items,"sample_id":sample.id}
 
 def run_method(name, detect_fn, samples):
@@ -248,7 +257,8 @@ def main():
     # Summarize
     summaries = {}
     for name, data in all_results.items():
-        if data: summaries[name] = summarize(data)
+        if data:
+            summaries[name] = summarize(data)
 
     # Print
     print(f"\n{'Method':25s} {'TP':>4s} {'FN':>4s} {'FP':>4s} {'Prec':>6s} {'Rec':>6s} {'F1':>6s} {'Lat(ms)':>8s}")

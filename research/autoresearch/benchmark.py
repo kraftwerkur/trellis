@@ -175,7 +175,7 @@ def run_benchmark(classify_fn=None):
 def print_results(results: dict):
     """Pretty-print benchmark results."""
     print(f"\n{'='*60}")
-    print(f"CLASSIFICATION ENGINE BENCHMARK")
+    print("CLASSIFICATION ENGINE BENCHMARK")
     print(f"{'='*60}")
     print(f"Total test cases: {results['total']}")
     print(f"Category accuracy:   {results['accuracy']['category']:.1%} ({results['correct_category']}/{results['total']})")
@@ -193,9 +193,12 @@ def print_results(results: dict):
             print(f"    Expected: {f['expected']}")
             print(f"    Actual:   {f['actual']}")
             flags = []
-            if not f["cat_ok"]: flags.append("CAT")
-            if not f["dept_ok"]: flags.append("DEPT")
-            if not f["sev_ok"]: flags.append("SEV")
+            if not f["cat_ok"]:
+                flags.append("CAT")
+            if not f["dept_ok"]:
+                flags.append("DEPT")
+            if not f["sev_ok"]:
+                flags.append("SEV")
             print(f"    Wrong: {', '.join(flags)}")
 
     print(f"\n{'='*60}")
@@ -207,4 +210,4 @@ if __name__ == "__main__":
     # Save results for Qwopus to read
     with open(Path(__file__).parent / "baseline_results.json", "w") as f:
         json.dump(results, f, indent=2, default=str)
-    print(f"\nResults saved to baseline_results.json")
+    print("\nResults saved to baseline_results.json")

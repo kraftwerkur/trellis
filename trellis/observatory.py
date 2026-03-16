@@ -7,13 +7,12 @@ Single file, Karpathy style.
 """
 
 import logging
-import time
 from datetime import datetime, timedelta, timezone
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel
-from sqlalchemy import Float, Integer, String, DateTime, Boolean, JSON, func, select, text, case, cast
+from sqlalchemy import func, select, case
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from trellis.database import get_db
@@ -274,7 +273,7 @@ async def _get_hourly_breakdown(
 
 # ── API Router ─────────────────────────────────────────────────────────────
 
-from trellis.api import require_management_auth
+from trellis.api import require_management_auth  # noqa: E402
 
 observatory_router = APIRouter(
     prefix="/observatory", tags=["observatory"],

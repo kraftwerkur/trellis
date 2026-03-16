@@ -1,4 +1,3 @@
-from trellis.agents.health_auditor import record_task_heartbeat
 """Rule Optimizer Agent — platform housekeeping agent.
 
 Analyzes routing rules for optimization opportunities: dead rules,
@@ -6,13 +5,14 @@ overlapping conditions, unmatched envelopes, and utilization ranking.
 Runs nightly at 2 AM (configurable). Read-only — never modifies rules.
 """
 
+from trellis.agents.health_auditor import record_task_heartbeat
 import asyncio
 import logging
 import os
 from datetime import datetime, timedelta, timezone
 from collections import defaultdict
 
-from sqlalchemy import func, select
+from sqlalchemy import select
 
 logger = logging.getLogger("trellis.agents.rule_optimizer")
 
@@ -28,7 +28,7 @@ async def run_analysis(days: int = 7) -> dict:
 
     async with async_session() as db:
         # Fetch all active rules
-        rules_result = await db.execute(select(Rule).where(Rule.active == True))
+        rules_result = await db.execute(select(Rule).where(Rule.active))
         rules = list(rules_result.scalars().all())
 
         # Fetch envelope log entries in the analysis window

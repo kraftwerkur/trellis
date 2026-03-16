@@ -1,9 +1,8 @@
 """Tests for Slice 2: LLM Gateway — auth, proxying, cost tracking, budget caps."""
 
 import pytest
-from httpx import ASGITransport, AsyncClient
+from httpx import AsyncClient
 
-from trellis.main import app
 
 
 async def _register_agent(client: AsyncClient, agent_id: str = "mock-echo"):

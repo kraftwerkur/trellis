@@ -3,8 +3,8 @@
 import os
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:////tmp/test_trellis.db"
 
-from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import datetime
+from unittest.mock import MagicMock, patch
 
 import pytest
 import pytest_asyncio
@@ -152,7 +152,7 @@ async def test_function_agent_no_endpoint_healthy(client):
 @pytest.mark.asyncio
 async def test_agent_unreachable_on_connection_error(client):
     """Agent should be marked unreachable if health endpoint fails."""
-    from trellis.agents.health_auditor import check_one_agent, _http_client
+    from trellis.agents.health_auditor import check_one_agent
     agent = MagicMock()
     agent.agent_id = "bad-agent"
     agent.agent_type = "http"

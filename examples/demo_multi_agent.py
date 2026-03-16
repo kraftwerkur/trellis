@@ -25,7 +25,6 @@ What it demonstrates:
 
 import json
 import sys
-import time
 from pathlib import Path
 
 import httpx
@@ -400,8 +399,8 @@ def show_platform_summary(client: httpx.Client):
     print(f"{BOLD}{GREEN}  ✓ Demo complete. Trellis is managing {len(agents)} agents.{RESET}")
     print(f"{'='*70}")
     print(f"\n  {DIM}Dashboard: http://localhost:3000")
-    print(f"  Swagger:  http://localhost:8100/docs")
-    print(f"  Audit:    GET /api/audit")
+    print("  Swagger:  http://localhost:8100/docs")
+    print("  Audit:    GET /api/audit")
     print(f"  Costs:    GET /api/finops/summary{RESET}\n")
 
 

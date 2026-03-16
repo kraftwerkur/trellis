@@ -1,10 +1,8 @@
 """Tests filling coverage gaps: model router, agent CRUD edge cases, audit filtering, cost endpoints."""
 
-import pytest
-from httpx import ASGITransport, AsyncClient
+from httpx import AsyncClient
 
 from trellis.gateway import classify_complexity, resolve_model_and_provider
-from trellis.main import app
 from trellis.schemas import ChatCompletionRequest, ChatMessage
 
 

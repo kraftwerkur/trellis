@@ -11,7 +11,6 @@ import asyncio
 import logging
 import re
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from enum import Enum
 from typing import Any
 
@@ -629,9 +628,9 @@ class IntakeResponse(BaseModel):
 # FastAPI Router
 # ═══════════════════════════════════════════════════════════════════════════
 
-from fastapi import APIRouter, Depends, HTTPException
-from trellis.database import get_db
-from trellis.api import require_management_auth
+from fastapi import APIRouter, Depends, HTTPException  # noqa: E402
+from trellis.database import get_db  # noqa: E402
+from trellis.api import require_management_auth  # noqa: E402
 
 intelligent_router = APIRouter(tags=["intelligent-routing"], dependencies=[Depends(require_management_auth)])
 
@@ -877,7 +876,6 @@ async def submit_routing_feedback(
     db: AsyncSession = Depends(get_db),
 ):
     """Submit feedback on a routing decision to update agent scoring."""
-    from sqlalchemy import func as sa_func
     
     # Look up the envelope to get category context
     envelope_log = (
@@ -1043,7 +1041,7 @@ async def shadow_report_endpoint(
 
     # Agreement count
     agreed_q = await db.execute(
-        select(sa_func.count(ShadowComparison.id)).where(ShadowComparison.agreed == True)
+        select(sa_func.count(ShadowComparison.id)).where(ShadowComparison.agreed)
     )
     agreed_count = agreed_q.scalar() or 0
 
@@ -1060,7 +1058,7 @@ async def shadow_report_endpoint(
     # Recent disagreements
     disagree_q = await db.execute(
         select(ShadowComparison)
-        .where(ShadowComparison.agreed == False)
+        .where(not ShadowComparison.agreed)
         .order_by(ShadowComparison.timestamp.desc())
         .limit(limit)
     )

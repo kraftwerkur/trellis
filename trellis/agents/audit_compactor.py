@@ -1,10 +1,10 @@
-from trellis.agents.health_auditor import record_task_heartbeat
 """Audit Compactor Agent — platform housekeeping.
 
 Prevents unbounded audit log growth by rolling up old events into summaries,
 archiving raw rows to gzipped JSONL files, then deleting archived rows.
 """
 
+from trellis.agents.health_auditor import record_task_heartbeat
 import asyncio
 import gzip
 import json
@@ -13,7 +13,7 @@ import os
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import delete, select
 
 logger = logging.getLogger("trellis.agents.audit_compactor")
 

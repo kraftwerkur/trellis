@@ -1,9 +1,6 @@
 """Tests for the document ingestion adapter, utilities, and API endpoint."""
 
-import io
 import pytest
-from unittest.mock import patch, AsyncMock
-from httpx import AsyncClient, ASGITransport
 
 from trellis.adapters.document_utils import (
     ExtractionError,

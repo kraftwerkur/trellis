@@ -135,7 +135,7 @@ def _extract_vendor_product(cve: dict) -> tuple[str, str]:
                 if len(parts) >= 5:
                     return parts[3], parts[4]
     # Fall back to affected packages
-    weaknesses = cve.get("weaknesses", [])
+    cve.get("weaknesses", [])
     return "", ""
 
 

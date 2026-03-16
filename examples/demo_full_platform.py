@@ -594,22 +594,22 @@ def _print_dry_run_dashboard():
     print(f"  {BOLD}└────────────────────┴──────────┴──────────┴──────────┴──────────┘{RESET}")
     print()
     print(f"  {BOLD}PHI Shield Results:{RESET}")
-    print(f"  ┌────────────────────────────────────────┬────────────┬────────────────────┐")
-    print(f"  │ Test                                   │ Detections │ Categories         │")
-    print(f"  ├────────────────────────────────────────┼────────────┼────────────────────┤")
-    print(f"  │ Patient referral note                  │ ~6         │ SSN,MRN,PHONE,EMAIL│")
-    print(f"  │ Discharge summary                      │ ~4         │ PHONE,EMAIL,ACCT   │")
-    print(f"  │ Clean text (no PHI)                    │ 0          │ —                  │")
-    print(f"  └────────────────────────────────────────┴────────────┴────────────────────┘")
+    print("  ┌────────────────────────────────────────┬────────────┬────────────────────┐")
+    print("  │ Test                                   │ Detections │ Categories         │")
+    print("  ├────────────────────────────────────────┼────────────┼────────────────────┤")
+    print("  │ Patient referral note                  │ ~6         │ SSN,MRN,PHONE,EMAIL│")
+    print("  │ Discharge summary                      │ ~4         │ PHONE,EMAIL,ACCT   │")
+    print("  │ Clean text (no PHI)                    │ 0          │ —                  │")
+    print("  └────────────────────────────────────────┴────────────┴────────────────────┘")
     print()
     print(f"  {BOLD}Scorer Results (Smart Model Routing):{RESET}")
-    print(f"  ┌────────────────────────────────────────┬──────────┬─────────┬────────────┐")
-    print(f"  │ Prompt                                 │ Tier     │ Score   │ Confidence │")
-    print(f"  ├────────────────────────────────────────┼──────────┼─────────┼────────────┤")
+    print("  ┌────────────────────────────────────────┬──────────┬─────────┬────────────┐")
+    print("  │ Prompt                                 │ Tier     │ Score   │ Confidence │")
+    print("  ├────────────────────────────────────────┼──────────┼─────────┼────────────┤")
     print(f"  │ Simple greeting                        │ {GREEN}simple{RESET}   │ -0.300  │ 95%        │")
     print(f"  │ Clinical FHIR/HL7 analysis             │ {RED}complex{RESET}  │  0.250  │ 88%        │")
     print(f"  │ Multi-step security remediation        │ {MAGENTA}complex{RESET}  │  0.300  │ 92%        │")
-    print(f"  └────────────────────────────────────────┴──────────┴─────────┴────────────┘")
+    print("  └────────────────────────────────────────┴──────────┴─────────┴────────────┘")
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -691,7 +691,7 @@ def send_hl7_event():
     if result:
         matched = result.get("matched_rule", result.get("routed_to", ""))
         trace = result.get("trace_id", "")
-        success(f"HL7 message routed successfully!")
+        success("HL7 message routed successfully!")
         substep(f"Matched rule: {matched}")
         substep(f"Trace ID: {trace}")
         state.add_event("HL7 ADT^A01", "Patient admission — Jane Doe, ICU",
@@ -717,7 +717,7 @@ def send_fhir_event():
     if result:
         matched = result.get("matched_rule", result.get("routed_to", ""))
         trace = result.get("trace_id", "")
-        success(f"FHIR resource routed successfully!")
+        success("FHIR resource routed successfully!")
         substep(f"Matched rule: {matched}")
         substep(f"Trace ID: {trace}")
         state.add_event("FHIR Patient", "Patient resource — Jane Doe",
@@ -741,7 +741,7 @@ def send_document_event():
     if result:
         matched = result.get("matched_rule", result.get("routed_to", ""))
         trace = result.get("trace_id", DOCUMENT_ENVELOPE["metadata"]["trace_id"])
-        success(f"Document envelope routed successfully!")
+        success("Document envelope routed successfully!")
         substep(f"Matched rule: {matched}")
         substep(f"Trace ID: {trace}")
         state.add_event("Document", "Infection control policy PDF",
@@ -765,9 +765,9 @@ def send_security_alert():
     if result:
         matched = result.get("matched_rule", result.get("routed_to", ""))
         trace = result.get("trace_id", SECURITY_ALERT["metadata"]["trace_id"])
-        success(f"Security alert routed successfully!")
+        success("Security alert routed successfully!")
         substep(f"Matched rule: {matched}")
-        substep(f"Priority escalated to: CRITICAL")
+        substep("Priority escalated to: CRITICAL")
         substep(f"Trace ID: {trace}")
         state.add_event("Security Alert", "Mimikatz on WS-NURSE-042 (CRITICAL)",
                         "security-ops", trace)
@@ -973,23 +973,23 @@ def print_summary_dashboard():
     if state.phi_results:
         print()
         print(f"  {BOLD}PHI Shield Results:{RESET}")
-        print(f"  ┌────────────────────────────────────────┬────────────┬─────────────────────┐")
-        print(f"  │ Test                                   │ Detections │ Categories          │")
-        print(f"  ├────────────────────────────────────────┼────────────┼─────────────────────┤")
+        print("  ┌────────────────────────────────────────┬────────────┬─────────────────────┐")
+        print("  │ Test                                   │ Detections │ Categories          │")
+        print("  ├────────────────────────────────────────┼────────────┼─────────────────────┤")
         for p in state.phi_results:
             label = p["label"][:38]
             dets = str(p["detections"])
             cats = ",".join(p["categories"])[:19] if p["categories"] else "—"
             print(f"  │ {label:<38s} │ {dets:^10s} │ {cats:<19s} │")
-        print(f"  └────────────────────────────────────────┴────────────┴─────────────────────┘")
+        print("  └────────────────────────────────────────┴────────────┴─────────────────────┘")
 
     # Scorer results
     if state.scorer_results:
         print()
         print(f"  {BOLD}Scorer Results (Smart Model Routing):{RESET}")
-        print(f"  ┌────────────────────────────────────────┬───────────┬─────────┬────────────┐")
-        print(f"  │ Prompt                                 │ Tier      │ Score   │ Confidence │")
-        print(f"  ├────────────────────────────────────────┼───────────┼─────────┼────────────┤")
+        print("  ┌────────────────────────────────────────┬───────────┬─────────┬────────────┐")
+        print("  │ Prompt                                 │ Tier      │ Score   │ Confidence │")
+        print("  ├────────────────────────────────────────┼───────────┼─────────┼────────────┤")
         for s in state.scorer_results:
             label = s["label"][:38]
             tc = {"simple": GREEN, "standard": YELLOW,
@@ -997,7 +997,7 @@ def print_summary_dashboard():
             tier_str = f"{tc}{s['tier']:<7s}{RESET}"
             # For alignment, we need to account for ANSI codes in the tier column
             print(f"  │ {label:<38s} │ {tier_str}   │ {s['score']:+.3f}  │ {s['confidence']:>9.0%}  │")
-        print(f"  └────────────────────────────────────────┴───────────┴─────────┴────────────┘")
+        print("  └────────────────────────────────────────┴───────────┴─────────┴────────────┘")
 
     # Errors
     if state.errors:

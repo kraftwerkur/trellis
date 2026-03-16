@@ -7,9 +7,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-from httpx import ASGITransport, AsyncClient
 
-from trellis.main import app
 
 
 async def _insert_old_events(count=10, days_old=100, event_type="health_check", agent_id="test-agent"):
@@ -36,7 +34,7 @@ async def test_compaction_groups_correctly(client, tmp_path):
     await _insert_old_events(count=3, event_type="rule_matched", agent_id="a2")
 
     from trellis.database import async_session
-    from trellis.agents.audit_compactor import run_compaction, ARCHIVE_BASE
+    from trellis.agents.audit_compactor import run_compaction
 
     with patch.object(
         __import__("trellis.agents.audit_compactor", fromlist=["ARCHIVE_BASE"]),
@@ -77,9 +75,9 @@ async def test_archive_file_created(client, tmp_path):
     all_lines = []
     for gz_file in gz_files:
         with gzip.open(gz_file, "rt") as f:
-            all_lines.extend(json.loads(l) for l in f if l.strip())
+            all_lines.extend(json.loads(line) for line in f if line.strip())
     assert len(all_lines) == 3
-    assert all(l["event_type"] == "health_check" for l in all_lines)
+    assert all(line["event_type"] == "health_check" for line in all_lines)
 
 
 @pytest.mark.asyncio

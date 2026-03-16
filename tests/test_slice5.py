@@ -1,12 +1,9 @@
 """Tests for Slice 5: FinOps Engine."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
-import pytest
-from httpx import ASGITransport, AsyncClient
 
 from trellis.gateway import classify_complexity
-from trellis.main import app
 from trellis.schemas import ChatCompletionRequest, ChatMessage, ToolDef, ToolFunction
 
 

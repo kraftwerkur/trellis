@@ -26,11 +26,9 @@ What it demonstrates:
 """
 
 import argparse
-import json
 import subprocess
 import sys
 import time
-import uuid
 
 import requests
 

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -291,7 +290,7 @@ async def test_proactive_sends_text(monkeypatch):
         mock_client = AsyncMock()
         mock_client.send_text = AsyncMock(return_value={"id": "msg-1"})
         mock_fn.return_value = mock_client
-        result = await send_proactive_message("pro-conv", text="Alert!")
+        await send_proactive_message("pro-conv", text="Alert!")
         mock_client.send_text.assert_called_once()
 
 

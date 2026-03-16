@@ -1,9 +1,8 @@
 """Tests for Slice 3: Agent Onboarding — types, auto-keys, health checks, dispatch."""
 
 import pytest
-from httpx import ASGITransport, AsyncClient
+from httpx import AsyncClient
 
-from trellis.main import app
 
 
 # --- Agent Type Creation ---

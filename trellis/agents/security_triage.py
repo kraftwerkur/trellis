@@ -218,7 +218,7 @@ class SecurityTriageAgent:
         """Use LLM via gateway cost pipeline to draft a narrative advisory. Returns None on failure."""
         try:
             from trellis.gateway import (
-                _providers, MODEL_PROVIDER_MAP, log_cost_event, calculate_cost,
+                _providers, MODEL_PROVIDER_MAP, log_cost_event,
             )
             from trellis.database import async_session
         except ImportError:

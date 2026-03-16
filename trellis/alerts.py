@@ -6,7 +6,6 @@ Alert lifecycle: condition met → check cooldown → fire alert → dispatch to
 """
 
 import asyncio
-import json
 import logging
 import os
 import smtplib
@@ -14,13 +13,11 @@ import time
 from datetime import datetime, timedelta, timezone
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from enum import Enum
-from typing import Any
 
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import BaseModel, Field
-from sqlalchemy import Boolean, DateTime, Float, Integer, String, Text, JSON, func, select, delete
+from sqlalchemy import Boolean, DateTime, Integer, String, Text, JSON, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -288,7 +285,7 @@ async def dispatch_teams(webhook_url: str, payload: dict) -> bool:
         async with httpx.AsyncClient(timeout=10) as client:
             resp = await client.post(webhook_url, json=card)
             if resp.status_code < 300:
-                logger.info(f"Teams alert dispatched")
+                logger.info("Teams alert dispatched")
                 return True
             logger.warning(f"Teams webhook failed: {resp.status_code}")
             return False
@@ -386,7 +383,7 @@ async def fire_alert(
     """
     async with async_session() as db:
         q = select(AlertRule).where(
-            AlertRule.active == True,
+            AlertRule.active,
             AlertRule.source == source,
             AlertRule.condition_metric == metric,
         )
@@ -437,7 +434,7 @@ async def fire_alert_event(
     """
     async with async_session() as db:
         q = select(AlertRule).where(
-            AlertRule.active == True,
+            AlertRule.active,
             AlertRule.source == source,
             AlertRule.condition_metric == metric,
         )
@@ -606,7 +603,7 @@ async def alert_summary(db: AsyncSession = Depends(get_db)):
     rules_result = await db.execute(select(func.count(AlertRule.id)))
     total_rules = rules_result.scalar() or 0
 
-    active_result = await db.execute(select(func.count(AlertRule.id)).where(AlertRule.active == True))
+    active_result = await db.execute(select(func.count(AlertRule.id)).where(AlertRule.active))
     active_rules = active_result.scalar() or 0
 
     # Last 24h events by severity

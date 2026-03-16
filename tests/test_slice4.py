@@ -1,10 +1,9 @@
 """Tests for Slice 4: Enhanced Rules Engine + Audit."""
 
 import pytest
-from httpx import ASGITransport, AsyncClient
+from httpx import AsyncClient
 
 from trellis.router import _match_condition, _resolve_field, _SENTINEL, match_envelope, match_envelope_all
-from trellis.main import app
 from trellis.models import Rule
 from trellis.schemas import Envelope
 

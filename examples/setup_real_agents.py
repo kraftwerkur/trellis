@@ -233,7 +233,7 @@ def main():
             active = "●" if r["active"] else "○"
             print(f"    - {active} {r['name']}")
         print(f"\n  Test: curl -X POST {BASE}/api/adapter/http -H 'Content-Type: application/json' \\")
-        print(f'    -d \'{{"text": "CVE-2026-1281: Critical RCE in Ivanti EPMM", "sender_name": "rss-adapter", "metadata": {{"category": "security"}}}}\'')
+        print('    -d \'{"text": "CVE-2026-1281: Critical RCE in Ivanti EPMM", "sender_name": "rss-adapter", "metadata": {"category": "security"}}\'')
 
 
 if __name__ == "__main__":

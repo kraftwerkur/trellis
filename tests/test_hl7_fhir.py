@@ -1,7 +1,7 @@
 """Tests for HL7v2 and FHIR R4 adapters — parsing, envelope construction, and API routes."""
 
 import pytest
-from httpx import ASGITransport, AsyncClient
+from httpx import AsyncClient
 
 from trellis.adapters.hl7_adapter import parse_hl7, build_hl7_envelope, HL7ParseError
 from trellis.adapters.fhir_adapter import (
@@ -9,7 +9,6 @@ from trellis.adapters.fhir_adapter import (
     build_fhir_bundle_envelopes, parse_fhir_subscription_notification,
     FHIRParseError,
 )
-from trellis.main import app
 
 
 # ── Sample HL7 Messages ───────────────────────────────────────────────────

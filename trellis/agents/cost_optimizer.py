@@ -1,4 +1,3 @@
-from trellis.agents.health_auditor import record_task_heartbeat
 """Cost Optimizer Agent — platform FinOps housekeeping agent.
 
 Analyzes cost event data to find optimization opportunities: expensive model
@@ -6,6 +5,7 @@ usage for simple tasks, cost-per-agent rankings, model efficiency comparisons,
 and budget projections. Runs weekly (configurable). Read-only — never modifies.
 """
 
+from trellis.agents.health_auditor import record_task_heartbeat
 import asyncio
 import logging
 import os
@@ -206,7 +206,6 @@ async def run_analysis(days: int = 7) -> dict:
         })
 
     # Catch high-spend agents using expensive models with NO complexity data
-    agent_model_map: dict[str, str] = {}
     for row in model_stats:
         # Track the most-used model per agent via the complexity join above;
         # fall back to agent cost rows to find the dominant model

@@ -5,9 +5,8 @@ Each test is self-contained. No shared state between tests.
 """
 
 import pytest
-from httpx import ASGITransport, AsyncClient
+from httpx import AsyncClient
 
-from trellis.main import app
 
 
 @pytest.mark.asyncio
@@ -37,7 +36,7 @@ async def test_full_pipeline_http_to_audit(client: AsyncClient):
     data = resp.json()
     assert data["status"] == "success"
     assert "Integration test message" in data["result"]["result"]["text"]
-    trace_id = data.get("trace_id")
+    data.get("trace_id")
 
     # Verify audit trail has full chain
     resp = await client.get("/api/audit")

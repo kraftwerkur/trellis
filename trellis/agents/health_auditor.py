@@ -25,7 +25,7 @@ import socket
 import time
 from collections import deque
 from dataclasses import asdict, dataclass, field
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -578,7 +578,7 @@ class HealthAuditorAgent:
 
 # ── API Router ─────────────────────────────────────────────────────────────
 
-from trellis.api import require_management_auth
+from trellis.api import require_management_auth  # noqa: E402
 
 health_auditor_router = APIRouter(prefix="/health", tags=["health-auditor"], dependencies=[Depends(require_management_auth)])
 

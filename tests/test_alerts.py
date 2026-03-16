@@ -9,7 +9,6 @@ from trellis.database import Base, engine
 from trellis.alerts import (
     evaluate_condition, _in_cooldown, _mark_fired, _mark_resolved,
     _last_fired, _rule_state, fire_alert, fire_alert_event,
-    AlertRule, AlertEvent,
 )
 
 

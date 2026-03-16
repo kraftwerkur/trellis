@@ -9,7 +9,6 @@ from fastapi import APIRouter, FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from trellis.database import Base, async_session, engine
-from trellis.models import Agent, ModelRoute
 from trellis.schemas import Envelope
 
 
@@ -118,17 +117,17 @@ async def mock_agent_manifest():
 
 # ── Mount routers ──────────────────────────────────────────────────────────
 
-from trellis.api import (
+from trellis.api import (  # noqa: E402
     agents_router, audit_router, costs_router, event_router,
     finops_router, gateway_mgmt_router, health_router, keys_router, rules_router,
     phi_router, tools_router,
 )
-from trellis.intelligent_router import intelligent_router as intelligent_routing_router
-from trellis.gateway import router as gateway_llm_router
-from trellis.observatory import observatory_router
-from trellis.agents.health_auditor import health_auditor_router
-from trellis.bot_service import bot_router
-from trellis.alerts import alerts_router
+from trellis.intelligent_router import intelligent_router as intelligent_routing_router  # noqa: E402
+from trellis.gateway import router as gateway_llm_router  # noqa: E402
+from trellis.observatory import observatory_router  # noqa: E402
+from trellis.agents.health_auditor import health_auditor_router  # noqa: E402
+from trellis.bot_service import bot_router  # noqa: E402
+from trellis.alerts import alerts_router  # noqa: E402
 
 api = APIRouter(prefix="/api")
 api.include_router(health_router)
@@ -160,8 +159,8 @@ async def root_health():
 
 # ── Static dashboard (served from /app/static in Docker) ──────────────────
 
-import os
-from pathlib import Path
+import os  # noqa: E402
+from pathlib import Path  # noqa: E402
 
 _project_root = Path(__file__).resolve().parent.parent
 # Docker: /app/static (copied from dashboard/out)

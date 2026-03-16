@@ -13,11 +13,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import pytest
 
 from trellis.adapters.teams_adapter import (
-    ACTIVITY_TYPE_CONVERSATION_UPDATE,
-    ACTIVITY_TYPE_INVOKE,
-    ACTIVITY_TYPE_MESSAGE,
     TeamsClient,
-    _jwks_cache,
     _validate_service_url,
     build_teams_envelope,
     parse_activity,
@@ -196,7 +192,6 @@ class TestTokenValidation:
 
         # Generate a throwaway RSA key
         from cryptography.hazmat.primitives.asymmetric import rsa
-        from cryptography.hazmat.primitives import serialization
 
         private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
 
@@ -217,7 +212,6 @@ class TestTokenValidation:
         """Full validation with a self-signed token and matching JWKS."""
         import jwt as pyjwt
         from cryptography.hazmat.primitives.asymmetric import rsa
-        from cryptography.hazmat.primitives import serialization
         from jwt.algorithms import RSAAlgorithm
 
         private_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)

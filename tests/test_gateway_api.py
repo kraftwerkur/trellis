@@ -1,9 +1,7 @@
 """Tests for Gateway Management API — providers, model routes, per-agent LLM config."""
 
 import pytest
-from httpx import ASGITransport, AsyncClient
 
-from trellis.main import app
 
 
 async def _create_agent(client, agent_id="test-agent"):
@@ -125,7 +123,7 @@ async def test_model_routes_table_created(client):
 
 @pytest.mark.asyncio
 async def test_agent_llm_config(client):
-    agent_data = await _create_agent(client)
+    await _create_agent(client)
 
     # Get default (empty)
     resp = await client.get("/api/gateway/agents/test-agent/llm-config")
@@ -167,7 +165,7 @@ async def test_allowlist_enforcement(client):
     from trellis.models import ApiKey
     from trellis.database import async_session
 
-    agent_data = await _create_agent(client, agent_id="restricted-agent")
+    await _create_agent(client, agent_id="restricted-agent")
 
     # Set allowed_models
     resp = await client.put("/api/gateway/agents/restricted-agent/llm-config", json={

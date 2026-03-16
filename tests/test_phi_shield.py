@@ -1,11 +1,10 @@
 """Tests for PHI Shield — regex, Presidio, vault, redact/rehydrate, modes, API."""
 
 import pytest
-from httpx import ASGITransport, AsyncClient
 
 from trellis.phi_shield import (
     PhiVault, PhiDetection, PhiStats,
-    detect, redact, rehydrate, redact_messages,
+    redact, redact_messages,
     shield_request, shield_response,
     _detect_regex, _detect_presidio,
 )

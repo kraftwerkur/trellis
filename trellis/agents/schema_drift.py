@@ -1,4 +1,3 @@
-from trellis.agents.health_auditor import record_task_heartbeat
 """Schema Drift Detector — platform housekeeping agent.
 
 Monitors envelope payload structures per source_type. Detects when payload
@@ -8,6 +7,7 @@ breakage when upstream sources change their format.
 Runs every 6 hours (configurable via TRELLIS_SCHEMA_CHECK_INTERVAL).
 """
 
+from trellis.agents.health_auditor import record_task_heartbeat
 import asyncio
 import json
 import logging

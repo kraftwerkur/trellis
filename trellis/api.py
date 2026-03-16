@@ -23,16 +23,15 @@ from trellis.adapters.fhir_adapter import (
 from trellis.adapters.hl7_adapter import HL7ParseError
 from trellis.database import get_db
 from trellis.gateway import (
-    MODEL_PROVIDER_MAP, _providers, hash_key, log_cost_event,
+    MODEL_PROVIDER_MAP, _providers, hash_key,
 )
 from trellis.models import Agent, ApiKey, AuditEvent, CostEvent, EnvelopeLog, ModelRoute, Rule
-from trellis.router import emit_audit, match_envelope_all, route_envelope, set_client_override
+from trellis.router import emit_audit, match_envelope_all, route_envelope
 import trellis.router as _router_mod
 from trellis.schemas import (
     AgentCreate, AgentCreateResponse, AgentRead, AgentUpdate,
     ApiKeyCreate, ApiKeyCreated, ApiKeyRead,
     AuditEventRead,
-    ChatCompletionRequest,
     CostEventRead, CostSummary,
     Envelope, EnvelopeLogRead, HttpAdapterInput,
     RuleCreate, RuleRead, RuleTestRequest, RuleTestResult, RuleUpdate,
@@ -269,7 +268,7 @@ async def toggle_rule(rule_id: int, db: AsyncSession = Depends(get_db)):
 @rules_router.post("/test", response_model=RuleTestResult)
 async def test_rules(body: RuleTestRequest, db: AsyncSession = Depends(get_db)):
     envelope = Envelope(**body.envelope)
-    result = await db.execute(select(Rule).where(Rule.active == True))
+    result = await db.execute(select(Rule).where(Rule.active))
     rules = list(result.scalars().all())
     matched = match_envelope_all(envelope, rules)
     return RuleTestResult(matched_rules=[RuleRead.model_validate(r) for r in matched])
@@ -368,8 +367,6 @@ async def document_ingest(
 
     Size limit: configurable via TRELLIS_MAX_DOCUMENT_SIZE_MB env var (default 10MB).
     """
-    from fastapi import UploadFile
-    import json
 
     max_size_mb = int(os.environ.get("TRELLIS_MAX_DOCUMENT_SIZE_MB", "10"))
     max_size_bytes = max_size_mb * 1024 * 1024
@@ -472,7 +469,7 @@ async def create_key(body: ApiKeyCreate, db: AsyncSession = Depends(get_db)):
 
 @keys_router.get("", response_model=list[ApiKeyRead])
 async def list_keys(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(ApiKey).where(ApiKey.active == True))
+    result = await db.execute(select(ApiKey).where(ApiKey.active))
     return result.scalars().all()
 
 
@@ -501,11 +498,16 @@ async def list_audit_events(
     db: AsyncSession = Depends(get_db),
 ):
     q = select(AuditEvent).order_by(AuditEvent.timestamp.desc()).limit(limit)
-    if event_type: q = q.where(AuditEvent.event_type == event_type)
-    if agent_id: q = q.where(AuditEvent.agent_id == agent_id)
-    if trace_id: q = q.where(AuditEvent.trace_id == trace_id)
-    if since: q = q.where(AuditEvent.timestamp >= since)
-    if until: q = q.where(AuditEvent.timestamp <= until)
+    if event_type:
+        q = q.where(AuditEvent.event_type == event_type)
+    if agent_id:
+        q = q.where(AuditEvent.agent_id == agent_id)
+    if trace_id:
+        q = q.where(AuditEvent.trace_id == trace_id)
+    if since:
+        q = q.where(AuditEvent.timestamp >= since)
+    if until:
+        q = q.where(AuditEvent.timestamp <= until)
     result = await db.execute(q)
     return result.scalars().all()
 
@@ -529,10 +531,14 @@ async def list_costs(
     limit: int = Query(100, le=1000), db: AsyncSession = Depends(get_db),
 ):
     q = select(CostEvent).order_by(CostEvent.timestamp.desc()).limit(limit)
-    if agent_id: q = q.where(CostEvent.agent_id == agent_id)
-    if trace_id: q = q.where(CostEvent.trace_id == trace_id)
-    if since: q = q.where(CostEvent.timestamp >= since)
-    if until: q = q.where(CostEvent.timestamp <= until)
+    if agent_id:
+        q = q.where(CostEvent.agent_id == agent_id)
+    if trace_id:
+        q = q.where(CostEvent.trace_id == trace_id)
+    if since:
+        q = q.where(CostEvent.timestamp >= since)
+    if until:
+        q = q.where(CostEvent.timestamp <= until)
     result = await db.execute(q)
     return result.scalars().all()
 
@@ -549,8 +555,10 @@ async def cost_summary(
         func.sum(CostEvent.tokens_out).label("total_tokens_out"),
         func.count(CostEvent.id).label("request_count"),
     ).group_by(CostEvent.agent_id)
-    if since: q = q.where(CostEvent.timestamp >= since)
-    if until: q = q.where(CostEvent.timestamp <= until)
+    if since:
+        q = q.where(CostEvent.timestamp >= since)
+    if until:
+        q = q.where(CostEvent.timestamp <= until)
     result = await db.execute(q)
     return [CostSummary(agent_id=r.agent_id, total_cost_usd=r.total_cost_usd or 0.0,
             total_tokens_in=r.total_tokens_in or 0, total_tokens_out=r.total_tokens_out or 0,
@@ -567,8 +575,10 @@ async def costs_by_department(
          func.sum(CostEvent.tokens_out).label("total_tokens_out"),
          func.count(CostEvent.id).label("request_count"))
          .join(Agent, CostEvent.agent_id == Agent.agent_id).group_by(Agent.department))
-    if since: q = q.where(CostEvent.timestamp >= since)
-    if until: q = q.where(CostEvent.timestamp <= until)
+    if since:
+        q = q.where(CostEvent.timestamp >= since)
+    if until:
+        q = q.where(CostEvent.timestamp <= until)
     result = await db.execute(q)
     return [{"department": r.department, "total_cost_usd": round(r.total_cost_usd or 0.0, 8),
              "total_tokens_in": r.total_tokens_in or 0, "total_tokens_out": r.total_tokens_out or 0,
@@ -587,8 +597,10 @@ async def costs_by_department_detail(
          func.count(CostEvent.id).label("request_count"))
          .join(Agent, CostEvent.agent_id == Agent.agent_id)
          .where(Agent.department == dept).group_by(CostEvent.agent_id, Agent.name))
-    if since: q = q.where(CostEvent.timestamp >= since)
-    if until: q = q.where(CostEvent.timestamp <= until)
+    if since:
+        q = q.where(CostEvent.timestamp >= since)
+    if until:
+        q = q.where(CostEvent.timestamp <= until)
     result = await db.execute(q)
     agents = [{"agent_id": r.agent_id, "agent_name": r.agent_name,
                "total_cost_usd": round(r.total_cost_usd or 0.0, 8),
@@ -640,9 +652,12 @@ async def cost_timeseries(
          func.sum(CostEvent.tokens_out).label("total_tokens_out"),
          func.count(CostEvent.id).label("request_count"))
          .group_by(bucket_expr).order_by(bucket_expr))
-    if agent_id: q = q.where(CostEvent.agent_id == agent_id)
-    if since: q = q.where(CostEvent.timestamp >= since)
-    if until: q = q.where(CostEvent.timestamp <= until)
+    if agent_id:
+        q = q.where(CostEvent.agent_id == agent_id)
+    if since:
+        q = q.where(CostEvent.timestamp >= since)
+    if until:
+        q = q.where(CostEvent.timestamp <= until)
     result = await db.execute(q)
     return [{"bucket": r.bucket, "total_cost_usd": round(r.total_cost_usd or 0.0, 8),
              "total_tokens_in": r.total_tokens_in or 0, "total_tokens_out": r.total_tokens_out or 0,
@@ -713,32 +728,53 @@ PROVIDER_META = {
 
 
 class ProviderInfo(BaseModel):
-    name: str; display_name: str; configured: bool; base_url: str | None = None; models: list[str]
+    name: str
+    display_name: str
+    configured: bool
+    base_url: str | None = None
+    models: list[str]
 
 class ModelInfo(BaseModel):
-    model: str; provider: str; available: bool
+    model: str
+    provider: str
+    available: bool
 
 class GatewayStats(BaseModel):
-    total_requests: int; total_tokens: int; total_cost: float
-    requests_by_provider: dict[str, int]; avg_tokens_per_request: float
+    total_requests: int
+    total_tokens: int
+    total_cost: float
+    requests_by_provider: dict[str, int]
+    avg_tokens_per_request: float
 
 class ModelRouteRead(BaseModel):
-    id: int; model_name: str; provider: str; cost_per_1k_input: float
-    cost_per_1k_output: float; active: bool
+    id: int
+    model_name: str
+    provider: str
+    cost_per_1k_input: float
+    cost_per_1k_output: float
+    active: bool
     model_config = {"from_attributes": True}
 
 class ModelRouteCreate(BaseModel):
-    model_name: str; provider: str; cost_per_1k_input: float = 0.0
-    cost_per_1k_output: float = 0.0; active: bool = True
+    model_name: str
+    provider: str
+    cost_per_1k_input: float = 0.0
+    cost_per_1k_output: float = 0.0
+    active: bool = True
 
 class ModelRouteUpdate(BaseModel):
-    provider: str | None = None; cost_per_1k_input: float | None = None
-    cost_per_1k_output: float | None = None; active: bool | None = None
+    provider: str | None = None
+    cost_per_1k_input: float | None = None
+    cost_per_1k_output: float | None = None
+    active: bool | None = None
 
 class LLMConfigSchema(BaseModel):
-    model: str | None = None; system_prompt: str | None = None
-    temperature: float | None = None; max_tokens: int | None = None
-    allowed_models: list[str] | None = None; preferred_provider: str | None = None
+    model: str | None = None
+    system_prompt: str | None = None
+    temperature: float | None = None
+    max_tokens: int | None = None
+    allowed_models: list[str] | None = None
+    preferred_provider: str | None = None
 
 
 @gateway_mgmt_router.get("/providers", response_model=list[ProviderInfo])
@@ -877,7 +913,7 @@ async def phi_agent_configs(db: AsyncSession = Depends(get_db)):
 
 @phi_router.post("/test", response_model=PhiTestResponse)
 async def phi_test(body: PhiTestRequest):
-    from trellis.phi_shield import PhiVault, redact, detect
+    from trellis.phi_shield import PhiVault, redact
     vault = PhiVault()
     redacted_text, detections = redact(body.text, vault)
     return PhiTestResponse(

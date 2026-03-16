@@ -22,7 +22,6 @@ Usage:
 import logging
 import time
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
 from typing import Any, Callable
 
 logger = logging.getLogger("trellis.tool_registry")
@@ -153,7 +152,6 @@ class ToolRegistry:
 
         # Execute with timing
         start = time.monotonic()
-        status = "success"
         error_msg = None
         result = None
 
@@ -168,7 +166,6 @@ class ToolRegistry:
 
         except ToolPermissionDenied:
             latency_ms = (time.monotonic() - start) * 1000
-            status = "denied"
             meta.error_count += 1
             await self._emit_audit(db, "tool_call_failed", agent_id=agent_id,
                                    trace_id=trace_id, tool_name=tool_name,
@@ -180,7 +177,6 @@ class ToolRegistry:
 
         except Exception as e:
             latency_ms = (time.monotonic() - start) * 1000
-            status = "error"
             error_msg = str(e)
             meta.error_count += 1
             logger.error(f"Tool '{tool_name}' failed for agent '{agent_id}': {e}")

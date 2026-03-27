@@ -78,21 +78,23 @@ graph TD
 ### Prerequisites
 
 - **Python 3.11+** with [uv](https://docs.astral.sh/uv/) package manager
-- **Ollama** (recommended) — [install here](https://ollama.com), then pull a model:
-  ```bash
-  ollama pull llama3.1:8b
-  ```
+- **An LLM provider** — at least one of:
+  - **NVIDIA NIM** (recommended) — free tier at [build.nvidia.com](https://build.nvidia.com). The seed agents are pre-configured for NVIDIA.
+  - **Groq** — fast inference, free tier at [console.groq.com](https://console.groq.com)
+  - **OpenAI** / **Google** — standard API keys
+  - **Ollama** — local only, not available in cloud deploys
 
-### 1. Clone, install, and start
+### 1. Clone, install, and configure
 
 ```bash
 git clone https://github.com/kraftwerkur/trellis.git
 cd trellis
-cp .env.example .env          # Review and edit if needed
+cp .env.example .env          # ← Edit this! Add your NVIDIA_API_KEY (or other provider)
 uv sync                       # Install dependencies
-uv run alembic upgrade head   # Initialize database
 uv run -m trellis.main        # Start server on port 8000
 ```
+
+> **Important:** Open `.env` and set `NVIDIA_API_KEY=nvapi-...` (or configure another provider). The seed agents use NVIDIA NIM models. Without a configured provider, agents can't do LLM inference.
 
 **Swagger UI:** [http://localhost:8000/docs](http://localhost:8000/docs)
 
@@ -121,7 +123,7 @@ curl -s -X POST http://localhost:8000/api/agents \
     "tools": ["check_cisa_kev", "lookup_tech_stack", "get_cvss_details", "calculate_risk_score"],
     "channels": ["api"],
     "maturity": "assisted",
-    "llm_config": {"model": "llama3.1:8b", "temperature": 0.1, "max_tokens": 2048}
+    "llm_config": {"model": "meta/llama-3.3-70b-instruct", "provider": "nvidia", "temperature": 0.1, "max_tokens": 2048}
   }' | python3 -m json.tool
 ```
 
@@ -177,15 +179,17 @@ Trellis ships with **Ollama as the default** — if Ollama is running locally, a
 To enable cloud providers, add keys to your `.env` file:
 
 ```bash
-# .env
-TRELLIS_OLLAMA_URL=http://localhost:11434/v1    # Default, always available
-TRELLIS_OPENAI_API_KEY=sk-...                   # Optional
-TRELLIS_GROQ_API_KEY=gsk-...                    # Optional
-TRELLIS_GOOGLE_API_KEY=...                      # Optional
-NVIDIA_API_KEY=nvapi-...                        # Optional
+# .env — configure at least one provider
+NVIDIA_API_KEY=nvapi-...                        # Recommended (seed agents use this)
+# TRELLIS_OPENAI_API_KEY=sk-...                 # Optional
+# TRELLIS_GROQ_API_KEY=gsk_...                  # Optional (fast, free tier)
+# TRELLIS_GOOGLE_API_KEY=AIza...                # Optional
+# TRELLIS_OLLAMA_URL=http://localhost:11434/v1   # Local dev only
 ```
 
-The LLM Gateway exposes an **OpenAI-compatible** `/v1/chat/completions` endpoint. Any framework or tool that speaks the OpenAI API can use it. Smart model routing automatically selects the right provider based on request complexity.
+The seed agents are pre-configured for **NVIDIA NIM** (`meta/llama-3.3-70b-instruct`). Get a free API key at [build.nvidia.com](https://build.nvidia.com). To use a different provider, update the `provider` field in the agent's `llm_config` when registering.
+
+The LLM Gateway exposes an **OpenAI-compatible** `/v1/chat/completions` endpoint. Any framework or tool that speaks the OpenAI API can use it.
 
 See `.env.example` for all configurable environment variables.
 

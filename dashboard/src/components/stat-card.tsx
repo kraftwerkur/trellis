@@ -17,25 +17,25 @@ const STATUS_CONFIG: Record<
 > = {
   healthy: {
     icon: CheckCircle2,
-    color: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
+    color: "text-status-healthy bg-status-healthy/10 border-status-healthy/20",
     label: "Healthy",
   },
   warning: {
     icon: AlertTriangle,
-    color: "text-amber-400 bg-amber-400/10 border-amber-400/20",
+    color: "text-status-warning bg-status-warning/10 border-status-warning/20",
     label: "Warning",
   },
   critical: {
     icon: XCircle,
-    color: "text-red-400 bg-red-400/10 border-red-400/20",
+    color: "text-destructive bg-destructive/10 border-destructive/20",
     label: "Critical",
   },
 };
 
 const TREND_CONFIG: Record<Trend, { icon: typeof TrendingUp; color: string }> =
   {
-    up: { icon: TrendingUp, color: "text-emerald-400" },
-    down: { icon: TrendingDown, color: "text-red-400" },
+    up: { icon: TrendingUp, color: "text-status-healthy" },
+    down: { icon: TrendingDown, color: "text-destructive" },
   };
 
 export function StatCard({

@@ -59,7 +59,7 @@ function generateMockMetrics(modelId: string): ObservatoryModelMetrics {
 
 /* ─── Helpers ─── */
 
-const COLORS = ["#06b6d4", "#8b5cf6", "#f59e0b", "#10b981", "#ef4444", "#ec4899"];
+const COLORS = ["var(--color-primary)", "var(--color-chart-4)", "var(--color-status-warning)", "var(--color-status-healthy)", "var(--color-destructive)", "var(--color-chart-5)"];
 
 function formatTimeAgo(ts: string) {
   const diff = Date.now() - new Date(ts).getTime();
@@ -110,17 +110,17 @@ function ModelDetailView({ modelId, onBack }: { modelId: string; onBack: () => v
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <button onClick={onBack} className="w-8 h-8 rounded-lg bg-white/[0.04] flex items-center justify-center hover:bg-white/[0.08] transition-colors">
-          <ArrowLeft className="w-4 h-4 text-zinc-400" />
+        <button onClick={onBack} className="w-8 h-8 rounded-lg bg-muted/10 flex items-center justify-center hover:bg-muted/20 transition-colors">
+          <ArrowLeft className="w-4 h-4 text-muted-foreground" />
         </button>
         <div>
-          <h2 className="text-lg font-bold text-zinc-100 font-data">{modelId}</h2>
-          <p className="text-[10px] text-zinc-500 uppercase tracking-widest">Model Metrics</p>
+          <h2 className="text-lg font-bold text-foreground font-data">{modelId}</h2>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Model Metrics</p>
         </div>
       </div>
 
       {loading && !rawMetrics && (
-        <div className="text-[10px] text-zinc-500 bg-zinc-800/50 border border-zinc-700/30 rounded-lg px-3 py-1.5 text-center animate-pulse">
+        <div className="text-[10px] text-muted-foreground bg-muted/50 border border-border rounded-lg px-3 py-1.5 text-center animate-pulse">
           Loading metrics…
         </div>
       )}
@@ -128,64 +128,64 @@ function ModelDetailView({ modelId, onBack }: { modelId: string; onBack: () => v
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* Latency Distribution */}
         <div className="card-dark overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-white/[0.06]">
-            <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium flex items-center gap-2">
+          <div className="px-4 py-2.5 border-b border-border">
+            <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium flex items-center gap-2">
               <Clock className="w-3.5 h-3.5" /> Latency Distribution
             </span>
           </div>
           <div className="p-4 space-y-3">
             {[
-              { label: "p50", value: metrics.latency.p50_ms, color: "#10b981" },
-              { label: "p95", value: metrics.latency.p95_ms, color: "#f59e0b" },
-              { label: "p99", value: metrics.latency.p99_ms, color: "#ef4444" },
+              { label: "p50", value: metrics.latency.p50_ms, color: "var(--color-status-healthy)" },
+              { label: "p95", value: metrics.latency.p95_ms, color: "var(--color-status-warning)" },
+              { label: "p99", value: metrics.latency.p99_ms, color: "var(--color-destructive)" },
             ].map(p => (
               <div key={p.label}>
                 <div className="flex items-center justify-between text-xs mb-1">
-                  <span className="text-zinc-400 uppercase font-mono">{p.label}</span>
-                  <span className="font-data text-zinc-200">{formatLatency(p.value)}</span>
+                  <span className="text-muted-foreground uppercase font-mono">{p.label}</span>
+                  <span className="font-data text-foreground">{formatLatency(p.value)}</span>
                 </div>
-                <div className="h-2 rounded-full bg-white/[0.04] overflow-hidden">
+                <div className="h-2 rounded-full bg-muted/10 overflow-hidden">
                   <div className="h-full rounded-full transition-all duration-500"
                     style={{ width: `${maxLatency > 0 ? (p.value / maxLatency) * 100 : 0}%`, background: p.color }} />
                 </div>
               </div>
             ))}
-            <div className="pt-2 border-t border-white/[0.06] flex items-center justify-between text-xs">
-              <span className="text-zinc-500">Average</span>
-              <span className="font-data text-cyan-400">{formatLatency(metrics.latency.avg_ms)}</span>
+            <div className="pt-2 border-t border-border flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">Average</span>
+              <span className="font-data text-primary">{formatLatency(metrics.latency.avg_ms)}</span>
             </div>
           </div>
         </div>
 
         {/* Token Efficiency */}
         <div className="card-dark overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-white/[0.06]">
-            <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium flex items-center gap-2">
+          <div className="px-4 py-2.5 border-b border-border">
+            <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium flex items-center gap-2">
               <Zap className="w-3.5 h-3.5" /> Token Efficiency
             </span>
           </div>
           <div className="p-4 space-y-4">
             {/* Input/Output ratio bar */}
             <div>
-              <div className="flex items-center justify-between text-[10px] text-zinc-500 mb-1.5">
+              <div className="flex items-center justify-between text-[10px] text-muted-foreground mb-1.5">
                 <span>Input ({inputPct.toFixed(0)}%)</span>
                 <span>Output ({(100 - inputPct).toFixed(0)}%)</span>
               </div>
               <div className="h-3 rounded-full overflow-hidden flex">
-                <div className="h-full bg-cyan-500/60 transition-all" style={{ width: `${inputPct}%` }} />
-                <div className="h-full bg-purple-500/60 transition-all" style={{ width: `${100 - inputPct}%` }} />
+                <div className="h-full bg-primary/60 transition-all" style={{ width: `${inputPct}%` }} />
+                <div className="h-full bg-chart-4/60 transition-all" style={{ width: `${100 - inputPct}%` }} />
               </div>
             </div>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { label: "Total Input", value: formatTokens(metrics.tokens.total_input), color: "text-cyan-400" },
-                { label: "Total Output", value: formatTokens(metrics.tokens.total_output), color: "text-purple-400" },
-                { label: "Avg Input/Req", value: formatTokens(metrics.tokens.avg_input_per_request), color: "text-cyan-400" },
-                { label: "Avg Output/Req", value: formatTokens(metrics.tokens.avg_output_per_request), color: "text-purple-400" },
+                { label: "Total Input", value: formatTokens(metrics.tokens.total_input), color: "text-primary" },
+                { label: "Total Output", value: formatTokens(metrics.tokens.total_output), color: "text-chart-4" },
+                { label: "Avg Input/Req", value: formatTokens(metrics.tokens.avg_input_per_request), color: "text-primary" },
+                { label: "Avg Output/Req", value: formatTokens(metrics.tokens.avg_output_per_request), color: "text-chart-4" },
               ].map(s => (
-                <div key={s.label} className="text-center p-2 rounded-lg bg-white/[0.02]">
+                <div key={s.label} className="text-center p-2 rounded-lg bg-muted/5">
                   <div className={`text-lg font-bold font-data ${s.color}`}>{s.value}</div>
-                  <div className="text-[10px] text-zinc-600 uppercase tracking-wider">{s.label}</div>
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wider">{s.label}</div>
                 </div>
               ))}
             </div>
@@ -195,32 +195,32 @@ function ModelDetailView({ modelId, onBack }: { modelId: string; onBack: () => v
 
       {/* Hourly Requests/Errors */}
       <div className="card-dark overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-white/[0.06] flex items-center justify-between">
-          <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Requests & Errors (24h)</span>
-          <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 font-medium">Hourly</span>
+        <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
+          <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Requests & Errors (24h)</span>
+          <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">Hourly</span>
         </div>
         <div className="p-4 h-64">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={metrics.hourly} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="reqGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
                 </linearGradient>
                 <linearGradient id="errGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--color-destructive)" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="var(--color-destructive)" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-              <XAxis dataKey="hour" tick={{ fontSize: 10, fill: "#52525b" }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: "#52525b" }} tickLine={false} axisLine={false} width={36} />
+              <XAxis dataKey="hour" tick={{ fontSize: 10, fill: "var(--color-muted-foreground)" }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: "var(--color-muted-foreground)" }} tickLine={false} axisLine={false} width={36} />
               <Tooltip
-                contentStyle={{ background: "#0a0a0f", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, fontSize: 12 }}
-                labelStyle={{ color: "#a1a1aa" }}
+                contentStyle={{ background: "var(--color-card)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, fontSize: 12 }}
+                labelStyle={{ color: "var(--color-muted-foreground)" }}
               />
-              <Area type="monotone" dataKey="requests" stroke="#06b6d4" fill="url(#reqGrad)" strokeWidth={2} name="Requests" />
-              <Area type="monotone" dataKey="errors" stroke="#ef4444" fill="url(#errGrad)" strokeWidth={1.5} name="Errors" />
+              <Area type="monotone" dataKey="requests" stroke="var(--color-primary)" fill="url(#reqGrad)" strokeWidth={2} name="Requests" />
+              <Area type="monotone" dataKey="errors" stroke="var(--color-destructive)" fill="url(#errGrad)" strokeWidth={1.5} name="Errors" />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -228,8 +228,8 @@ function ModelDetailView({ modelId, onBack }: { modelId: string; onBack: () => v
 
       {/* Cost per Request Trend */}
       <div className="card-dark overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-white/[0.06]">
-          <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium flex items-center gap-2">
+        <div className="px-4 py-2.5 border-b border-border">
+          <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium flex items-center gap-2">
             <TrendingUp className="w-3.5 h-3.5" /> Cost per Request Trend
           </span>
         </div>
@@ -238,20 +238,20 @@ function ModelDetailView({ modelId, onBack }: { modelId: string; onBack: () => v
             <AreaChart data={metrics.cost_per_request_trend} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="cprGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
+                  <stop offset="5%" stopColor="var(--color-status-warning)" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="var(--color-status-warning)" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-              <XAxis dataKey="hour" tick={{ fontSize: 10, fill: "#52525b" }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: "#52525b" }} tickLine={false} axisLine={false} width={48}
+              <XAxis dataKey="hour" tick={{ fontSize: 10, fill: "var(--color-muted-foreground)" }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: "var(--color-muted-foreground)" }} tickLine={false} axisLine={false} width={48}
                 tickFormatter={(v: number) => `$${v.toFixed(3)}`} />
               <Tooltip
-                contentStyle={{ background: "#0a0a0f", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, fontSize: 12 }}
-                labelStyle={{ color: "#a1a1aa" }}
+                contentStyle={{ background: "var(--color-card)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, fontSize: 12 }}
+                labelStyle={{ color: "var(--color-muted-foreground)" }}
                 formatter={(v: number) => [`$${v.toFixed(5)}`, "Cost/Request"]}
               />
-              <Area type="monotone" dataKey="cost_per_request" stroke="#f59e0b" fill="url(#cprGrad)" strokeWidth={2} />
+              <Area type="monotone" dataKey="cost_per_request" stroke="var(--color-status-warning)" fill="url(#cprGrad)" strokeWidth={2} />
             </AreaChart>
           </ResponsiveContainer>
         </div>
@@ -296,7 +296,7 @@ export default function ObservatoryPage() {
   return (
     <div className="space-y-4">
       {isLoading && (
-        <div className="text-[10px] text-zinc-500 bg-zinc-800/50 border border-zinc-700/30 rounded-lg px-3 py-1.5 text-center animate-pulse">
+        <div className="text-[10px] text-muted-foreground bg-muted/50 border border-border rounded-lg px-3 py-1.5 text-center animate-pulse">
           Connecting to Observatory API…
         </div>
       )}
@@ -304,17 +304,17 @@ export default function ObservatoryPage() {
       {/* Summary Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         {[
-          { icon: Activity, color: "text-cyan-500", label: "Total Requests", value: summary.total_requests.toLocaleString() },
-          { icon: DollarSign, color: "text-amber-500", label: "Total Cost", value: `$${summary.total_cost_usd.toFixed(2)}` },
-          { icon: AlertTriangle, color: "text-red-500", label: "Error Rate", value: `${(summary.error_rate * 100).toFixed(1)}%` },
-          { icon: Cpu, color: "text-violet-500", label: "Models", value: String(summary.unique_models) },
-          { icon: Bot, color: "text-emerald-500", label: "Agents", value: String(summary.unique_agents) },
+          { icon: Activity, color: "text-primary", label: "Total Requests", value: summary.total_requests.toLocaleString() },
+          { icon: DollarSign, color: "text-status-warning", label: "Total Cost", value: `$${summary.total_cost_usd.toFixed(2)}` },
+          { icon: AlertTriangle, color: "text-destructive", label: "Error Rate", value: `${(summary.error_rate * 100).toFixed(1)}%` },
+          { icon: Cpu, color: "text-chart-4", label: "Models", value: String(summary.unique_models) },
+          { icon: Bot, color: "text-status-healthy", label: "Agents", value: String(summary.unique_agents) },
         ].map(s => (
           <div key={s.label} className="card-dark p-4 flex items-center gap-3">
             <s.icon className={`w-5 h-5 ${s.color}`} />
             <div>
-              <div className="text-sm font-data text-zinc-200">{s.value}</div>
-              <div className="text-[10px] text-zinc-600 uppercase">{s.label}</div>
+              <div className="text-sm font-data text-foreground">{s.value}</div>
+              <div className="text-[10px] text-muted-foreground uppercase">{s.label}</div>
             </div>
           </div>
         ))}
@@ -322,16 +322,16 @@ export default function ObservatoryPage() {
 
       {/* Model Table */}
       <div className="card-dark overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-white/[0.06] flex items-center justify-between">
-          <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium flex items-center gap-2">
+        <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
+          <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium flex items-center gap-2">
             <Telescope className="w-3.5 h-3.5" /> Model Overview
           </span>
-          <span className="text-[10px] text-zinc-600">{models.length} models</span>
+          <span className="text-[10px] text-muted-foreground">{models.length} models</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-white/[0.06]">
+              <tr className="border-b border-border">
                 {([
                   ["model_id", "Model"],
                   ["provider", "Provider"],
@@ -343,7 +343,7 @@ export default function ObservatoryPage() {
                 ] as [SortKey, string][]).map(([key, label]) => (
                   <th key={key}
                     onClick={() => handleSort(key)}
-                    className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-zinc-500 font-medium cursor-pointer hover:text-zinc-300 transition-colors select-none whitespace-nowrap">
+                    className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-muted-foreground font-medium cursor-pointer hover:text-foreground/80 transition-colors select-none whitespace-nowrap">
                     {label}{sortIndicator(key)}
                   </th>
                 ))}
@@ -353,9 +353,9 @@ export default function ObservatoryPage() {
               {models.map((m, i) => (
                 <tr key={m.model_id}
                   onClick={() => setSelectedModel(m.model_id)}
-                  className="border-b border-white/[0.04] hover:bg-white/[0.02] cursor-pointer transition-colors">
+                  className="border-b border-border/60 hover:bg-muted/5 cursor-pointer transition-colors">
                   <td className="px-4 py-3">
-                    <span className="font-data text-zinc-200">{m.model_id}</span>
+                    <span className="font-data text-foreground">{m.model_id}</span>
                   </td>
                   <td className="px-4 py-3">
                     <span className="px-1.5 py-0.5 rounded text-[10px] font-medium"
@@ -363,15 +363,15 @@ export default function ObservatoryPage() {
                       {m.provider}
                     </span>
                   </td>
-                  <td className="px-4 py-3 font-data text-zinc-300">{m.request_count.toLocaleString()}</td>
+                  <td className="px-4 py-3 font-data text-foreground/80">{m.request_count.toLocaleString()}</td>
                   <td className="px-4 py-3">
-                    <span className={`font-data ${m.error_rate > 0.05 ? "text-red-400" : m.error_rate > 0.02 ? "text-amber-400" : "text-emerald-400"}`}>
+                    <span className={`font-data ${m.error_rate > 0.05 ? "text-destructive" : m.error_rate > 0.02 ? "text-status-warning" : "text-status-healthy"}`}>
                       {(m.error_rate * 100).toFixed(1)}%
                     </span>
                   </td>
-                  <td className="px-4 py-3 font-data text-zinc-300">{formatLatency(m.avg_latency_ms)}</td>
-                  <td className="px-4 py-3 font-data text-amber-400">${m.total_cost_usd.toFixed(2)}</td>
-                  <td className="px-4 py-3 text-zinc-500 font-data">{formatTimeAgo(m.last_used)}</td>
+                  <td className="px-4 py-3 font-data text-foreground/80">{formatLatency(m.avg_latency_ms)}</td>
+                  <td className="px-4 py-3 font-data text-status-warning">${m.total_cost_usd.toFixed(2)}</td>
+                  <td className="px-4 py-3 text-muted-foreground font-data">{formatTimeAgo(m.last_used)}</td>
                 </tr>
               ))}
             </tbody>
@@ -381,19 +381,19 @@ export default function ObservatoryPage() {
 
       {/* Model Cost Distribution */}
       <div className="card-dark overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-white/[0.06]">
-          <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Cost by Model</span>
+        <div className="px-4 py-2.5 border-b border-border">
+          <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Cost by Model</span>
         </div>
         <div className="p-4 h-48">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={models} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" horizontal={true} vertical={false} />
-              <XAxis dataKey="model_id" tick={{ fontSize: 10, fill: "#52525b" }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 10, fill: "#52525b" }} tickLine={false} axisLine={false}
+              <XAxis dataKey="model_id" tick={{ fontSize: 10, fill: "var(--color-muted-foreground)" }} tickLine={false} axisLine={false} />
+              <YAxis tick={{ fontSize: 10, fill: "var(--color-muted-foreground)" }} tickLine={false} axisLine={false}
                 tickFormatter={(v: number) => `$${v}`} width={40} />
               <Tooltip
-                contentStyle={{ background: "#0a0a0f", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, fontSize: 12 }}
-                labelStyle={{ color: "#a1a1aa" }}
+                contentStyle={{ background: "var(--color-card)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, fontSize: 12 }}
+                labelStyle={{ color: "var(--color-muted-foreground)" }}
                 formatter={(v: number) => [`$${v.toFixed(2)}`, "Cost"]}
               />
               <Bar dataKey="total_cost_usd" radius={[4, 4, 0, 0]}>

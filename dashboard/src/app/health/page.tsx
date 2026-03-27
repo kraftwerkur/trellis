@@ -92,12 +92,12 @@ function formatLatency(ms: number | null) {
 }
 
 const STATUS_CONFIG = {
-  healthy: { color: "text-emerald-400", bg: "bg-emerald-500/10", border: "border-emerald-500/20", icon: CheckCircle2, label: "Healthy" },
-  degraded: { color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20", icon: AlertTriangle, label: "Degraded" },
-  warning: { color: "text-amber-400", bg: "bg-amber-500/10", border: "border-amber-500/20", icon: AlertTriangle, label: "Warning" },
-  unreachable: { color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20", icon: XCircle, label: "Unreachable" },
-  unhealthy: { color: "text-red-400", bg: "bg-red-500/10", border: "border-red-500/20", icon: XCircle, label: "Unhealthy" },
-  unknown: { color: "text-zinc-500", bg: "bg-zinc-500/10", border: "border-zinc-500/20", icon: Clock, label: "Unknown" },
+  healthy: { color: "text-status-healthy", bg: "bg-status-healthy/10", border: "border-status-healthy/20", icon: CheckCircle2, label: "Healthy" },
+  degraded: { color: "text-status-warning", bg: "bg-status-warning/10", border: "border-status-warning/20", icon: AlertTriangle, label: "Degraded" },
+  warning: { color: "text-status-warning", bg: "bg-status-warning/10", border: "border-status-warning/20", icon: AlertTriangle, label: "Warning" },
+  unreachable: { color: "text-destructive", bg: "bg-destructive/10", border: "border-destructive/20", icon: XCircle, label: "Unreachable" },
+  unhealthy: { color: "text-destructive", bg: "bg-destructive/10", border: "border-destructive/20", icon: XCircle, label: "Unhealthy" },
+  unknown: { color: "text-muted-foreground", bg: "bg-secondary/10", border: "border-border", icon: Clock, label: "Unknown" },
 } as const;
 
 function getStatusConfig(status: string) {
@@ -260,50 +260,50 @@ function HistoryDetailView({ checkName, onBack }: { checkName: string; onBack: (
   const hasLatency = chartData.some(d => d.latency !== null);
 
   const STATUS_COLORS: Record<string, string> = {
-    healthy: "#10b981",
-    degraded: "#f59e0b",
-    warning: "#f59e0b",
-    unreachable: "#ef4444",
+    healthy: "var(--color-status-healthy)",
+    degraded: "var(--color-status-warning)",
+    warning: "var(--color-status-warning)",
+    unreachable: "var(--color-destructive)",
   };
 
   return (
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <button onClick={onBack} className="w-8 h-8 rounded-lg bg-white/[0.04] flex items-center justify-center hover:bg-white/[0.08] transition-colors">
-          <ArrowLeft className="w-4 h-4 text-zinc-400" />
+        <button onClick={onBack} className="w-8 h-8 rounded-lg bg-muted/10 flex items-center justify-center hover:bg-muted/20 transition-colors">
+          <ArrowLeft className="w-4 h-4 text-muted-foreground" />
         </button>
         <div>
-          <h2 className="text-lg font-bold text-zinc-100 font-data">{checkName}</h2>
-          <p className="text-[10px] text-zinc-500 uppercase tracking-widest">Check History · {history.length} records</p>
+          <h2 className="text-lg font-bold text-foreground font-data">{checkName}</h2>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Check History · {history.length} records</p>
         </div>
       </div>
 
       {loading && !rawHistory && (
-        <div className="text-[10px] text-zinc-500 bg-zinc-800/50 border border-zinc-700/30 rounded-lg px-3 py-1.5 text-center animate-pulse">
+        <div className="text-[10px] text-muted-foreground bg-muted/50 border border-border rounded-lg px-3 py-1.5 text-center animate-pulse">
           Loading history…
         </div>
       )}
 
       {/* Status Timeline */}
       <div className="card-dark overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-white/[0.06]">
-          <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Status Timeline</span>
+        <div className="px-4 py-2.5 border-b border-border">
+          <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Status Timeline</span>
         </div>
         <div className="p-4 h-32">
           <ResponsiveContainer width="100%" height="100%">
             <ScatterChart margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-              <XAxis dataKey="time" tick={{ fontSize: 10, fill: "#52525b" }} tickLine={false} axisLine={false} />
+              <XAxis dataKey="time" tick={{ fontSize: 10, fill: "var(--color-muted-foreground)" }} tickLine={false} axisLine={false} />
               <YAxis domain={[-0.1, 1.1]} tick={false} axisLine={false} width={0} />
               <Tooltip
-                contentStyle={{ background: "#0a0a0f", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, fontSize: 12 }}
-                labelStyle={{ color: "#a1a1aa" }}
+                contentStyle={{ background: "var(--color-card)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, fontSize: 12 }}
+                labelStyle={{ color: "var(--color-muted-foreground)" }}
                 formatter={(_: unknown, __: unknown, props: { payload?: { statusLabel?: string } }) => [props?.payload?.statusLabel ?? "—", "Status"]}
               />
               <Scatter data={chartData} dataKey="status">
                 {chartData.map((d, i) => (
-                  <Cell key={i} fill={STATUS_COLORS[d.statusLabel] ?? "#71717a"} r={5} />
+                  <Cell key={i} fill={STATUS_COLORS[d.statusLabel] ?? "var(--color-status-unknown)"} r={5} />
                 ))}
               </Scatter>
             </ScatterChart>
@@ -314,28 +314,28 @@ function HistoryDetailView({ checkName, onBack }: { checkName: string; onBack: (
       {/* Latency Trend */}
       {hasLatency && (
         <div className="card-dark overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-white/[0.06]">
-            <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Latency Trend</span>
+          <div className="px-4 py-2.5 border-b border-border">
+            <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Latency Trend</span>
           </div>
           <div className="p-4 h-48">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
                 <defs>
                   <linearGradient id="latGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                    <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                <XAxis dataKey="time" tick={{ fontSize: 10, fill: "#52525b" }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: "#52525b" }} tickLine={false} axisLine={false} width={48}
+                <XAxis dataKey="time" tick={{ fontSize: 10, fill: "var(--color-muted-foreground)" }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: "var(--color-muted-foreground)" }} tickLine={false} axisLine={false} width={48}
                   tickFormatter={(v: number) => `${Math.round(v)}ms`} />
                 <Tooltip
-                  contentStyle={{ background: "#0a0a0f", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, fontSize: 12 }}
-                  labelStyle={{ color: "#a1a1aa" }}
+                  contentStyle={{ background: "var(--color-card)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, fontSize: 12 }}
+                  labelStyle={{ color: "var(--color-muted-foreground)" }}
                   formatter={(v: number) => [`${v?.toFixed(1)}ms`, "Latency"]}
                 />
-                <Area type="monotone" dataKey="latency" stroke="#06b6d4" fill="url(#latGrad)" strokeWidth={2} connectNulls />
+                <Area type="monotone" dataKey="latency" stroke="var(--color-primary)" fill="url(#latGrad)" strokeWidth={2} connectNulls />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -344,32 +344,32 @@ function HistoryDetailView({ checkName, onBack }: { checkName: string; onBack: (
 
       {/* Recent Records Table */}
       <div className="card-dark overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-white/[0.06]">
-          <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Recent Records</span>
+        <div className="px-4 py-2.5 border-b border-border">
+          <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Recent Records</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-white/[0.06]">
-                <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-zinc-500 font-medium">Time</th>
-                <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-zinc-500 font-medium">Status</th>
-                <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-zinc-500 font-medium">Latency</th>
-                <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-zinc-500 font-medium">Details</th>
+              <tr className="border-b border-border">
+                <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Time</th>
+                <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Status</th>
+                <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Latency</th>
+                <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Details</th>
               </tr>
             </thead>
             <tbody>
               {history.slice(0, 20).map(r => {
                 const sc = getStatusConfig(r.status);
                 return (
-                  <tr key={r.id} className="border-b border-white/[0.04]">
-                    <td className="px-4 py-2.5 font-data text-zinc-400">{formatTimeAgo(r.timestamp)}</td>
+                  <tr key={r.id} className="border-b border-border/60">
+                    <td className="px-4 py-2.5 font-data text-muted-foreground">{formatTimeAgo(r.timestamp)}</td>
                     <td className="px-4 py-2.5">
                       <span className={`inline-flex items-center gap-1 text-xs ${sc.color}`}>
                         <sc.icon className="w-3 h-3" /> {r.status}
                       </span>
                     </td>
-                    <td className="px-4 py-2.5 font-data text-zinc-300">{formatLatency(r.latency_ms)}</td>
-                    <td className="px-4 py-2.5 text-zinc-500 font-mono text-[10px] max-w-[300px] truncate">
+                    <td className="px-4 py-2.5 font-data text-foreground/80">{formatLatency(r.latency_ms)}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground font-mono text-[10px] max-w-[300px] truncate">
                       {Object.keys(r.details).length > 0 ? JSON.stringify(r.details) : "—"}
                     </td>
                   </tr>
@@ -420,7 +420,7 @@ export default function HealthPage() {
   return (
     <div className="space-y-4">
       {loadingQuick && loadingDetailed && (
-        <div className="text-[10px] text-zinc-500 bg-zinc-800/50 border border-zinc-700/30 rounded-lg px-3 py-1.5 text-center animate-pulse">
+        <div className="text-[10px] text-muted-foreground bg-muted/50 border border-border rounded-lg px-3 py-1.5 text-center animate-pulse">
           Connecting to Health Auditor API…
         </div>
       )}
@@ -434,7 +434,7 @@ export default function HealthPage() {
               <div className={`text-lg font-bold font-data ${overallConfig.color}`}>
                 System {overallConfig.label}
               </div>
-              <div className="text-[10px] text-zinc-500 uppercase tracking-widest">
+              <div className="text-[10px] text-muted-foreground uppercase tracking-widest">
                 {quick.timestamp ? `Last check ${formatTimeAgo(quick.timestamp)}` : "No checks yet"}
                 {quick.agents && ` · ${quick.agents.total} agents monitored`}
               </div>
@@ -443,7 +443,7 @@ export default function HealthPage() {
           <button
             onClick={handleRunFullCheck}
             disabled={runningCheck}
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/[0.06] hover:bg-white/[0.10] text-xs text-zinc-300 transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-muted/15 hover:bg-muted/25 text-xs text-foreground/80 transition-colors disabled:opacity-50"
           >
             {runningCheck ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -475,22 +475,22 @@ export default function HealthPage() {
                   setSelectedCheck(checks[0].name);
                 }
               }}
-              className={`card-dark overflow-hidden cursor-pointer hover:bg-white/[0.02] transition-colors border ${sc.border}`}
+              className={`card-dark overflow-hidden cursor-pointer hover:bg-muted/5 transition-colors border ${sc.border}`}
             >
               <div className="p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <cat.icon className={`w-4 h-4 ${sc.color}`} />
-                    <span className="text-sm font-medium text-zinc-200">{cat.label}</span>
+                    <span className="text-sm font-medium text-foreground">{cat.label}</span>
                   </div>
                   <StatusIcon className={`w-4 h-4 ${sc.color}`} />
                 </div>
                 <div className="space-y-1.5">
-                  <div className="text-[10px] text-zinc-500 uppercase tracking-wider">
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wider">
                     {cat.getSummary(detailed)}
                   </div>
                   {latency !== null && (
-                    <div className="flex items-center gap-1 text-[10px] text-zinc-500">
+                    <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
                       <Clock className="w-3 h-3" />
                       <span className="font-data">{formatLatency(latency)}</span>
                     </div>
@@ -523,22 +523,22 @@ export default function HealthPage() {
 
       {/* Detailed Check Results Table */}
       <div className="card-dark overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-white/[0.06] flex items-center justify-between">
-          <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium flex items-center gap-2">
+        <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
+          <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium flex items-center gap-2">
             <HeartPulse className="w-3.5 h-3.5" /> All Checks
           </span>
-          <span className="text-[10px] text-zinc-600">
+          <span className="text-[10px] text-muted-foreground">
             {detailed.timestamp ? new Date(detailed.timestamp).toLocaleString() : "—"}
           </span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-white/[0.06]">
-                <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-zinc-500 font-medium">Check</th>
-                <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-zinc-500 font-medium">Status</th>
-                <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-zinc-500 font-medium">Latency</th>
-                <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-zinc-500 font-medium">Details</th>
+              <tr className="border-b border-border">
+                <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Check</th>
+                <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Status</th>
+                <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Latency</th>
+                <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Details</th>
               </tr>
             </thead>
             <tbody>
@@ -567,16 +567,16 @@ export default function HealthPage() {
                     <tr
                       key={c.name}
                       onClick={() => setSelectedCheck(c.name)}
-                      className="border-b border-white/[0.04] hover:bg-white/[0.02] cursor-pointer transition-colors"
+                      className="border-b border-border/60 hover:bg-muted/5 cursor-pointer transition-colors"
                     >
-                      <td className="px-4 py-2.5 font-data text-zinc-200">{c.name}</td>
+                      <td className="px-4 py-2.5 font-data text-foreground">{c.name}</td>
                       <td className="px-4 py-2.5">
                         <span className={`inline-flex items-center gap-1 ${sc.color}`}>
                           <sc.icon className="w-3 h-3" /> {c.status}
                         </span>
                       </td>
-                      <td className="px-4 py-2.5 font-data text-zinc-300">{formatLatency(c.latency_ms)}</td>
-                      <td className="px-4 py-2.5 text-zinc-500 text-[10px] max-w-[400px] truncate">{detailStr || "—"}</td>
+                      <td className="px-4 py-2.5 font-data text-foreground/80">{formatLatency(c.latency_ms)}</td>
+                      <td className="px-4 py-2.5 text-muted-foreground text-[10px] max-w-[400px] truncate">{detailStr || "—"}</td>
                     </tr>
                   );
                 });

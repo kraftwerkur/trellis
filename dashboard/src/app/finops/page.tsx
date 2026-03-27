@@ -10,7 +10,7 @@ import {
   Tooltip, ResponsiveContainer, Cell, PieChart, Pie,
 } from "@/lib/charts";
 
-const COLORS = ["#06b6d4", "#8b5cf6", "#f59e0b", "#10b981", "#ef4444", "#ec4899"];
+const COLORS = ["var(--color-primary)", "var(--color-chart-4)", "var(--color-status-warning)", "var(--color-status-healthy)", "var(--color-destructive)", "var(--color-chart-5)"];
 const BUDGET_CAP_DAILY = 25.0;
 const BUDGET_CAP_MONTHLY = 500.0;
 
@@ -106,16 +106,16 @@ export default function FinOpsPage() {
               <AreaChart data={timeseries}>
                 <defs>
                   <linearGradient id="costGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                    <stop offset="5%" stopColor="var(--color-primary)" stopOpacity={0.3} />
+                    <stop offset="95%" stopColor="var(--color-primary)" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
                 <XAxis dataKey="bucket" tick={{ fontSize: 10, fill: "hsl(215, 15%, 55%)" }} tickLine={false} axisLine={false} />
                 <YAxis tick={{ fontSize: 10, fill: "hsl(215, 15%, 55%)" }} tickLine={false} axisLine={false} tickFormatter={v => `$${v}`} />
                 <Tooltip contentStyle={{ background: "hsl(222, 20%, 11%)", border: "1px solid hsl(220, 14%, 20%)", borderRadius: 8, fontSize: 12 }}
-                  labelStyle={{ color: "#a1a1aa" }} itemStyle={{ color: "#06b6d4" }} formatter={(v: number) => [`$${v.toFixed(4)}`, "Cost"]} />
-                <Area type="monotone" dataKey="total_cost_usd" stroke="#06b6d4" fill="url(#costGrad)" strokeWidth={2} />
+                  labelStyle={{ color: "var(--color-muted-foreground)" }} itemStyle={{ color: "var(--color-primary)" }} formatter={(v: number) => [`$${v.toFixed(4)}`, "Cost"]} />
+                <Area type="monotone" dataKey="total_cost_usd" stroke="var(--color-primary)" fill="url(#costGrad)" strokeWidth={2} />
               </AreaChart>
             </ResponsiveContainer>
           )}
@@ -235,7 +235,7 @@ export default function FinOpsPage() {
                   <XAxis type="number" tick={{ fontSize: 10, fill: "hsl(215, 15%, 55%)" }} tickLine={false} axisLine={false} />
                   <YAxis type="category" dataKey="model" tick={{ fontSize: 10, fill: "hsl(215, 15%, 55%)" }} tickLine={false} axisLine={false} width={120} />
                   <Tooltip contentStyle={{ background: "hsl(222, 20%, 11%)", border: "1px solid hsl(220, 14%, 20%)", borderRadius: 8, fontSize: 12 }}
-                    labelStyle={{ color: "#a1a1aa" }} />
+                    labelStyle={{ color: "var(--color-muted-foreground)" }} />
                   <Bar dataKey="requests" radius={[0, 4, 4, 0]}>
                     {modelData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                   </Bar>

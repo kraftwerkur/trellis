@@ -56,7 +56,7 @@ export default function AuditPage() {
       {/* Filters */}
       <div className="flex items-center gap-3">
         <select
-          className="bg-black/40 border border-white/[0.06] rounded px-2 py-1.5 text-xs text-zinc-400 focus:outline-none focus:border-cyan-500/30"
+          className="bg-background/60 border border-border rounded px-2 py-1.5 text-xs text-muted-foreground focus:outline-none focus:border-primary/30"
           value={filterType}
           onChange={e => setFilterType(e.target.value)}
         >
@@ -64,7 +64,7 @@ export default function AuditPage() {
           {eventTypes.map(t => <option key={t} value={t}>{t.replace(/_/g, " ")}</option>)}
         </select>
         <select
-          className="bg-black/40 border border-white/[0.06] rounded px-2 py-1.5 text-xs text-zinc-400 focus:outline-none focus:border-cyan-500/30"
+          className="bg-background/60 border border-border rounded px-2 py-1.5 text-xs text-muted-foreground focus:outline-none focus:border-primary/30"
           value={filterAgent}
           onChange={e => setFilterAgent(e.target.value)}
         >
@@ -78,7 +78,7 @@ export default function AuditPage() {
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-xs text-zinc-600 uppercase border-b border-white/[0.06]">
+              <tr className="text-xs text-muted-foreground uppercase border-b border-border">
                 <th className="text-left px-3 py-2">Timestamp</th>
                 <th className="text-left px-3 py-2">Trace</th>
                 <th className="text-left px-3 py-2">Agent</th>
@@ -94,7 +94,7 @@ export default function AuditPage() {
                   ))}</tr>
                 ))
               ) : !events?.length ? (
-                <tr><td colSpan={5} className="text-center text-zinc-600 py-8">No audit events</td></tr>
+                <tr><td colSpan={5} className="text-center text-muted-foreground py-8">No audit events</td></tr>
               ) : (
                 events.map(e => (
                   <AuditRow
@@ -123,37 +123,37 @@ function AuditRow({ event: e, agentName, isTraceExpanded, onTraceClick }: {
   return (
     <>
       <tr className="table-row-hover">
-        <td className="px-3 py-1.5 font-data text-xs text-zinc-500 whitespace-nowrap">{formatTime(e.timestamp)}</td>
+        <td className="px-3 py-1.5 font-data text-xs text-muted-foreground whitespace-nowrap">{formatTime(e.timestamp)}</td>
         <td className="px-3 py-1.5">
           {e.trace_id ? (
-            <button onClick={onTraceClick} className="font-data text-xs text-cyan-400/70 hover:text-cyan-400 transition-colors">
+            <button onClick={onTraceClick} className="font-data text-xs text-primary/70 hover:text-primary transition-colors">
               {e.trace_id.slice(0, 8)}
             </button>
-          ) : <span className="text-xs text-zinc-600">—</span>}
+          ) : <span className="text-xs text-muted-foreground">—</span>}
         </td>
-        <td className="px-3 py-1.5 text-xs text-zinc-300">{agentName ?? (e.agent_id?.slice(0, 8) || "—")}</td>
+        <td className="px-3 py-1.5 text-xs text-foreground/80">{agentName ?? (e.agent_id?.slice(0, 8) || "—")}</td>
         <td className="px-3 py-1.5"><EventBadge type={e.event_type} /></td>
-        <td className="px-3 py-1.5 text-xs text-zinc-400 truncate max-w-[400px]">{detailsSummary(e.details)}</td>
+        <td className="px-3 py-1.5 text-xs text-muted-foreground truncate max-w-[400px]">{detailsSummary(e.details)}</td>
       </tr>
       {isTraceExpanded && e.trace_id && (
         <tr>
-          <td colSpan={5} className="bg-black/30 px-4 py-3 border-b border-white/[0.06]">
-            <div className="text-[10px] uppercase text-zinc-600 mb-2 tracking-wider">Trace {e.trace_id.slice(0, 8)}… — Full Chain</div>
+          <td colSpan={5} className="bg-background/50 px-4 py-3 border-b border-border">
+            <div className="text-[10px] uppercase text-muted-foreground mb-2 tracking-wider">Trace {e.trace_id.slice(0, 8)}… — Full Chain</div>
             {traceEvents?.length ? (
               <div className="space-y-1">
                 {traceEvents
                   .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
                   .map((te, i) => (
                     <div key={te.id} className="flex items-center gap-3 text-xs">
-                      <span className="text-zinc-700 font-data w-4 text-right">{i + 1}</span>
-                      <span className="font-data text-zinc-600 text-[10px] w-20 shrink-0">{formatTime(te.timestamp)}</span>
+                      <span className="text-muted-foreground font-data w-4 text-right">{i + 1}</span>
+                      <span className="font-data text-muted-foreground text-[10px] w-20 shrink-0">{formatTime(te.timestamp)}</span>
                       <EventBadge type={te.event_type} />
-                      <span className="text-zinc-400 truncate">{detailsSummary(te.details)}</span>
+                      <span className="text-muted-foreground truncate">{detailsSummary(te.details)}</span>
                     </div>
                   ))}
               </div>
             ) : (
-              <div className="text-xs text-zinc-600">Loading trace…</div>
+              <div className="text-xs text-muted-foreground">Loading trace…</div>
             )}
           </td>
         </tr>

@@ -57,9 +57,9 @@ const alertsApi = api.alerts;
 
 function SeverityBadge({ severity }: { severity: string }) {
   const colors: Record<string, string> = {
-    critical: "bg-red-500/20 text-red-400 border-red-500/30",
-    warning: "bg-amber-500/20 text-amber-400 border-amber-500/30",
-    info: "bg-blue-500/20 text-blue-400 border-blue-500/30",
+    critical: "bg-destructive/20 text-destructive border-destructive/30",
+    warning: "bg-status-warning/20 text-status-warning border-status-warning/30",
+    info: "bg-status-info/20 text-status-info border-status-info/30",
   };
   return (
     <span className={`px-2 py-0.5 text-[10px] uppercase tracking-wider rounded border ${colors[severity] || colors.info}`}>
@@ -70,9 +70,9 @@ function SeverityBadge({ severity }: { severity: string }) {
 
 function StatusBadge({ status }: { status: string }) {
   const config: Record<string, { color: string; icon: React.ReactNode }> = {
-    firing: { color: "text-red-400", icon: <XCircle className="w-3 h-3" /> },
-    resolved: { color: "text-emerald-400", icon: <CheckCircle2 className="w-3 h-3" /> },
-    test: { color: "text-blue-400", icon: <TestTube className="w-3 h-3" /> },
+    firing: { color: "text-destructive", icon: <XCircle className="w-3 h-3" /> },
+    resolved: { color: "text-status-healthy", icon: <CheckCircle2 className="w-3 h-3" /> },
+    test: { color: "text-status-info", icon: <TestTube className="w-3 h-3" /> },
   };
   const c = config[status] || config.firing;
   return (
@@ -142,17 +142,17 @@ function RuleForm({
     });
   };
 
-  const inputClass = "w-full bg-white/[0.04] border border-white/[0.08] rounded px-3 py-1.5 text-sm text-zinc-200 focus:outline-none focus:border-cyan-500/50";
-  const labelClass = "text-xs text-zinc-500 uppercase tracking-wider mb-1";
+  const inputClass = "w-full bg-muted/10 border border-border rounded px-3 py-1.5 text-sm text-foreground focus:outline-none focus:border-primary/50";
+  const labelClass = "text-xs text-muted-foreground uppercase tracking-wider mb-1";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-zinc-900 border border-white/[0.08] rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+      <div className="bg-background border border-border rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-sm font-semibold text-zinc-200">
+          <h3 className="text-sm font-semibold text-foreground">
             {rule ? "Edit Alert Rule" : "New Alert Rule"}
           </h3>
-          <button onClick={onCancel} className="text-zinc-500 hover:text-zinc-300">
+          <button onClick={onCancel} className="text-muted-foreground hover:text-foreground/80">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -218,14 +218,14 @@ function RuleForm({
             <label className={labelClass}>Channels</label>
             <div className="flex gap-3 mt-1">
               {CHANNELS.map((ch: string) => (
-                <label key={ch} className="flex items-center gap-1.5 text-xs text-zinc-400 cursor-pointer">
+                <label key={ch} className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer">
                   <input
                     type="checkbox"
                     checked={channels.includes(ch)}
                     onChange={(e) =>
                       setChannels(e.target.checked ? [...channels, ch] : channels.filter((c) => c !== ch))
                     }
-                    className="rounded border-white/20 bg-white/[0.04]"
+                    className="rounded border-border bg-muted/10"
                   />
                   {ch}
                 </label>
@@ -253,13 +253,13 @@ function RuleForm({
           )}
 
           <div className="flex justify-end gap-2 pt-2">
-            <button onClick={onCancel} className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 border border-white/[0.08] rounded">
+            <button onClick={onCancel} className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground border border-border rounded">
               Cancel
             </button>
             <button
               onClick={handleSubmit}
               disabled={!name || !metric || !value}
-              className="px-3 py-1.5 text-xs bg-cyan-600 hover:bg-cyan-500 text-white rounded disabled:opacity-30"
+              className="px-3 py-1.5 text-xs bg-primary hover:bg-primary/90 text-white rounded disabled:opacity-30"
             >
               {rule ? "Update" : "Create"} Rule
             </button>
@@ -329,13 +329,13 @@ export default function AlertsPage() {
       {/* Summary cards */}
       <div className="grid grid-cols-4 gap-3">
         {[
-          { label: "Total Rules", value: s.total_rules, color: "text-zinc-200" },
-          { label: "Active", value: s.active_rules, color: "text-cyan-400" },
-          { label: "Firing Now", value: s.firing_count, color: s.firing_count > 0 ? "text-red-400" : "text-emerald-400" },
-          { label: "Last 24h", value: Object.values(s.last_24h).reduce((a: number, b) => a + (b as number), 0), color: "text-amber-400" },
+          { label: "Total Rules", value: s.total_rules, color: "text-foreground" },
+          { label: "Active", value: s.active_rules, color: "text-primary" },
+          { label: "Firing Now", value: s.firing_count, color: s.firing_count > 0 ? "text-destructive" : "text-status-healthy" },
+          { label: "Last 24h", value: Object.values(s.last_24h).reduce((a: number, b) => a + (b as number), 0), color: "text-status-warning" },
         ].map((card) => (
-          <div key={card.label} className="bg-white/[0.02] border border-white/[0.06] rounded-lg p-3">
-            <div className="text-[10px] uppercase tracking-wider text-zinc-600">{card.label}</div>
+          <div key={card.label} className="bg-muted/5 border border-border rounded-lg p-3">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{card.label}</div>
             <div className={`text-2xl font-data font-bold ${card.color}`}>{card.value}</div>
           </div>
         ))}
@@ -348,7 +348,7 @@ export default function AlertsPage() {
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`px-3 py-1.5 text-xs rounded ${tab === t ? "bg-white/[0.08] text-zinc-200" : "text-zinc-500 hover:text-zinc-300"}`}
+              className={`px-3 py-1.5 text-xs rounded ${tab === t ? "bg-muted/20 text-foreground" : "text-muted-foreground hover:text-foreground/80"}`}
             >
               {t === "rules" ? "Rules" : "History"}
             </button>
@@ -357,7 +357,7 @@ export default function AlertsPage() {
         {tab === "rules" && (
           <button
             onClick={() => { setEditRule(undefined); setShowForm(true); }}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-cyan-600 hover:bg-cyan-500 text-white rounded"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs bg-primary hover:bg-primary/90 text-white rounded"
           >
             <Plus className="w-3 h-3" /> New Rule
           </button>
@@ -366,7 +366,7 @@ export default function AlertsPage() {
 
       {/* Test result toast */}
       {testResult && (
-        <div className="bg-blue-500/10 border border-blue-500/20 rounded p-2 text-xs text-blue-400">
+        <div className="bg-status-info/10 border border-status-info/20 rounded p-2 text-xs text-status-info">
           {testResult}
         </div>
       )}
@@ -375,18 +375,18 @@ export default function AlertsPage() {
       {tab === "rules" && (
         <div className="space-y-2">
           {!rules?.length && (
-            <div className="text-center py-12 text-zinc-600 text-sm">
+            <div className="text-center py-12 text-muted-foreground text-sm">
               No alert rules configured. Create one to get started.
             </div>
           )}
           {rules?.map((rule) => (
-            <div key={rule.id} className="bg-white/[0.02] border border-white/[0.06] rounded-lg p-3">
+            <div key={rule.id} className="bg-muted/5 border border-border rounded-lg p-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Bell className={`w-4 h-4 ${rule.active ? "text-cyan-400" : "text-zinc-600"}`} />
+                  <Bell className={`w-4 h-4 ${rule.active ? "text-primary" : "text-muted-foreground"}`} />
                   <div>
-                    <div className="text-sm text-zinc-200 font-medium">{rule.name}</div>
-                    <div className="text-[10px] text-zinc-500">
+                    <div className="text-sm text-foreground font-medium">{rule.name}</div>
+                    <div className="text-[10px] text-muted-foreground">
                       {rule.source} · {rule.condition_metric} {rule.condition_operator} {rule.condition_value}
                       {rule.agent_id_filter && ` · agent: ${rule.agent_id_filter}`}
                     </div>
@@ -395,29 +395,29 @@ export default function AlertsPage() {
                 <div className="flex items-center gap-2">
                   <SeverityBadge severity={rule.severity} />
                   {rule.channels.map((ch: string) => (
-                    <span key={ch} className="px-1.5 py-0.5 text-[9px] bg-white/[0.04] border border-white/[0.06] rounded text-zinc-500">
+                    <span key={ch} className="px-1.5 py-0.5 text-[9px] bg-muted/10 border border-border rounded text-muted-foreground">
                       {ch}
                     </span>
                   ))}
-                  <span className="text-[10px] text-zinc-600 flex items-center gap-0.5">
+                  <span className="text-[10px] text-muted-foreground flex items-center gap-0.5">
                     <Clock className="w-3 h-3" /> {rule.cooldown_minutes}m
                   </span>
-                  <button onClick={() => handleToggle(rule.id)} className="text-zinc-500 hover:text-zinc-300" title="Toggle">
-                    {rule.active ? <ToggleRight className="w-4 h-4 text-cyan-400" /> : <ToggleLeft className="w-4 h-4" />}
+                  <button onClick={() => handleToggle(rule.id)} className="text-muted-foreground hover:text-foreground/80" title="Toggle">
+                    {rule.active ? <ToggleRight className="w-4 h-4 text-primary" /> : <ToggleLeft className="w-4 h-4" />}
                   </button>
-                  <button onClick={() => handleTest(rule.id)} className="text-zinc-500 hover:text-cyan-400" title="Test">
+                  <button onClick={() => handleTest(rule.id)} className="text-muted-foreground hover:text-primary" title="Test">
                     <Send className="w-3.5 h-3.5" />
                   </button>
-                  <button onClick={() => { setEditRule(rule); setShowForm(true); }} className="text-zinc-500 hover:text-zinc-300 text-xs">
+                  <button onClick={() => { setEditRule(rule); setShowForm(true); }} className="text-muted-foreground hover:text-foreground/80 text-xs">
                     Edit
                   </button>
-                  <button onClick={() => handleDelete(rule.id)} className="text-zinc-500 hover:text-red-400" title="Delete">
+                  <button onClick={() => handleDelete(rule.id)} className="text-muted-foreground hover:text-destructive" title="Delete">
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
               </div>
               {rule.description && (
-                <div className="mt-1 text-[11px] text-zinc-500 ml-7">{rule.description}</div>
+                <div className="mt-1 text-[11px] text-muted-foreground ml-7">{rule.description}</div>
               )}
             </div>
           ))}
@@ -428,30 +428,30 @@ export default function AlertsPage() {
       {tab === "history" && (
         <div className="space-y-1">
           {!history?.length && (
-            <div className="text-center py-12 text-zinc-600 text-sm">
+            <div className="text-center py-12 text-muted-foreground text-sm">
               No alert events yet.
             </div>
           )}
           {history?.map((event) => (
-            <div key={event.id} className="bg-white/[0.02] border border-white/[0.06] rounded p-2.5 flex items-start justify-between gap-3">
+            <div key={event.id} className="bg-muted/5 border border-border rounded p-2.5 flex items-start justify-between gap-3">
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
                   <StatusBadge status={event.status} />
                   <SeverityBadge severity={event.severity} />
-                  <span className="text-xs text-zinc-400 font-medium truncate">{event.rule_name}</span>
+                  <span className="text-xs text-muted-foreground font-medium truncate">{event.rule_name}</span>
                 </div>
-                <div className="text-[11px] text-zinc-500 mt-0.5 truncate">{event.message}</div>
+                <div className="text-[11px] text-muted-foreground mt-0.5 truncate">{event.message}</div>
                 {event.agent_id && (
-                  <span className="text-[10px] text-zinc-600">agent: {event.agent_id}</span>
+                  <span className="text-[10px] text-muted-foreground">agent: {event.agent_id}</span>
                 )}
               </div>
               <div className="text-right shrink-0">
-                <div className="text-[10px] text-zinc-600">
+                <div className="text-[10px] text-muted-foreground">
                   {new Date(event.timestamp).toLocaleString()}
                 </div>
                 <div className="flex gap-1 mt-0.5 justify-end">
                   {event.channels_notified.map((ch: string) => (
-                    <span key={ch} className="text-[9px] text-emerald-500">✓{ch}</span>
+                    <span key={ch} className="text-[9px] text-status-healthy">✓{ch}</span>
                   ))}
                 </div>
               </div>

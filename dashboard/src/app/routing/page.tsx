@@ -61,7 +61,7 @@ const SAMPLE_ENVELOPE = `{
 
 /* ─── Helpers ─── */
 
-const COLORS = ["#06b6d4", "#8b5cf6", "#f59e0b", "#10b981", "#ef4444"];
+const COLORS = ["var(--color-primary)", "var(--color-chart-4)", "var(--color-status-warning)", "var(--color-status-healthy)", "var(--color-destructive)"];
 const DIMENSION_LABELS: Record<string, string> = {
   category: "Category",
   source_type: "Source",
@@ -71,27 +71,27 @@ const DIMENSION_LABELS: Record<string, string> = {
 };
 
 function confidenceColor(c: number): string {
-  if (c >= 0.8) return "text-emerald-400";
-  if (c >= 0.5) return "text-amber-400";
-  return "text-red-400";
+  if (c >= 0.8) return "text-status-healthy";
+  if (c >= 0.5) return "text-status-warning";
+  return "text-destructive";
 }
 
 function confidenceBg(c: number): string {
-  if (c >= 0.8) return "bg-emerald-500/10 border-emerald-500/20";
-  if (c >= 0.5) return "bg-amber-500/10 border-amber-500/20";
-  return "bg-red-500/10 border-red-500/20";
+  if (c >= 0.8) return "bg-status-healthy/10 border-status-healthy/20";
+  if (c >= 0.5) return "bg-status-warning/10 border-status-warning/20";
+  return "bg-destructive/10 border-destructive/20";
 }
 
 function overlapColor(v: number): string {
-  if (v < 0.3) return "#10b981";
-  if (v < 0.7) return "#f59e0b";
-  return "#ef4444";
+  if (v < 0.3) return "var(--color-status-healthy)";
+  if (v < 0.7) return "var(--color-status-warning)";
+  return "var(--color-destructive)";
 }
 
 function overlapBg(v: number): string {
-  if (v < 0.3) return "bg-emerald-500/20";
-  if (v < 0.7) return "bg-amber-500/20";
-  return "bg-red-500/20";
+  if (v < 0.3) return "bg-status-healthy/20";
+  if (v < 0.7) return "bg-status-warning/20";
+  return "bg-destructive/20";
 }
 
 function formatTimeAgo(ts: string) {
@@ -169,8 +169,8 @@ function RouteTester() {
 
   return (
     <div className="card-dark overflow-hidden">
-      <div className="px-4 py-2.5 border-b border-white/[0.06]">
-        <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium flex items-center gap-2">
+      <div className="px-4 py-2.5 border-b border-border">
+        <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium flex items-center gap-2">
           <Send className="w-3.5 h-3.5" /> Route Tester
         </span>
       </div>
@@ -181,7 +181,7 @@ function RouteTester() {
             <textarea
               value={envelope}
               onChange={e => setEnvelope(e.target.value)}
-              className="w-full h-40 bg-white/[0.03] border border-white/[0.08] rounded-lg p-3 text-xs font-mono text-zinc-300 resize-none focus:outline-none focus:border-cyan-500/40 transition-colors"
+              className="w-full h-40 bg-muted/10 border border-border rounded-lg p-3 text-xs font-mono text-foreground/80 resize-none focus:outline-none focus:border-primary/40 transition-colors"
               placeholder="Paste JSON envelope here..."
               spellCheck={false}
             />
@@ -189,11 +189,11 @@ function RouteTester() {
               <button
                 onClick={handleRoute}
                 disabled={loading}
-                className="px-4 py-1.5 rounded-lg bg-cyan-500/20 border border-cyan-500/30 text-cyan-400 text-xs font-medium hover:bg-cyan-500/30 transition-colors disabled:opacity-50"
+                className="px-4 py-1.5 rounded-lg bg-primary/20 border border-primary/30 text-primary text-xs font-medium hover:bg-primary/30 transition-colors disabled:opacity-50"
               >
                 {loading ? "Routing…" : "Route Envelope"}
               </button>
-              {error && <span className="text-xs text-red-400">{error}</span>}
+              {error && <span className="text-xs text-destructive">{error}</span>}
             </div>
           </div>
 
@@ -203,9 +203,9 @@ function RouteTester() {
               <ResponsiveContainer width="100%" height="100%">
                 <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
                   <PolarGrid stroke="rgba(255,255,255,0.06)" />
-                  <PolarAngleAxis dataKey="dimension" tick={{ fontSize: 10, fill: "#a1a1aa" }} />
-                  <PolarRadiusAxis angle={90} domain={[0, 1]} tick={{ fontSize: 8, fill: "#52525b" }} tickCount={5} />
-                  <Radar name="Score" dataKey="score" stroke="#06b6d4" fill="#06b6d4" fillOpacity={0.25} strokeWidth={2} />
+                  <PolarAngleAxis dataKey="dimension" tick={{ fontSize: 10, fill: "var(--color-muted-foreground)" }} />
+                  <PolarRadiusAxis angle={90} domain={[0, 1]} tick={{ fontSize: 8, fill: "var(--color-muted-foreground)" }} tickCount={5} />
+                  <Radar name="Score" dataKey="score" stroke="var(--color-primary)" fill="var(--color-primary)" fillOpacity={0.25} strokeWidth={2} />
                 </RadarChart>
               </ResponsiveContainer>
             </div>
@@ -217,16 +217,16 @@ function RouteTester() {
           <div className="space-y-2">
             {/* Winner banner */}
             <div className={`flex items-center gap-3 p-3 rounded-lg border ${confidenceBg(result.winner.confidence)}`}>
-              <Trophy className="w-5 h-5 text-amber-400" />
+              <Trophy className="w-5 h-5 text-status-warning" />
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold text-zinc-100">{result.winner.agent_name}</span>
-                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.06] text-zinc-400 font-mono">{result.winner.agent_id}</span>
+                  <span className="text-sm font-bold text-foreground">{result.winner.agent_name}</span>
+                  <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted/15 text-muted-foreground font-mono">{result.winner.agent_id}</span>
                 </div>
-                <span className="text-[10px] text-zinc-500">Winner — routed {formatTimeAgo(result.routed_at)}</span>
+                <span className="text-[10px] text-muted-foreground">Winner — routed {formatTimeAgo(result.routed_at)}</span>
               </div>
               <div className="text-right">
-                <div className="text-lg font-bold font-data text-cyan-400">{(result.winner.score * 100).toFixed(0)}%</div>
+                <div className="text-lg font-bold font-data text-primary">{(result.winner.score * 100).toFixed(0)}%</div>
                 <div className={`text-[10px] font-data ${confidenceColor(result.winner.confidence)}`}>
                   {(result.winner.confidence * 100).toFixed(0)}% confidence
                 </div>
@@ -240,11 +240,11 @@ function RouteTester() {
                   key={c.agent_id}
                   onClick={() => setSelectedCandidate(c.agent_id === selectedCandidate ? null : c.agent_id)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                    c.agent_id === selectedCandidate ? "bg-cyan-500/10 border border-cyan-500/20" : "bg-white/[0.02] border border-white/[0.04] hover:bg-white/[0.04]"
+                    c.agent_id === selectedCandidate ? "bg-primary/10 border border-primary/20" : "bg-muted/5 border border-border/60 hover:bg-muted/10"
                   }`}
                 >
-                  <span className={`text-xs font-bold w-5 text-center ${i === 0 ? "text-amber-400" : "text-zinc-500"}`}>#{i + 1}</span>
-                  <span className="text-xs text-zinc-300 flex-1">{c.agent_name}</span>
+                  <span className={`text-xs font-bold w-5 text-center ${i === 0 ? "text-status-warning" : "text-muted-foreground"}`}>#{i + 1}</span>
+                  <span className="text-xs text-foreground/80 flex-1">{c.agent_name}</span>
                   <div className="flex items-center gap-3">
                     {/* Mini bar chart for breakdown */}
                     <div className="flex items-end gap-0.5 h-4">
@@ -252,7 +252,7 @@ function RouteTester() {
                         <div key={j} className="w-1.5 rounded-t" style={{ height: `${v * 16}px`, background: COLORS[j] }} />
                       ))}
                     </div>
-                    <span className="text-xs font-data text-zinc-300 w-10 text-right">{(c.score * 100).toFixed(0)}%</span>
+                    <span className="text-xs font-data text-foreground/80 w-10 text-right">{(c.score * 100).toFixed(0)}%</span>
                     <span className={`text-[10px] font-data w-12 text-right ${confidenceColor(c.confidence)}`}>
                       {(c.confidence * 100).toFixed(0)}% conf
                     </span>
@@ -273,10 +273,10 @@ function RouteTester() {
                     margin={{ top: 4, right: 4, bottom: 0, left: 0 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-                    <XAxis dataKey="dimension" tick={{ fontSize: 10, fill: "#52525b" }} tickLine={false} axisLine={false} />
-                    <YAxis domain={[0, 1]} tick={{ fontSize: 10, fill: "#52525b" }} tickLine={false} axisLine={false} width={30} />
+                    <XAxis dataKey="dimension" tick={{ fontSize: 10, fill: "var(--color-muted-foreground)" }} tickLine={false} axisLine={false} />
+                    <YAxis domain={[0, 1]} tick={{ fontSize: 10, fill: "var(--color-muted-foreground)" }} tickLine={false} axisLine={false} width={30} />
                     <Tooltip
-                      contentStyle={{ background: "#0a0a0f", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, fontSize: 12 }}
+                      contentStyle={{ background: "var(--color-card)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, fontSize: 12 }}
                       formatter={(v: number) => [`${(v * 100).toFixed(0)}%`, "Score"]}
                     />
                     <Bar dataKey="score" radius={[4, 4, 0, 0]}>
@@ -302,22 +302,22 @@ function IntakeRegistry({ agents, intakes }: { agents: Agent[]; intakes: Record<
 
   return (
     <div className="card-dark overflow-hidden">
-      <div className="px-4 py-2.5 border-b border-white/[0.06] flex items-center justify-between">
-        <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium flex items-center gap-2">
+      <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
+        <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium flex items-center gap-2">
           <Route className="w-3.5 h-3.5" /> Agent Intake Registry
         </span>
-        <span className="text-[10px] text-zinc-600">{agents.length} agents</span>
+        <span className="text-[10px] text-muted-foreground">{agents.length} agents</span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-white/[0.06]">
-              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-zinc-500 font-medium w-6"></th>
-              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-zinc-500 font-medium">Agent</th>
-              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-zinc-500 font-medium">Categories</th>
-              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-zinc-500 font-medium">Sources</th>
-              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-zinc-500 font-medium">Priority</th>
-              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-zinc-500 font-medium">PHI</th>
+            <tr className="border-b border-border">
+              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-muted-foreground font-medium w-6"></th>
+              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Agent</th>
+              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Categories</th>
+              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Sources</th>
+              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Priority</th>
+              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-muted-foreground font-medium">PHI</th>
             </tr>
           </thead>
           <tbody>
@@ -330,64 +330,64 @@ function IntakeRegistry({ agents, intakes }: { agents: Agent[]; intakes: Record<
                   <tr
                     key={agent.agent_id}
                     onClick={() => setExpanded(isExpanded ? null : agent.agent_id)}
-                    className="border-b border-white/[0.04] hover:bg-white/[0.02] cursor-pointer transition-colors"
+                    className="border-b border-border/60 hover:bg-muted/5 cursor-pointer transition-colors"
                   >
-                    <td className="px-4 py-3 text-zinc-500">
+                    <td className="px-4 py-3 text-muted-foreground">
                       {isExpanded ? <ChevronDown className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="font-data text-zinc-200">{agent.name}</span>
-                      <span className="text-[10px] text-zinc-600 ml-2">{agent.agent_id}</span>
+                      <span className="font-data text-foreground">{agent.name}</span>
+                      <span className="text-[10px] text-muted-foreground ml-2">{agent.agent_id}</span>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
                         {intake.categories.slice(0, 3).map(c => (
-                          <span key={c} className="px-1.5 py-0.5 rounded text-[10px] bg-cyan-500/10 text-cyan-400">{c}</span>
+                          <span key={c} className="px-1.5 py-0.5 rounded text-[10px] bg-primary/10 text-primary">{c}</span>
                         ))}
                         {intake.categories.length > 3 && (
-                          <span className="text-[10px] text-zinc-600">+{intake.categories.length - 3}</span>
+                          <span className="text-[10px] text-muted-foreground">+{intake.categories.length - 3}</span>
                         )}
                       </div>
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
                         {intake.source_types.map(s => (
-                          <span key={s} className="px-1.5 py-0.5 rounded text-[10px] bg-violet-500/10 text-violet-400">{s}</span>
+                          <span key={s} className="px-1.5 py-0.5 rounded text-[10px] bg-chart-4/10 text-chart-4">{s}</span>
                         ))}
                       </div>
                     </td>
-                    <td className="px-4 py-3 font-data text-zinc-300">
+                    <td className="px-4 py-3 font-data text-foreground/80">
                       P{intake.priority_range[0]}–P{intake.priority_range[1]}
                     </td>
                     <td className="px-4 py-3">
                       {intake.phi_authorized
-                        ? <Shield className="w-3.5 h-3.5 text-emerald-400" />
-                        : <span className="text-zinc-600 text-[10px]">No</span>}
+                        ? <Shield className="w-3.5 h-3.5 text-status-healthy" />
+                        : <span className="text-muted-foreground text-[10px]">No</span>}
                     </td>
                   </tr>
                   {isExpanded && (
-                    <tr key={`${agent.agent_id}-detail`} className="border-b border-white/[0.04]">
-                      <td colSpan={6} className="px-4 py-3 bg-white/[0.01]">
+                    <tr key={`${agent.agent_id}-detail`} className="border-b border-border/60">
+                      <td colSpan={6} className="px-4 py-3 bg-muted/5">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
                           <div>
-                            <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Keywords</div>
+                            <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Keywords</div>
                             <div className="flex flex-wrap gap-1">
                               {intake.keywords.map(k => (
-                                <span key={k} className="px-1.5 py-0.5 rounded text-[10px] bg-amber-500/10 text-amber-400">{k}</span>
+                                <span key={k} className="px-1.5 py-0.5 rounded text-[10px] bg-status-warning/10 text-status-warning">{k}</span>
                               ))}
                             </div>
                           </div>
                           <div>
-                            <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Systems</div>
+                            <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Systems</div>
                             <div className="flex flex-wrap gap-1">
                               {intake.systems.map(s => (
-                                <span key={s} className="px-1.5 py-0.5 rounded text-[10px] bg-emerald-500/10 text-emerald-400">{s}</span>
+                                <span key={s} className="px-1.5 py-0.5 rounded text-[10px] bg-status-healthy/10 text-status-healthy">{s}</span>
                               ))}
                             </div>
                           </div>
                           <div>
-                            <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Full Config</div>
-                            <div className="text-[10px] text-zinc-400 space-y-0.5">
+                            <div className="text-[10px] text-muted-foreground uppercase tracking-wider mb-1">Full Config</div>
+                            <div className="text-[10px] text-muted-foreground space-y-0.5">
                               <div>Priority: P{intake.priority_range[0]}–P{intake.priority_range[1]}</div>
                               <div>PHI Authorized: {intake.phi_authorized ? "Yes ✓" : "No"}</div>
                               <div>Categories: {intake.categories.length} | Keywords: {intake.keywords.length} | Systems: {intake.systems.length}</div>
@@ -423,14 +423,14 @@ function OverlapMatrix({ agents, intakes }: { agents: Agent[]; intakes: Record<s
 
   return (
     <div className="card-dark overflow-hidden">
-      <div className="px-4 py-2.5 border-b border-white/[0.06] flex items-center justify-between">
-        <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium flex items-center gap-2">
+      <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
+        <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium flex items-center gap-2">
           <Grid3x3 className="w-3.5 h-3.5" /> Overlap Matrix
         </span>
         <div className="flex items-center gap-2 text-[10px]">
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-emerald-500/40" /> &lt;0.3</span>
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-amber-500/40" /> 0.3–0.7</span>
-          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-red-500/40" /> &gt;0.7</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-status-healthy/40" /> &lt;0.3</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-status-warning/40" /> 0.3–0.7</span>
+          <span className="flex items-center gap-1"><span className="w-2 h-2 rounded bg-destructive/40" /> &gt;0.7</span>
         </div>
       </div>
       <div className="p-4 overflow-x-auto">
@@ -439,7 +439,7 @@ function OverlapMatrix({ agents, intakes }: { agents: Agent[]; intakes: Record<s
             <tr>
               <th className="px-2 py-1"></th>
               {agentsWithIntake.map(a => (
-                <th key={a.agent_id} className="px-2 py-1 text-[10px] text-zinc-500 font-medium text-center whitespace-nowrap" style={{ writingMode: "vertical-lr", transform: "rotate(180deg)" }}>
+                <th key={a.agent_id} className="px-2 py-1 text-[10px] text-muted-foreground font-medium text-center whitespace-nowrap" style={{ writingMode: "vertical-lr", transform: "rotate(180deg)" }}>
                   {a.name}
                 </th>
               ))}
@@ -448,11 +448,11 @@ function OverlapMatrix({ agents, intakes }: { agents: Agent[]; intakes: Record<s
           <tbody>
             {agentsWithIntake.map((a, i) => (
               <tr key={a.agent_id}>
-                <td className="px-2 py-1 text-[10px] text-zinc-400 font-medium whitespace-nowrap text-right">{a.name}</td>
+                <td className="px-2 py-1 text-[10px] text-muted-foreground font-medium whitespace-nowrap text-right">{a.name}</td>
                 {matrix[i].map((val, j) => (
                   <td key={j} className="px-1 py-1 text-center">
                     {i === j ? (
-                      <div className="w-10 h-10 rounded flex items-center justify-center bg-white/[0.04] text-zinc-600 text-[10px] font-mono">—</div>
+                      <div className="w-10 h-10 rounded flex items-center justify-center bg-muted/10 text-muted-foreground text-[10px] font-mono">—</div>
                     ) : (
                       <div
                         className={`w-10 h-10 rounded flex items-center justify-center text-[10px] font-mono font-bold ${overlapBg(val)}`}
@@ -478,46 +478,46 @@ function OverlapMatrix({ agents, intakes }: { agents: Agent[]; intakes: Record<s
 function RecentDecisions({ decisions }: { decisions: RoutingDecision[] }) {
   return (
     <div className="card-dark overflow-hidden">
-      <div className="px-4 py-2.5 border-b border-white/[0.06] flex items-center justify-between">
-        <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium flex items-center gap-2">
+      <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
+        <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium flex items-center gap-2">
           <History className="w-3.5 h-3.5" /> Recent Routing Decisions
         </span>
-        <span className="text-[10px] text-zinc-600">{decisions.length} decisions</span>
+        <span className="text-[10px] text-muted-foreground">{decisions.length} decisions</span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
           <thead>
-            <tr className="border-b border-white/[0.06]">
-              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-zinc-500 font-medium">Envelope</th>
-              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-zinc-500 font-medium">Winner</th>
-              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-zinc-500 font-medium">Score</th>
-              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-zinc-500 font-medium">Confidence</th>
-              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-zinc-500 font-medium">Candidates</th>
-              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-zinc-500 font-medium">When</th>
+            <tr className="border-b border-border">
+              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Envelope</th>
+              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Winner</th>
+              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Score</th>
+              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Confidence</th>
+              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-muted-foreground font-medium">Candidates</th>
+              <th className="px-4 py-2.5 text-left text-[10px] uppercase tracking-widest text-muted-foreground font-medium">When</th>
             </tr>
           </thead>
           <tbody>
             {decisions.map(d => (
-              <tr key={d.id} className="border-b border-white/[0.04] hover:bg-white/[0.02] transition-colors">
+              <tr key={d.id} className="border-b border-border/60 hover:bg-muted/5 transition-colors">
                 <td className="px-4 py-3">
                   <div className="max-w-xs">
-                    <span className="text-zinc-300 line-clamp-1">{d.envelope_summary}</span>
-                    <span className="text-[10px] text-zinc-600 font-mono">{d.envelope_id}</span>
+                    <span className="text-foreground/80 line-clamp-1">{d.envelope_summary}</span>
+                    <span className="text-[10px] text-muted-foreground font-mono">{d.envelope_id}</span>
                   </div>
                 </td>
                 <td className="px-4 py-3">
-                  <span className="font-data text-zinc-200">{d.winner_agent_name}</span>
+                  <span className="font-data text-foreground">{d.winner_agent_name}</span>
                 </td>
                 <td className="px-4 py-3">
-                  <span className="font-data text-cyan-400">{(d.score * 100).toFixed(0)}%</span>
+                  <span className="font-data text-primary">{(d.score * 100).toFixed(0)}%</span>
                 </td>
                 <td className="px-4 py-3">
                   <span className={`font-data ${confidenceColor(d.confidence)}`}>
                     {(d.confidence * 100).toFixed(0)}%
                   </span>
                 </td>
-                <td className="px-4 py-3 font-data text-zinc-400">{d.candidates_count}</td>
-                <td className="px-4 py-3 text-zinc-500 font-data">{formatTimeAgo(d.routed_at)}</td>
+                <td className="px-4 py-3 font-data text-muted-foreground">{d.candidates_count}</td>
+                <td className="px-4 py-3 text-muted-foreground font-data">{formatTimeAgo(d.routed_at)}</td>
               </tr>
             ))}
           </tbody>

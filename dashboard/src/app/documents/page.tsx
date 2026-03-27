@@ -105,14 +105,14 @@ export default function DocumentsPage() {
     }
   }, [selectedFile, meta]);
 
-  const inputClass = "bg-white/[0.04] border border-white/[0.06] rounded-md px-3 py-1.5 text-xs text-zinc-300 placeholder-zinc-600 outline-none focus:border-cyan-500/40 focus:ring-1 focus:ring-cyan-500/20 transition-colors w-full";
+  const inputClass = "bg-muted/10 border border-border rounded-md px-3 py-1.5 text-xs text-foreground/80 placeholder-muted-foreground outline-none focus:border-primary/40 focus:ring-1 focus:ring-primary/20 transition-colors w-full";
 
   return (
     <div className="space-y-4">
       {/* Upload Zone */}
       <div className="card-dark overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-white/[0.06]">
-          <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Document Ingestion</span>
+        <div className="px-4 py-2.5 border-b border-border">
+          <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Document Ingestion</span>
         </div>
         <div className="p-4 space-y-4">
           {/* Drop zone */}
@@ -122,9 +122,9 @@ export default function DocumentsPage() {
             onDrop={handleDrop}
             onClick={() => fileRef.current?.click()}
             className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-              dragOver ? "border-cyan-500/60 bg-cyan-500/5" :
-              selectedFile ? "border-emerald-500/40 bg-emerald-500/5" :
-              "border-white/[0.08] hover:border-white/[0.15] bg-white/[0.02]"
+              dragOver ? "border-primary/60 bg-primary/5" :
+              selectedFile ? "border-status-healthy/40 bg-status-healthy/5" :
+              "border-border hover:border-border bg-muted/5"
             }`}
           >
             <input
@@ -136,13 +136,13 @@ export default function DocumentsPage() {
             />
             {selectedFile ? (
               <div>
-                <p className="text-sm text-emerald-400 font-medium">{selectedFile.name}</p>
-                <p className="text-xs text-zinc-500 mt-1">{(selectedFile.size / 1024).toFixed(1)} KB — click to change</p>
+                <p className="text-sm text-status-healthy font-medium">{selectedFile.name}</p>
+                <p className="text-xs text-muted-foreground mt-1">{(selectedFile.size / 1024).toFixed(1)} KB — click to change</p>
               </div>
             ) : (
               <div>
-                <p className="text-sm text-zinc-400">Drop a document here or click to browse</p>
-                <p className="text-xs text-zinc-600 mt-1">PDF, TXT, CSV, MD, DOCX, HL7 CDA/CCD — max 10MB</p>
+                <p className="text-sm text-muted-foreground">Drop a document here or click to browse</p>
+                <p className="text-xs text-muted-foreground mt-1">PDF, TXT, CSV, MD, DOCX, HL7 CDA/CCD — max 10MB</p>
               </div>
             )}
           </div>
@@ -150,7 +150,7 @@ export default function DocumentsPage() {
           {/* Metadata fields */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div>
-              <label className="text-[10px] uppercase tracking-wide text-zinc-600 mb-1 block">Document Type</label>
+              <label className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 block">Document Type</label>
               <select
                 value={meta.document_type}
                 onChange={e => setMeta(m => ({ ...m, document_type: e.target.value }))}
@@ -161,15 +161,15 @@ export default function DocumentsPage() {
               </select>
             </div>
             <div>
-              <label className="text-[10px] uppercase tracking-wide text-zinc-600 mb-1 block">Department</label>
+              <label className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 block">Department</label>
               <input placeholder="e.g. Nursing" value={meta.department} onChange={e => setMeta(m => ({ ...m, department: e.target.value }))} className={inputClass} />
             </div>
             <div>
-              <label className="text-[10px] uppercase tracking-wide text-zinc-600 mb-1 block">Author</label>
+              <label className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 block">Author</label>
               <input placeholder="e.g. J. Smith" value={meta.author} onChange={e => setMeta(m => ({ ...m, author: e.target.value }))} className={inputClass} />
             </div>
             <div>
-              <label className="text-[10px] uppercase tracking-wide text-zinc-600 mb-1 block">Effective Date</label>
+              <label className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1 block">Effective Date</label>
               <input type="date" value={meta.effective_date} onChange={e => setMeta(m => ({ ...m, effective_date: e.target.value }))} className={inputClass} />
             </div>
           </div>
@@ -179,25 +179,25 @@ export default function DocumentsPage() {
             <button
               onClick={handleUpload}
               disabled={!selectedFile || uploading}
-              className="px-4 py-1.5 rounded-md text-xs font-medium transition-colors bg-cyan-500/15 text-cyan-400 hover:bg-cyan-500/25 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="px-4 py-1.5 rounded-md text-xs font-medium transition-colors bg-primary/15 text-primary hover:bg-primary/25 disabled:opacity-30 disabled:cursor-not-allowed"
             >
               {uploading ? "Ingesting…" : "Ingest Document"}
             </button>
-            {error && <span className="text-xs text-red-400">{error}</span>}
+            {error && <span className="text-xs text-destructive">{error}</span>}
           </div>
         </div>
       </div>
 
       {/* Supported Formats */}
       <div className="card-dark overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-white/[0.06]">
-          <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Supported Formats</span>
+        <div className="px-4 py-2.5 border-b border-border">
+          <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Supported Formats</span>
         </div>
         <div className="px-4 py-3 flex flex-wrap gap-2">
           {SUPPORTED_FORMATS.map(f => (
-            <div key={f.ext} className="flex items-center gap-2 px-2.5 py-1 rounded bg-white/[0.04] border border-white/[0.06]">
-              <span className="text-xs font-medium text-cyan-400 font-data">{f.ext}</span>
-              <span className="text-[10px] text-zinc-600">{f.desc}</span>
+            <div key={f.ext} className="flex items-center gap-2 px-2.5 py-1 rounded bg-muted/10 border border-border">
+              <span className="text-xs font-medium text-primary font-data">{f.ext}</span>
+              <span className="text-[10px] text-muted-foreground">{f.desc}</span>
             </div>
           ))}
         </div>
@@ -206,37 +206,37 @@ export default function DocumentsPage() {
       {/* Results */}
       {result && (
         <div className="card-dark overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-white/[0.06] flex items-center gap-2">
-            <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Ingestion Result</span>
+          <div className="px-4 py-2.5 border-b border-border flex items-center gap-2">
+            <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Ingestion Result</span>
             <span className={`status-dot ${result.status === "ok" ? "status-dot-healthy" : "status-dot-unhealthy"}`} />
           </div>
           <div className="p-4 space-y-3">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               <div>
-                <p className="text-[10px] uppercase tracking-wide text-zinc-600">File</p>
-                <p className="text-xs text-zinc-300 font-data mt-0.5">{result.filename}</p>
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">File</p>
+                <p className="text-xs text-foreground/80 font-data mt-0.5">{result.filename}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-wide text-zinc-600">Format</p>
-                <p className="text-xs text-zinc-300 font-data mt-0.5">{result.format || result.content_type}</p>
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Format</p>
+                <p className="text-xs text-foreground/80 font-data mt-0.5">{result.format || result.content_type}</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-wide text-zinc-600">Size</p>
-                <p className="text-xs text-zinc-300 font-data mt-0.5">{(result.size_bytes / 1024).toFixed(1)} KB</p>
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Size</p>
+                <p className="text-xs text-foreground/80 font-data mt-0.5">{(result.size_bytes / 1024).toFixed(1)} KB</p>
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-wide text-zinc-600">Chunks</p>
-                <p className="text-xs text-emerald-400 font-data mt-0.5">{result.total_chunks}</p>
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Chunks</p>
+                <p className="text-xs text-status-healthy font-data mt-0.5">{result.total_chunks}</p>
               </div>
             </div>
             {/* Envelope IDs */}
             <div>
-              <p className="text-[10px] uppercase tracking-wide text-zinc-600 mb-1">Envelope IDs</p>
+              <p className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">Envelope IDs</p>
               <div className="max-h-32 overflow-y-auto space-y-0.5">
                 {result.envelope_ids.map((id, i) => (
                   <div key={id} className="flex items-center gap-2">
-                    <span className="text-[10px] text-zinc-600 w-6 text-right">{i + 1}</span>
-                    <span className="text-[10px] text-zinc-400 font-data">{id}</span>
+                    <span className="text-[10px] text-muted-foreground w-6 text-right">{i + 1}</span>
+                    <span className="text-[10px] text-muted-foreground font-data">{id}</span>
                   </div>
                 ))}
               </div>
@@ -248,14 +248,14 @@ export default function DocumentsPage() {
       {/* Recent Uploads */}
       {recent.length > 0 && (
         <div className="card-dark overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-white/[0.06]">
-            <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Recent Uploads</span>
-            <span className="text-xs text-zinc-600 ml-2">({recent.length})</span>
+          <div className="px-4 py-2.5 border-b border-border">
+            <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Recent Uploads</span>
+            <span className="text-xs text-muted-foreground ml-2">({recent.length})</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="text-xs text-zinc-600 uppercase border-b border-white/[0.06]">
+                <tr className="text-xs text-muted-foreground uppercase border-b border-border">
                   <th className="text-left px-3 py-2">File</th>
                   <th className="text-left px-3 py-2">Format</th>
                   <th className="text-right px-3 py-2">Chunks</th>
@@ -265,10 +265,10 @@ export default function DocumentsPage() {
               <tbody>
                 {recent.map((r, i) => (
                   <tr key={i} className="table-row-hover">
-                    <td className="px-3 py-2 text-xs text-zinc-300 font-data">{r.filename}</td>
-                    <td className="px-3 py-2 text-xs text-zinc-400">{r.format || "—"}</td>
-                    <td className="px-3 py-2 text-right text-xs text-emerald-400 font-data">{r.chunks}</td>
-                    <td className="px-3 py-2 text-right text-xs text-zinc-600">{r.timestamp.toLocaleTimeString()}</td>
+                    <td className="px-3 py-2 text-xs text-foreground/80 font-data">{r.filename}</td>
+                    <td className="px-3 py-2 text-xs text-muted-foreground">{r.format || "—"}</td>
+                    <td className="px-3 py-2 text-right text-xs text-status-healthy font-data">{r.chunks}</td>
+                    <td className="px-3 py-2 text-right text-xs text-muted-foreground">{r.timestamp.toLocaleTimeString()}</td>
                   </tr>
                 ))}
               </tbody>

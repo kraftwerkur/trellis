@@ -27,7 +27,7 @@ export class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <div className="card-dark p-6 text-center space-y-3">
-          <AlertTriangle className="w-8 h-8 text-amber-500 mx-auto" />
+          <AlertTriangle className="w-8 h-8 text-status-warning mx-auto" />
           <div className="text-sm text-[hsl(var(--foreground))] font-medium">
             {this.props.fallbackTitle ?? "Something went wrong"}
           </div>

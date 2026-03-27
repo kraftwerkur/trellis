@@ -87,55 +87,55 @@ function RuleModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
       <div className="card-dark w-full max-w-lg mx-4 max-h-[90vh] overflow-y-auto">
-        <div className="px-4 py-3 border-b border-white/[0.06]">
-          <span className="text-sm font-medium text-zinc-200">{title}</span>
+        <div className="px-4 py-3 border-b border-border">
+          <span className="text-sm font-medium text-foreground">{title}</span>
         </div>
         <div className="p-4 space-y-4">
           {/* Name */}
           <div>
-            <label className="text-xs text-zinc-500 uppercase tracking-wider block mb-1">Name</label>
+            <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Name</label>
             <input
               type="text"
               value={form.name}
               onChange={e => setForm({ ...form, name: e.target.value })}
-              className="w-full bg-white/[0.04] border border-white/[0.08] rounded px-3 py-2 text-sm text-zinc-200 outline-none focus:border-cyan-500/50"
+              className="w-full bg-muted/10 border border-border rounded px-3 py-2 text-sm text-foreground outline-none focus:border-primary/50"
               placeholder="Rule name"
             />
           </div>
 
           {/* Priority */}
           <div>
-            <label className="text-xs text-zinc-500 uppercase tracking-wider block mb-1">Priority</label>
+            <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Priority</label>
             <input
               type="number"
               value={form.priority}
               onChange={e => setForm({ ...form, priority: parseInt(e.target.value) || 0 })}
-              className="w-24 bg-white/[0.04] border border-white/[0.08] rounded px-3 py-2 text-sm text-zinc-200 outline-none focus:border-cyan-500/50"
+              className="w-24 bg-muted/10 border border-border rounded px-3 py-2 text-sm text-foreground outline-none focus:border-primary/50"
             />
-            <span className="text-xs text-zinc-600 ml-2">Lower = higher priority</span>
+            <span className="text-xs text-muted-foreground ml-2">Lower = higher priority</span>
           </div>
 
           {/* Conditions */}
           <div>
-            <label className="text-xs text-zinc-500 uppercase tracking-wider block mb-1">Conditions (JSON)</label>
+            <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Conditions (JSON)</label>
             <textarea
               value={form.conditions}
               onChange={e => { setForm({ ...form, conditions: e.target.value }); validateConditions(e.target.value); }}
               rows={4}
-              className="w-full bg-white/[0.04] border border-white/[0.08] rounded px-3 py-2 text-sm text-zinc-200 font-mono outline-none focus:border-cyan-500/50"
+              className="w-full bg-muted/10 border border-border rounded px-3 py-2 text-sm text-foreground font-mono outline-none focus:border-primary/50"
               placeholder='{"source_type": "email"}'
             />
-            {condError && <span className="text-xs text-red-400">{condError}</span>}
+            {condError && <span className="text-xs text-destructive">{condError}</span>}
           </div>
 
           {/* Route To */}
           <div>
-            <label className="text-xs text-zinc-500 uppercase tracking-wider block mb-1">Route To (agents)</label>
+            <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Route To (agents)</label>
             <div className="space-y-1.5 max-h-36 overflow-y-auto">
               {agents.map(a => (
-                <label key={a.agent_id} className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer hover:text-zinc-100">
+                <label key={a.agent_id} className="flex items-center gap-2 text-sm text-foreground/80 cursor-pointer hover:text-foreground">
                   <input
                     type="checkbox"
                     checked={form.route_to.includes(a.agent_id)}
@@ -145,46 +145,46 @@ function RuleModal({
                         : form.route_to.filter(id => id !== a.agent_id);
                       setForm({ ...form, route_to: next });
                     }}
-                    className="accent-cyan-500"
+                    className="accent-primary"
                   />
                   {a.name}
                 </label>
               ))}
-              {!agents.length && <span className="text-xs text-zinc-600">No agents found</span>}
+              {!agents.length && <span className="text-xs text-muted-foreground">No agents found</span>}
             </div>
           </div>
 
           {/* Set Priority */}
           <div>
-            <label className="text-xs text-zinc-500 uppercase tracking-wider block mb-1">Set Priority (optional)</label>
+            <label className="text-xs text-muted-foreground uppercase tracking-wider block mb-1">Set Priority (optional)</label>
             <input
               type="text"
               value={form.set_priority}
               onChange={e => setForm({ ...form, set_priority: e.target.value })}
-              className="w-full bg-white/[0.04] border border-white/[0.08] rounded px-3 py-2 text-sm text-zinc-200 outline-none focus:border-cyan-500/50"
+              className="w-full bg-muted/10 border border-border rounded px-3 py-2 text-sm text-foreground outline-none focus:border-primary/50"
               placeholder="e.g. high, low, urgent"
             />
           </div>
 
           {/* Toggles */}
           <div className="flex items-center gap-6">
-            <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
+            <label className="flex items-center gap-2 text-sm text-foreground/80 cursor-pointer">
               <button
                 type="button"
                 onClick={() => setForm({ ...form, fan_out: !form.fan_out })}
-                className={`w-8 h-4 rounded-full relative transition-colors ${form.fan_out ? "bg-amber-500/30" : "bg-zinc-800"}`}
+                className={`w-8 h-4 rounded-full relative transition-colors ${form.fan_out ? "bg-status-warning/30" : "bg-muted"}`}
               >
-                <div className={`w-3 h-3 rounded-full absolute top-0.5 transition-all ${form.fan_out ? "left-4 bg-amber-400" : "left-0.5 bg-zinc-600"}`} />
+                <div className={`w-3 h-3 rounded-full absolute top-0.5 transition-all ${form.fan_out ? "left-4 bg-status-warning" : "left-0.5 bg-secondary"}`} />
               </button>
               Fan-out
             </label>
-            <label className="flex items-center gap-2 text-sm text-zinc-300 cursor-pointer">
+            <label className="flex items-center gap-2 text-sm text-foreground/80 cursor-pointer">
               <button
                 type="button"
                 onClick={() => setForm({ ...form, active: !form.active })}
-                className={`w-8 h-4 rounded-full relative transition-colors ${form.active ? "bg-emerald-500/20" : "bg-zinc-800"}`}
+                className={`w-8 h-4 rounded-full relative transition-colors ${form.active ? "bg-status-healthy/20" : "bg-muted"}`}
               >
-                <div className={`w-3 h-3 rounded-full absolute top-0.5 transition-all ${form.active ? "left-4 bg-emerald-500" : "left-0.5 bg-zinc-600"}`} />
+                <div className={`w-3 h-3 rounded-full absolute top-0.5 transition-all ${form.active ? "left-4 bg-status-healthy" : "left-0.5 bg-secondary"}`} />
               </button>
               Active
             </label>
@@ -192,14 +192,14 @@ function RuleModal({
         </div>
 
         {/* Actions */}
-        <div className="px-4 py-3 border-t border-white/[0.06] flex justify-end gap-2">
-          <button onClick={onCancel} className="px-3 py-1.5 text-xs text-zinc-400 hover:text-zinc-200 transition-colors">
+        <div className="px-4 py-3 border-t border-border flex justify-end gap-2">
+          <button onClick={onCancel} className="px-3 py-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
             Cancel
           </button>
           <button
             onClick={onSave}
             disabled={saving || !form.name || !form.route_to.length || !!condError}
-            className="px-3 py-1.5 text-xs bg-cyan-500/20 text-cyan-400 rounded hover:bg-cyan-500/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            className="px-3 py-1.5 text-xs bg-primary/20 text-primary rounded hover:bg-primary/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           >
             {saving ? "Saving…" : "Save"}
           </button>
@@ -304,14 +304,14 @@ export default function RulesPage() {
   return (
     <>
       <div className="card-dark overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-white/[0.06] flex items-center justify-between">
+        <div className="px-4 py-2.5 border-b border-border flex items-center justify-between">
           <div>
-            <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Routing Rules</span>
-            {rules && <span className="text-xs text-zinc-600 ml-2">({rules.length})</span>}
+            <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Routing Rules</span>
+            {rules && <span className="text-xs text-muted-foreground ml-2">({rules.length})</span>}
           </div>
           <button
             onClick={openCreate}
-            className="px-2.5 py-1 text-xs bg-emerald-500/15 text-emerald-400 rounded hover:bg-emerald-500/25 transition-colors"
+            className="px-2.5 py-1 text-xs bg-status-healthy/15 text-status-healthy rounded hover:bg-status-healthy/25 transition-colors"
           >
             + Add Rule
           </button>
@@ -322,49 +322,49 @@ export default function RulesPage() {
               <div key={i} className="px-4 py-3"><div className="skeleton h-10 w-full" /></div>
             ))
           ) : !sorted.length ? (
-            <div className="text-center text-zinc-600 py-8 text-sm">No rules configured</div>
+            <div className="text-center text-muted-foreground py-8 text-sm">No rules configured</div>
           ) : (
             sorted.map(r => (
               <div key={r.id} className="px-4 py-3 table-row-hover group">
                 <div className="flex items-center justify-between mb-1.5">
                   <div className="flex items-center gap-3 cursor-pointer flex-1" onClick={() => openEdit(r)}>
-                    <span className="font-data text-[10px] text-zinc-600 bg-white/[0.04] px-1.5 py-0.5 rounded">P{r.priority}</span>
-                    <span className="text-sm font-medium text-zinc-200">{r.name}</span>
-                    {r.fan_out && <span className="text-[10px] text-amber-400 bg-amber-400/10 px-1.5 py-0.5 rounded">fan-out</span>}
+                    <span className="font-data text-[10px] text-muted-foreground bg-muted/10 px-1.5 py-0.5 rounded">P{r.priority}</span>
+                    <span className="text-sm font-medium text-foreground">{r.name}</span>
+                    {r.fan_out && <span className="text-[10px] text-status-warning bg-status-warning/10 px-1.5 py-0.5 rounded">fan-out</span>}
                   </div>
                   <div className="flex items-center gap-2">
                     {deleteConfirm === r.id ? (
                       <div className="flex items-center gap-1.5">
-                        <span className="text-xs text-red-400">Delete?</span>
-                        <button onClick={() => handleDelete(r.id)} className="px-2 py-0.5 text-xs bg-red-500/20 text-red-400 rounded hover:bg-red-500/30 transition-colors">
+                        <span className="text-xs text-destructive">Delete?</span>
+                        <button onClick={() => handleDelete(r.id)} className="px-2 py-0.5 text-xs bg-destructive/20 text-destructive rounded hover:bg-destructive/30 transition-colors">
                           Yes
                         </button>
-                        <button onClick={() => setDeleteConfirm(null)} className="px-2 py-0.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
+                        <button onClick={() => setDeleteConfirm(null)} className="px-2 py-0.5 text-xs text-muted-foreground hover:text-foreground/80 transition-colors">
                           No
                         </button>
                       </div>
                     ) : (
                       <button
                         onClick={() => setDeleteConfirm(r.id)}
-                        className="px-2 py-0.5 text-xs text-zinc-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+                        className="px-2 py-0.5 text-xs text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
                       >
                         Delete
                       </button>
                     )}
                     <button
                       onClick={() => handleToggle(r)}
-                      className={`w-8 h-4 rounded-full relative transition-colors ${r.active ? "bg-emerald-500/20" : "bg-zinc-800"}`}
+                      className={`w-8 h-4 rounded-full relative transition-colors ${r.active ? "bg-status-healthy/20" : "bg-muted"}`}
                     >
-                      <div className={`w-3 h-3 rounded-full absolute top-0.5 transition-all ${r.active ? "left-4 bg-emerald-500" : "left-0.5 bg-zinc-600"}`} />
+                      <div className={`w-3 h-3 rounded-full absolute top-0.5 transition-all ${r.active ? "left-4 bg-status-healthy" : "left-0.5 bg-secondary"}`} />
                     </button>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 text-xs cursor-pointer" onClick={() => openEdit(r)}>
-                  <span className="text-zinc-400">when</span>
-                  <span className="font-data text-cyan-400/70">{conditionToEnglish(r.conditions)}</span>
+                  <span className="text-muted-foreground">when</span>
+                  <span className="font-data text-primary/70">{conditionToEnglish(r.conditions)}</span>
                   <span className="flow-arrow" />
-                  <span className="text-zinc-400">route to</span>
-                  <span className="font-data text-purple-400/80">{targetToString(r.actions, agentMap)}</span>
+                  <span className="text-muted-foreground">route to</span>
+                  <span className="font-data text-chart-4/80">{targetToString(r.actions, agentMap)}</span>
                 </div>
               </div>
             ))

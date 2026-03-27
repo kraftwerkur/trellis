@@ -27,31 +27,31 @@ export default function GatewayPage() {
       {/* Gateway status + stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="card-dark p-4 flex items-center gap-3">
-          <Server className={`w-5 h-5 ${isOnline ? "text-emerald-500" : "text-red-500"}`} />
+          <Server className={`w-5 h-5 ${isOnline ? "text-status-healthy" : "text-destructive"}`} />
           <div>
-            <div className="text-sm font-medium text-zinc-200">{isOnline ? "Online" : "Offline"}</div>
-            <div className="text-[10px] text-zinc-600 uppercase">Gateway Status</div>
+            <div className="text-sm font-medium text-foreground">{isOnline ? "Online" : "Offline"}</div>
+            <div className="text-[10px] text-muted-foreground uppercase">Gateway Status</div>
           </div>
         </div>
         <div className="card-dark p-4 flex items-center gap-3">
-          <Zap className="w-5 h-5 text-cyan-500" />
+          <Zap className="w-5 h-5 text-primary" />
           <div>
-            <div className="text-sm font-data text-zinc-200">{providers?.filter(p => p.configured).length ?? 0}</div>
-            <div className="text-[10px] text-zinc-600 uppercase">Providers</div>
+            <div className="text-sm font-data text-foreground">{providers?.filter(p => p.configured).length ?? 0}</div>
+            <div className="text-[10px] text-muted-foreground uppercase">Providers</div>
           </div>
         </div>
         <div className="card-dark p-4 flex items-center gap-3">
-          <BarChart3 className="w-5 h-5 text-blue-500" />
+          <BarChart3 className="w-5 h-5 text-status-info" />
           <div>
-            <div className="text-sm font-data text-zinc-200">{totalRequests}</div>
-            <div className="text-[10px] text-zinc-600 uppercase">Total Requests</div>
+            <div className="text-sm font-data text-foreground">{totalRequests}</div>
+            <div className="text-[10px] text-muted-foreground uppercase">Total Requests</div>
           </div>
         </div>
         <div className="card-dark p-4 flex items-center gap-3">
-          <DollarSign className="w-5 h-5 text-amber-500" />
+          <DollarSign className="w-5 h-5 text-status-warning" />
           <div>
-            <div className="text-sm font-data text-zinc-200">${totalCost.toFixed(4)}</div>
-            <div className="text-[10px] text-zinc-600 uppercase">Total Spend</div>
+            <div className="text-sm font-data text-foreground">${totalCost.toFixed(4)}</div>
+            <div className="text-[10px] text-muted-foreground uppercase">Total Spend</div>
           </div>
         </div>
       </div>
@@ -59,22 +59,22 @@ export default function GatewayPage() {
       {/* Provider cards */}
       {providers && providers.length > 0 && (
         <div>
-          <div className="text-xs uppercase tracking-widest text-zinc-500 font-medium mb-2">Providers</div>
+          <div className="text-xs uppercase tracking-widest text-muted-foreground font-medium mb-2">Providers</div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {providers.map(p => (
               <div key={p.name} className="card-dark p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <span className={`status-dot ${p.configured ? "status-dot-online" : "status-dot-offline"}`} />
-                  <span className="text-sm font-medium text-zinc-200">{p.display_name}</span>
+                  <span className="text-sm font-medium text-foreground">{p.display_name}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2 text-xs">
                   <div>
-                    <div className="font-data text-zinc-300">{p.models.length}</div>
-                    <div className="text-zinc-600">models</div>
+                    <div className="font-data text-foreground/80">{p.models.length}</div>
+                    <div className="text-muted-foreground">models</div>
                   </div>
                   <div>
-                    <div className="font-data text-zinc-300">{stats?.requests_by_provider?.[p.name] ?? 0}</div>
-                    <div className="text-zinc-600">requests</div>
+                    <div className="font-data text-foreground/80">{stats?.requests_by_provider?.[p.name] ?? 0}</div>
+                    <div className="text-muted-foreground">requests</div>
                   </div>
                 </div>
               </div>
@@ -85,13 +85,13 @@ export default function GatewayPage() {
 
       {/* Model routing table */}
       <div className="card-dark overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-white/[0.06]">
-          <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Model Routing</span>
+        <div className="px-4 py-2.5 border-b border-border">
+          <span className="text-xs uppercase tracking-widest text-muted-foreground font-medium">Model Routing</span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="text-xs text-zinc-600 uppercase border-b border-white/[0.06]">
+              <tr className="text-xs text-muted-foreground uppercase border-b border-border">
                 <th className="text-left px-3 py-2">Model</th>
                 <th className="text-left px-3 py-2">Provider</th>
                 <th className="text-left px-3 py-2">Requests</th>
@@ -107,16 +107,16 @@ export default function GatewayPage() {
                   ))}</tr>
                 ))
               ) : !models?.length ? (
-                <tr><td colSpan={5} className="text-center text-zinc-600 py-8">No model data yet</td></tr>
+                <tr><td colSpan={5} className="text-center text-muted-foreground py-8">No model data yet</td></tr>
               ) : (
                 models.map(m => (
                   <tr key={m.model} className="table-row-hover">
-                    <td className="px-3 py-2 font-data text-xs text-zinc-300">{m.model}</td>
-                    <td className="px-3 py-2 text-xs text-zinc-400 capitalize">{m.provider}</td>
-                    <td className="px-3 py-2 font-data text-xs text-zinc-400">—</td>
-                    <td className="px-3 py-2 font-data text-xs text-zinc-400">—</td>
+                    <td className="px-3 py-2 font-data text-xs text-foreground/80">{m.model}</td>
+                    <td className="px-3 py-2 text-xs text-muted-foreground capitalize">{m.provider}</td>
+                    <td className="px-3 py-2 font-data text-xs text-muted-foreground">—</td>
+                    <td className="px-3 py-2 font-data text-xs text-muted-foreground">—</td>
                     <td className="px-3 py-2 text-xs">
-                      <span className={m.available ? "text-emerald-400" : "text-zinc-600"}>{m.available ? "Available" : "Not configured"}</span>
+                      <span className={m.available ? "text-status-healthy" : "text-muted-foreground"}>{m.available ? "Available" : "Not configured"}</span>
                     </td>
                   </tr>
                 ))

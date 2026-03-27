@@ -20,7 +20,7 @@ import { Badge } from "@/components/ui/badge";
 
 /* ─── Sparkline (small inline chart, keep recharts for this) ─── */
 
-function Sparkline({ data, color = "#22d3ee", height = 32 }: { data: number[]; color?: string; height?: number }) {
+function Sparkline({ data, color = "var(--color-primary)", height = 32 }: { data: number[]; color?: string; height?: number }) {
   const chartData = data.map((v, i) => ({ v, i }));
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -56,12 +56,12 @@ function StatCard({ label, value, icon: Icon, accent, trend, sparkData }: {
   sparkData?: number[];
 }) {
   const accentColors: Record<string, { text: string; bg: string; spark: string }> = {
-    cyan: { text: "text-cyan-400", bg: "bg-cyan-500/10", spark: "#22d3ee" },
-    emerald: { text: "text-emerald-400", bg: "bg-emerald-500/10", spark: "#34d399" },
-    blue: { text: "text-blue-400", bg: "bg-blue-500/10", spark: "#60a5fa" },
-    red: { text: "text-red-400", bg: "bg-red-500/10", spark: "#f87171" },
-    amber: { text: "text-amber-400", bg: "bg-amber-500/10", spark: "#fbbf24" },
-    purple: { text: "text-purple-400", bg: "bg-purple-500/10", spark: "#c084fc" },
+    cyan: { text: "text-primary", bg: "bg-primary/10", spark: "var(--color-primary)" },
+    emerald: { text: "text-status-healthy", bg: "bg-status-healthy/10", spark: "var(--color-status-healthy)" },
+    blue: { text: "text-status-info", bg: "bg-status-info/10", spark: "var(--color-status-info)" },
+    red: { text: "text-destructive", bg: "bg-destructive/10", spark: "var(--color-destructive)" },
+    amber: { text: "text-status-warning", bg: "bg-status-warning/10", spark: "var(--color-status-warning)" },
+    purple: { text: "text-chart-4", bg: "bg-chart-4/10", spark: "var(--color-chart-4)" },
   };
   const c = accentColors[accent] ?? accentColors.cyan;
 
@@ -98,18 +98,18 @@ function StatCard({ label, value, icon: Icon, accent, trend, sparkData }: {
 /* ─── Activity Timeline ─── */
 
 const EVENT_CONFIG: Record<string, { color: string; icon: React.ElementType; label: string }> = {
-  envelope_received: { color: "text-cyan-400", icon: Zap, label: "Envelope Received" },
-  rule_matched: { color: "text-amber-400", icon: GitBranch, label: "Rule Matched" },
-  rule_triggered: { color: "text-amber-400", icon: AlertTriangle, label: "Rule Triggered" },
-  agent_dispatched: { color: "text-blue-400", icon: Bot, label: "Agent Dispatched" },
-  agent_responded: { color: "text-emerald-400", icon: Check, label: "Agent Responded" },
-  phi_detected: { color: "text-red-400", icon: Lock, label: "PHI Blocked" },
-  phi_blocked: { color: "text-red-400", icon: Lock, label: "PHI Blocked" },
-  rule_changed: { color: "text-purple-400", icon: Settings, label: "Rule Changed" },
-  agent_registered: { color: "text-green-400", icon: UserPlus, label: "Agent Registered" },
-  key_created: { color: "text-yellow-400", icon: Key, label: "Key Created" },
-  agent_action: { color: "text-cyan-400", icon: Zap, label: "Agent Action" },
-  budget_alert: { color: "text-purple-400", icon: DollarSign, label: "Budget Alert" },
+  envelope_received: { color: "text-primary", icon: Zap, label: "Envelope Received" },
+  rule_matched: { color: "text-status-warning", icon: GitBranch, label: "Rule Matched" },
+  rule_triggered: { color: "text-status-warning", icon: AlertTriangle, label: "Rule Triggered" },
+  agent_dispatched: { color: "text-status-info", icon: Bot, label: "Agent Dispatched" },
+  agent_responded: { color: "text-status-healthy", icon: Check, label: "Agent Responded" },
+  phi_detected: { color: "text-destructive", icon: Lock, label: "PHI Blocked" },
+  phi_blocked: { color: "text-destructive", icon: Lock, label: "PHI Blocked" },
+  rule_changed: { color: "text-chart-4", icon: Settings, label: "Rule Changed" },
+  agent_registered: { color: "text-status-healthy", icon: UserPlus, label: "Agent Registered" },
+  key_created: { color: "text-status-warning", icon: Key, label: "Key Created" },
+  agent_action: { color: "text-primary", icon: Zap, label: "Agent Action" },
+  budget_alert: { color: "text-chart-4", icon: DollarSign, label: "Budget Alert" },
 };
 
 function formatTimeAgo(ts: string) {
@@ -124,7 +124,7 @@ function formatTimeAgo(ts: string) {
   return date.toLocaleDateString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
 }
 
-const DEFAULT_EVENT_CFG = { color: "text-zinc-400", icon: Activity, label: "" };
+const DEFAULT_EVENT_CFG = { color: "text-muted-foreground", icon: Activity, label: "" };
 
 function eventSummary(e: AuditEvent): string {
   const d = e.details || {};
@@ -197,7 +197,7 @@ function AgentHealthGrid({ agents }: { agents: Agent[] }) {
         {agents.length === 0 ? (
           <div className="text-center text-[hsl(var(--muted-foreground))]/60 py-8 text-sm">No agents registered</div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-white/[0.04]">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-px bg-border/60">
             {agents.map(a => {
               const sc = statusConfig(a.status);
               return (
@@ -249,9 +249,9 @@ function CostTrendChart({ data }: { data: CostTimeseriesBucket[] }) {
                   <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0} />
                 </linearGradient>
               </defs>
-              <XAxis dataKey="day" tick={{ fill: "hsl(215, 15%, 55%)", fontSize: 10 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "hsl(215, 15%, 55%)", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `$${v.toFixed(0)}`} width={36} />
-              <Tooltip contentStyle={{ background: "hsl(222, 20%, 11%)", border: "1px solid hsl(220, 14%, 20%)", borderRadius: 8, fontSize: 12 }} formatter={(v: number) => [`$${v.toFixed(2)}`, "Cost"]} />
+              <XAxis dataKey="day" tick={{ fill: "var(--color-muted-foreground)", fontSize: 10 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "var(--color-muted-foreground)", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `$${v.toFixed(0)}`} width={36} />
+              <Tooltip contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-border)", borderRadius: 8, fontSize: 12 }} formatter={(v: number) => [`$${v.toFixed(2)}`, "Cost"]} />
               <Area type="monotone" dataKey="Cost" stroke="hsl(var(--chart-1))" strokeWidth={2} fill="url(#costGrad)" dot={false} isAnimationActive={false} />
             </RechartsAreaChart>
           </ResponsiveContainer>
@@ -291,7 +291,7 @@ function EventsOverTimeChart({ events }: { events: AuditEvent[] }) {
     <Card className="border-[hsl(var(--border))] bg-[hsl(var(--card))] py-0 gap-0">
       <CardHeader className="flex-row items-center justify-between px-4 py-2.5 border-b border-[hsl(var(--border))]">
         <CardTitle className="text-xs uppercase tracking-widest text-[hsl(var(--muted-foreground))] font-medium">Events Over Time</CardTitle>
-        <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 font-medium">Last 24h</span>
+        <span className="text-[10px] px-2 py-0.5 rounded-full bg-chart-4/10 text-chart-4 font-medium">Last 24h</span>
       </CardHeader>
       <CardContent className="p-4">
         {chartData.length === 0 ? (
@@ -307,13 +307,13 @@ function EventsOverTimeChart({ events }: { events: AuditEvent[] }) {
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
-              <XAxis dataKey="hour" tick={{ fill: "hsl(215, 15%, 55%)", fontSize: 10 }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fill: "hsl(215, 15%, 55%)", fontSize: 10 }} axisLine={false} tickLine={false} width={28} />
+              <XAxis dataKey="hour" tick={{ fill: "var(--color-muted-foreground)", fontSize: 10 }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fill: "var(--color-muted-foreground)", fontSize: 10 }} axisLine={false} tickLine={false} width={28} />
               <Tooltip
-                contentStyle={{ background: "hsl(222, 20%, 11%)", border: "1px solid rgba(139,92,246,0.3)", borderRadius: 8, fontSize: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.5)" }}
-                labelStyle={{ color: "#a1a1aa", fontSize: 10, marginBottom: 4 }}
-                itemStyle={{ color: "#c084fc" }}
-                cursor={{ stroke: "rgba(139,92,246,0.2)", strokeWidth: 1 }}
+                contentStyle={{ background: "var(--color-card)", border: "1px solid var(--color-chart-4)", borderRadius: 8, fontSize: 12, boxShadow: "0 4px 12px rgba(0,0,0,0.5)" }}
+                labelStyle={{ color: "var(--color-muted-foreground)", fontSize: 10, marginBottom: 4 }}
+                itemStyle={{ color: "var(--color-chart-4)" }}
+                cursor={{ stroke: "var(--color-chart-4)", strokeWidth: 1 }}
               />
               <Area type="monotone" dataKey="Events" stroke="hsl(var(--chart-4))" strokeWidth={2} fill="url(#eventsGrad)" dot={false} isAnimationActive={false} />
             </RechartsAreaChart>
@@ -338,8 +338,8 @@ function AgentStatusChart({ agents }: { agents: Agent[] }) {
     return Object.entries(counts).map(([name, value]) => ({ name, value }));
   }, [agents]);
 
-  const colorMap: Record<string, string> = { Healthy: "#34d399", Degraded: "#fbbf24", Unhealthy: "#f87171", Offline: "#71717a" };
-  const pieColors = statusData.map(d => colorMap[d.name] || "#71717a");
+  const colorMap: Record<string, string> = { Healthy: "var(--color-status-healthy)", Degraded: "var(--color-status-warning)", Unhealthy: "var(--color-destructive)", Offline: "var(--color-status-unknown)" };
+  const pieColors = statusData.map(d => colorMap[d.name] || "var(--color-status-unknown)");
 
   return (
     <Card className="border-[hsl(var(--border))] bg-[hsl(var(--card))] py-0 gap-0">
@@ -357,7 +357,7 @@ function AgentStatusChart({ agents }: { agents: Agent[] }) {
                   <Pie data={statusData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={36} outerRadius={56} strokeWidth={0} isAnimationActive={false}>
                     {statusData.map((_, i) => <Cell key={i} fill={pieColors[i]} />)}
                   </Pie>
-                  <text x="50%" y="50%" textAnchor="middle" dominantBaseline="central" fill="#e4e4e7" fontSize={18} fontWeight="bold">{agents.length}</text>
+                  <text x="50%" y="50%" textAnchor="middle" dominantBaseline="central" fill="var(--color-foreground)" fontSize={18} fontWeight="bold">{agents.length}</text>
                 </PieChart>
               </ResponsiveContainer>
             </div>
@@ -546,7 +546,7 @@ export default function OverviewPage() {
                     return (
                       <div key={c.agent_id} className="flex items-center gap-2">
                         <span className="text-xs text-[hsl(var(--foreground))] truncate w-28">{agent?.name ?? c.agent_id.slice(0, 12)}</span>
-                        <div className="flex-1 h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                        <div className="flex-1 h-1.5 bg-border rounded-full overflow-hidden">
                           <div className="h-full rounded-full bg-[hsl(var(--primary))]" style={{ width: `${pct}%` }} />
                         </div>
                         <span className="text-[10px] text-[hsl(var(--muted-foreground))] font-data w-14 text-right">${c.total_cost_usd.toFixed(2)}</span>

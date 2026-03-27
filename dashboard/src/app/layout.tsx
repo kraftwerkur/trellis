@@ -55,6 +55,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <html lang="en" className="dark">
+      <head>
+        <title>Trellis — Agent Operations</title>
+      </head>
       <body className="antialiased">
         <Sidebar expanded={expanded} setExpanded={setExpanded} />
         <Header sidebarWidth={sidebarWidth} />

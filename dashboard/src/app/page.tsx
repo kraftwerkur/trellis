@@ -66,7 +66,7 @@ function StatCard({ label, value, icon: Icon, accent, trend, sparkData }: {
   const c = accentColors[accent] ?? accentColors.cyan;
 
   return (
-    <Card className="border-white/[0.06] bg-[#0d0e14] py-0 gap-0">
+    <Card className="border-white/[0.06] bg-[hsl(var(--card))] py-0 gap-0 hover:border-[hsl(var(--primary))]/20 transition-colors">
       <CardContent className="p-4 space-y-2">
         <div className="flex items-center justify-between">
           <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${c.bg}`}>
@@ -141,9 +141,9 @@ function eventSummary(e: AuditEvent): string {
 
 function ActivityTimeline({ events, agentMap }: { events: AuditEvent[]; agentMap: Record<string, Agent> }) {
   return (
-    <Card className="border-white/[0.06] bg-[#0d0e14] py-0 gap-0">
+    <Card className="border-white/[0.06] bg-[hsl(var(--card))] py-0 gap-0">
       <CardHeader className="flex-row items-center justify-between px-4 py-2.5 border-b border-white/[0.06]">
-        <CardTitle className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Activity Timeline</CardTitle>
+        <CardTitle className="text-xs uppercase tracking-widest text-[hsl(var(--muted-foreground))] font-medium">Activity Feed</CardTitle>
         <span className="live-pulse w-2 h-2 rounded-full bg-emerald-500 inline-block" />
       </CardHeader>
       <CardContent className="p-0 divide-y divide-white/[0.04] max-h-[400px] overflow-y-auto">
@@ -189,9 +189,9 @@ function AgentHealthGrid({ agents }: { agents: Agent[] }) {
   };
 
   return (
-    <Card className="border-white/[0.06] bg-[#0d0e14] py-0 gap-0">
+    <Card className="border-white/[0.06] bg-[hsl(var(--card))] py-0 gap-0">
       <CardHeader className="px-4 py-2.5 border-b border-white/[0.06]">
-        <CardTitle className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Agent Health</CardTitle>
+        <CardTitle className="text-xs uppercase tracking-widest text-[hsl(var(--muted-foreground))] font-medium">Agent Status Grid</CardTitle>
       </CardHeader>
       <CardContent className="p-0">
         {agents.length === 0 ? (
@@ -201,7 +201,7 @@ function AgentHealthGrid({ agents }: { agents: Agent[] }) {
             {agents.map(a => {
               const sc = statusConfig(a.status);
               return (
-                <div key={a.agent_id} className="bg-[#0a0b10] p-3 space-y-1.5">
+                <div key={a.agent_id} className="bg-[hsl(var(--background))] p-3 space-y-1.5">
                   <div className="flex items-center gap-2">
                     <span className={`w-2 h-2 rounded-full ${sc.dot} ring-2 ${sc.ring}`} />
                     <span className="text-xs font-medium text-zinc-200 truncate">{a.name}</span>
@@ -233,9 +233,9 @@ function CostTrendChart({ data }: { data: CostTimeseriesBucket[] }) {
   }));
 
   return (
-    <Card className="border-white/[0.06] bg-[#0d0e14] py-0 gap-0">
+    <Card className="border-white/[0.06] bg-[hsl(var(--card))] py-0 gap-0">
       <CardHeader className="px-4 py-2.5 border-b border-white/[0.06]">
-        <CardTitle className="text-xs uppercase tracking-widest text-zinc-500 font-medium">7-Day Cost Trend</CardTitle>
+        <CardTitle className="text-xs uppercase tracking-widest text-[hsl(var(--muted-foreground))] font-medium">Cost Breakdown — 7 Day</CardTitle>
       </CardHeader>
       <CardContent className="p-4">
         {data.length === 0 ? (
@@ -245,14 +245,14 @@ function CostTrendChart({ data }: { data: CostTimeseriesBucket[] }) {
             <RechartsAreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="costGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#22d3ee" stopOpacity={0.3} />
-                  <stop offset="100%" stopColor="#22d3ee" stopOpacity={0} />
+                  <stop offset="0%" stopColor="hsl(var(--chart-1))" stopOpacity={0.3} />
+                  <stop offset="100%" stopColor="hsl(var(--chart-1))" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <XAxis dataKey="day" tick={{ fill: "#52525b", fontSize: 10 }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fill: "#52525b", fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={(v: number) => `$${v.toFixed(0)}`} width={36} />
               <Tooltip contentStyle={{ background: "#18181b", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, fontSize: 12 }} formatter={(v: number) => [`$${v.toFixed(2)}`, "Cost"]} />
-              <Area type="monotone" dataKey="Cost" stroke="#22d3ee" strokeWidth={2} fill="url(#costGrad)" dot={false} isAnimationActive={false} />
+              <Area type="monotone" dataKey="Cost" stroke="hsl(var(--chart-1))" strokeWidth={2} fill="url(#costGrad)" dot={false} isAnimationActive={false} />
             </RechartsAreaChart>
           </ResponsiveContainer>
         )}
@@ -288,9 +288,9 @@ function EventsOverTimeChart({ events }: { events: AuditEvent[] }) {
   }, [events, now]);
 
   return (
-    <Card className="border-white/[0.06] bg-[#0d0e14] py-0 gap-0">
+    <Card className="border-white/[0.06] bg-[hsl(var(--card))] py-0 gap-0">
       <CardHeader className="flex-row items-center justify-between px-4 py-2.5 border-b border-white/[0.06]">
-        <CardTitle className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Events Over Time</CardTitle>
+        <CardTitle className="text-xs uppercase tracking-widest text-[hsl(var(--muted-foreground))] font-medium">Events Over Time</CardTitle>
         <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 font-medium">Last 24h</span>
       </CardHeader>
       <CardContent className="p-4">
@@ -301,9 +301,9 @@ function EventsOverTimeChart({ events }: { events: AuditEvent[] }) {
             <RechartsAreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
               <defs>
                 <linearGradient id="eventsGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.4} />
-                  <stop offset="50%" stopColor="#8b5cf6" stopOpacity={0.1} />
-                  <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0} />
+                  <stop offset="0%" stopColor="hsl(var(--chart-4))" stopOpacity={0.4} />
+                  <stop offset="50%" stopColor="hsl(var(--chart-4))" stopOpacity={0.1} />
+                  <stop offset="100%" stopColor="hsl(var(--chart-4))" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
@@ -315,7 +315,7 @@ function EventsOverTimeChart({ events }: { events: AuditEvent[] }) {
                 itemStyle={{ color: "#c084fc" }}
                 cursor={{ stroke: "rgba(139,92,246,0.2)", strokeWidth: 1 }}
               />
-              <Area type="monotone" dataKey="Events" stroke="#8b5cf6" strokeWidth={2} fill="url(#eventsGrad)" dot={false} isAnimationActive={false} />
+              <Area type="monotone" dataKey="Events" stroke="hsl(var(--chart-4))" strokeWidth={2} fill="url(#eventsGrad)" dot={false} isAnimationActive={false} />
             </RechartsAreaChart>
           </ResponsiveContainer>
         )}
@@ -342,9 +342,9 @@ function AgentStatusChart({ agents }: { agents: Agent[] }) {
   const pieColors = statusData.map(d => colorMap[d.name] || "#71717a");
 
   return (
-    <Card className="border-white/[0.06] bg-[#0d0e14] py-0 gap-0">
+    <Card className="border-white/[0.06] bg-[hsl(var(--card))] py-0 gap-0">
       <CardHeader className="px-4 py-2.5 border-b border-white/[0.06]">
-        <CardTitle className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Agent Status</CardTitle>
+        <CardTitle className="text-xs uppercase tracking-widest text-[hsl(var(--muted-foreground))] font-medium">Agent Status</CardTitle>
       </CardHeader>
       <CardContent className="p-4">
         {agents.length === 0 ? (
@@ -491,8 +491,8 @@ export default function OverviewPage() {
         </div>
       </div>
 
-      {/* Stats Row */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
+      {/* ═══ TOP SECTION: Key Metrics ═══ */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <StatCard
           label="Active Agents"
           value={totalAgents > 0 ? `${onlineCount}/${totalAgents}` : "—"}
@@ -501,102 +501,55 @@ export default function OverviewPage() {
           trend={totalAgents > 0 ? { direction: onlineCount === totalAgents ? "up" : "down", label: `${onlineCount} healthy` } : undefined}
         />
         <StatCard
-          label="Events / 24h"
+          label="Envelopes Today"
           value={String(events24h)}
           icon={Activity}
-          accent="blue"
-          sparkData={requestSpark}
-        />
-        <StatCard
-          label="Total Requests"
-          value={String(totalRequests)}
-          icon={Gauge}
           accent="cyan"
           sparkData={requestSpark}
+          trend={eventsLastHour > 0 ? { direction: "up", label: `${eventsLastHour} last hr` } : undefined}
         />
         <StatCard
-          label="PHI Blocked"
-          value={String(phiBlocked)}
-          icon={Shield}
-          accent="red"
-        />
-        <StatCard
-          label="Budget Used"
-          value={totalCost > 0 ? `${budgetPct}%` : "—"}
+          label="Total Cost (24h)"
+          value={totalCost > 0 ? `$${totalCost.toFixed(2)}` : "—"}
           icon={DollarSign}
           accent="amber"
-          trend={totalCost > 0 ? { direction: budgetPct > 75 ? "up" : "flat", label: `$${totalCost.toFixed(2)}/$${budgetLimit}` } : undefined}
+          trend={totalCost > 0 ? { direction: budgetPct > 75 ? "up" : "flat", label: `${budgetPct}% of budget` } : undefined}
           sparkData={costSpark}
         />
         <StatCard
           label="System Health"
           value={totalAgents > 0 ? `${systemHealth}%` : "—"}
           icon={HeartPulse}
-          accent="purple"
+          accent={systemHealth >= 90 ? "emerald" : systemHealth >= 70 ? "amber" : "red"}
           trend={totalAgents > 0 ? { direction: systemHealth >= 90 ? "up" : systemHealth >= 70 ? "flat" : "down", label: systemHealth >= 90 ? "All clear" : "Degraded" } : undefined}
         />
       </div>
 
-      {/* System Health Summary */}
-      <Card className="border-white/[0.06] bg-[#0d0e14] py-0 gap-0 gradient-border">
-        <CardContent className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <HeartPulse className="w-4 h-4 text-cyan-400" />
-            <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">System Health Summary</span>
-            <span className="live-pulse w-2 h-2 rounded-full bg-emerald-500 inline-block ml-auto" />
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-            {[
-              { label: "Total Agents", value: totalAgents > 0 ? String(totalAgents) : "—", color: "text-blue-400" },
-              { label: "Active Agents", value: totalAgents > 0 ? `${onlineCount}` : "—", color: onlineCount === totalAgents && totalAgents > 0 ? "text-emerald-400" : "text-amber-400" },
-              { label: "Events (1h)", value: String(eventsLastHour), color: "text-cyan-400" },
-              { label: "Rule Match Rate", value: events.length > 0 ? `${ruleMatchRate}%` : "—", color: "text-purple-400" },
-              { label: "PHI Detections Today", value: String(phiToday), color: phiToday > 0 ? "text-red-400" : "text-emerald-400" },
-            ].map(s => (
-              <div key={s.label} className="text-center">
-                <div className={`text-xl font-bold font-data ${s.color}`}>{s.value}</div>
-                <div className="text-[10px] text-zinc-600 uppercase tracking-wider mt-0.5">{s.label}</div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Events Over Time + Agent Status */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
-        <div className="lg:col-span-3">
-          <EventsOverTimeChart events={events} />
-        </div>
-        <div className="lg:col-span-2">
-          <AgentStatusChart agents={agents} />
-        </div>
-      </div>
-
-      {/* Two-column: Timeline + Cost Chart */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-3">
-        <div className="lg:col-span-3">
-          <ActivityTimeline events={recentEvents} agentMap={agentMap} />
-        </div>
-        <div className="lg:col-span-2 space-y-3">
+      {/* ═══ MIDDLE SECTION: Activity Feed + Cost Chart ═══ */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <ActivityTimeline events={recentEvents} agentMap={agentMap} />
+        <div className="space-y-3">
           <CostTrendChart data={timeseries} />
-          {/* Cost Breakdown */}
-          <Card className="border-white/[0.06] bg-[#0d0e14] py-0 gap-0">
+          {/* Cost Breakdown by Agent */}
+          <Card className="border-white/[0.06] bg-[hsl(var(--card))] py-0 gap-0">
+            <CardHeader className="px-4 py-2.5 border-b border-white/[0.06]">
+              <CardTitle className="text-xs uppercase tracking-widest text-[hsl(var(--muted-foreground))] font-medium">Cost by Agent</CardTitle>
+            </CardHeader>
             <CardContent className="p-4">
-              <div className="text-[10px] uppercase tracking-widest text-zinc-500 font-medium mb-2">Cost Breakdown</div>
               {costs.length === 0 ? (
                 <div className="text-center text-zinc-600 py-4 text-sm">No cost data yet</div>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   {costs.slice(0, 5).map(c => {
                     const agent = agentMap[c.agent_id];
                     const pct = totalCost > 0 ? (c.total_cost_usd / totalCost) * 100 : 0;
                     return (
                       <div key={c.agent_id} className="flex items-center gap-2">
-                        <span className="text-xs text-zinc-300 truncate w-28">{agent?.name ?? c.agent_id.slice(0, 12)}</span>
-                        <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                          <div className="h-full bg-cyan-500/60 rounded-full" style={{ width: `${pct}%` }} />
+                        <span className="text-xs text-[hsl(var(--foreground))] truncate w-28">{agent?.name ?? c.agent_id.slice(0, 12)}</span>
+                        <div className="flex-1 h-1.5 bg-white/[0.06] rounded-full overflow-hidden">
+                          <div className="h-full rounded-full bg-[hsl(var(--primary))]" style={{ width: `${pct}%` }} />
                         </div>
-                        <span className="text-[10px] text-zinc-500 font-data w-14 text-right">${c.total_cost_usd.toFixed(2)}</span>
+                        <span className="text-[10px] text-[hsl(var(--muted-foreground))] font-data w-14 text-right">${c.total_cost_usd.toFixed(2)}</span>
                       </div>
                     );
                   })}
@@ -607,8 +560,41 @@ export default function OverviewPage() {
         </div>
       </div>
 
-      {/* Agent Health Grid */}
-      <AgentHealthGrid agents={agents} />
+      {/* ═══ BOTTOM SECTION: Agent Status + Alerts ═══ */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+        <AgentHealthGrid agents={agents} />
+        <div className="space-y-3">
+          <EventsOverTimeChart events={events} />
+          {/* Recent Alerts */}
+          <Card className="border-white/[0.06] bg-[hsl(var(--card))] py-0 gap-0">
+            <CardHeader className="px-4 py-2.5 border-b border-white/[0.06]">
+              <CardTitle className="text-xs uppercase tracking-widest text-[hsl(var(--muted-foreground))] font-medium">Recent Alerts</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0 divide-y divide-white/[0.04]">
+              {(() => {
+                const alerts = events.filter(e => e.event_type === "phi_blocked" || e.event_type === "budget_alert" || e.event_type === "rule_triggered").slice(0, 5);
+                if (alerts.length === 0) return (
+                  <div className="flex items-center justify-center gap-2 py-6 text-sm text-zinc-600">
+                    <Check className="w-4 h-4 text-emerald-500" />
+                    No recent alerts
+                  </div>
+                );
+                return alerts.map(e => {
+                  const cfg = EVENT_CONFIG[e.event_type] ?? DEFAULT_EVENT_CFG;
+                  const IconComp = cfg.icon;
+                  return (
+                    <div key={e.id} className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/[0.02] transition-colors">
+                      <IconComp className={`w-3.5 h-3.5 flex-shrink-0 ${cfg.color}`} />
+                      <span className="text-xs text-[hsl(var(--foreground))] truncate flex-1">{eventSummary(e)}</span>
+                      <span className="text-[10px] text-zinc-600 font-data whitespace-nowrap">{formatTimeAgo(e.timestamp)}</span>
+                    </div>
+                  );
+                });
+              })()}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }

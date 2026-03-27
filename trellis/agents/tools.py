@@ -1,11 +1,50 @@
 """Trellis agent tools — self-contained, no external APIs needed."""
 
 import json
+import time
 from pathlib import Path
 from difflib import SequenceMatcher
 
+import httpx
+
 _DATA_DIR = Path(__file__).parent / "data"
 _tech_stack: list[dict] | None = None
+
+# ── CISA KEV cache ─────────────────────────────────────────────────
+_CISA_KEV_URL = "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json"
+_CISA_KEV_TTL = 3600  # 1 hour
+_cisa_kev_cache: dict[str, dict] | None = None
+_cisa_kev_cache_ts: float = 0.0
+
+CISA_KEV_SCHEMA = {
+    "type": "function",
+    "function": {
+        "name": "check_cisa_kev",
+        "description": "Check if a CVE ID is in the CISA Known Exploited Vulnerabilities catalog",
+        "parameters": {
+            "type": "object",
+            "properties": {"cve_id": {"type": "string", "description": "CVE identifier (e.g. CVE-2024-1234)"}},
+            "required": ["cve_id"]
+        }
+    }
+}
+
+
+def _fetch_cisa_kev() -> dict[str, dict]:
+    """Fetch the CISA KEV catalog and return a dict keyed by CVE ID."""
+    global _cisa_kev_cache, _cisa_kev_cache_ts
+    now = time.time()
+    if _cisa_kev_cache is not None and (now - _cisa_kev_cache_ts) < _CISA_KEV_TTL:
+        return _cisa_kev_cache
+
+    resp = httpx.get(_CISA_KEV_URL, timeout=30)
+    resp.raise_for_status()
+    data = resp.json()
+    _cisa_kev_cache = {
+        v["cveID"]: v for v in data.get("vulnerabilities", [])
+    }
+    _cisa_kev_cache_ts = now
+    return _cisa_kev_cache
 
 
 def _load_tech_stack() -> list[dict]:
@@ -70,18 +109,33 @@ def lookup_tech_stack(product: str, vendor: str = "") -> dict:
 
 
 def check_cisa_kev(cve_id: str) -> dict:
-    """Check if CVE is in CISA Known Exploited Vulnerabilities catalog.
+    """Check if a CVE ID is in the CISA Known Exploited Vulnerabilities catalog.
 
-    Uses payload data if available, otherwise returns unknown status.
+    Fetches the catalog from CISA (cached for 1 hour) and looks up the CVE.
+    Returns {found: bool, vulnerability: {...} | None} on success,
+    or {found: False, error: "..."} on network failure.
     """
-    # In production, this would query a local CISA KEV cache/DB.
-    # For now, we rely on the event payload's exploited_in_wild field
-    # and return a structured response.
+    try:
+        catalog = _fetch_cisa_kev()
+    except Exception as exc:
+        return {"found": False, "vulnerability": None, "error": str(exc)}
+
+    cve_upper = cve_id.strip().upper()
+    entry = catalog.get(cve_upper)
+    if entry is None:
+        return {"found": False, "vulnerability": None}
+
     return {
-        "cve_id": cve_id,
-        "in_kev": None,  # None = unknown (no local cache yet)
-        "source": "payload_metadata",
-        "note": "CISA KEV local cache not yet populated. Using event payload metadata.",
+        "found": True,
+        "vulnerability": {
+            "cveID": entry.get("cveID"),
+            "vendorProject": entry.get("vendorProject"),
+            "product": entry.get("product"),
+            "dateAdded": entry.get("dateAdded"),
+            "shortDescription": entry.get("shortDescription"),
+            "requiredAction": entry.get("requiredAction"),
+            "dueDate": entry.get("dueDate"),
+        },
     }
 
 

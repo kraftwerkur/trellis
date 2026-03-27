@@ -16,6 +16,7 @@ from typing import Any
 import httpx
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
+from starlette.responses import StreamingResponse
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -528,6 +529,81 @@ async def chat_completions(
         body["max_tokens"] = request.max_tokens
     if request.top_p is not None:
         body["top_p"] = request.top_p
+    # ── Streaming path ─────────────────────────────────────────────────
+    if request.stream:
+        body["stream"] = True
+        from trellis.streaming import phi_safe_stream_filter
+
+        async def _event_generator():
+            collected_content = ""
+            start_t = time.monotonic()
+            try:
+                prov = provider
+                headers = {"Content-Type": "application/json"}
+                if isinstance(prov, OpenAICompatibleProvider):
+                    if prov.api_key:
+                        headers["Authorization"] = f"Bearer {prov.api_key}"
+                    url = f"{prov.base_url}/chat/completions"
+                elif isinstance(prov, AnthropicProvider):
+                    # Anthropic streaming not supported in this path; fall back
+                    url = None
+                else:
+                    url = None
+
+                if url is None:
+                    # Fallback: do non-streaming call and fake SSE
+                    body["stream"] = False
+                    result = await prov.chat_completion(body)
+                    content = result.get("choices", [{}])[0].get("message", {}).get("content", "")
+                    import json as _json
+                    yield f"data: {_json.dumps({'choices': [{'index': 0, 'delta': {'content': content}, 'finish_reason': 'stop'}]})}\n\n"
+                    yield "data: [DONE]\n\n"
+                    collected_content = content
+                else:
+                    async with httpx.AsyncClient(timeout=120.0) as client:
+                        async with client.stream("POST", url, json=body, headers=headers) as resp:
+                            resp.raise_for_status()
+                            async for line in resp.aiter_lines():
+                                line = line.strip()
+                                if not line:
+                                    continue
+                                yield line + "\n\n"
+                                # Collect content for token counting
+                                if line.startswith("data: ") and line[6:].strip() != "[DONE]":
+                                    try:
+                                        import json as _json
+                                        chunk = _json.loads(line[6:])
+                                        delta = chunk.get("choices", [{}])[0].get("delta", {})
+                                        if "content" in delta:
+                                            collected_content += delta["content"]
+                                    except Exception:
+                                        pass
+
+            except Exception as exc:
+                logger.error("Streaming error: %s", exc)
+                yield f"data: {json.dumps({'error': str(exc)})}\n\n"
+                yield "data: [DONE]\n\n"
+
+            # Log cost after stream completes
+            latency = int((time.monotonic() - start_t) * 1000)
+            tokens_est_in = _estimate_tokens(str(body.get("messages", "")))
+            tokens_est_out = _estimate_tokens(collected_content)
+            try:
+                from trellis.database import async_session
+                async with async_session() as cost_db:
+                    await log_cost_event(
+                        cost_db, agent_id=api_key.agent_id, trace_id=None,
+                        model_requested=request.model or model, model_used=model,
+                        provider=provider.name, tokens_in=tokens_est_in, tokens_out=tokens_est_out,
+                        latency_ms=latency, has_tool_calls=False, complexity_class=complexity_class,
+                    )
+            except Exception:
+                logger.exception("Failed to log streaming cost event")
+
+        raw_stream = _event_generator()
+        filtered_stream = phi_safe_stream_filter(raw_stream, model=model)
+        return StreamingResponse(filtered_stream, media_type="text/event-stream")
+
     body["stream"] = False
 
     start = time.monotonic()

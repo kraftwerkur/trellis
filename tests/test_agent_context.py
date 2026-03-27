@@ -12,9 +12,8 @@ from trellis.models import AuditEvent
 async def _setup_tables():
     """Ensure tables exist and are clean for each test."""
     async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all, checkfirst=True)
-        for table in reversed(Base.metadata.sorted_tables):
-            await conn.execute(table.delete())
+        await conn.run_sync(Base.metadata.drop_all)
+        await conn.run_sync(Base.metadata.create_all)
 
 
 @pytest.mark.asyncio

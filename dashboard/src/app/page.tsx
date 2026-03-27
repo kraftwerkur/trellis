@@ -470,10 +470,10 @@ export default function OverviewPage() {
       )}
 
       {/* System Health Bar */}
-      <div className="health-bar px-4 py-3 flex items-center gap-6 flex-wrap">
+      <div className="health-bar px-4 py-3 flex items-center gap-6 flex-wrap rounded-lg border border-white/[0.06] bg-[hsl(var(--card))]">
         <div className="flex items-center gap-2">
-          <HeartPulse className="w-4 h-4 text-cyan-400" />
-          <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-medium">System Health</span>
+          <HeartPulse className="w-4 h-4 text-[hsl(var(--primary))]" />
+          <span className="text-[10px] uppercase tracking-widest text-[hsl(var(--muted-foreground))] font-medium">Command Center</span>
         </div>
         <div className="flex items-center gap-6 flex-wrap flex-1">
           {[

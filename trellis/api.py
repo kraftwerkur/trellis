@@ -116,6 +116,14 @@ async def create_agent(data: AgentCreate, db: AsyncSession = Depends(get_db)):
     if data.llm_config is not None:
         dump["llm_config"] = data.llm_config.model_dump()
 
+    # Fold top-level LLM fields into llm_config (backward compat convenience)
+    for _fld in ("model", "temperature", "max_tokens"):
+        val = dump.pop(_fld, None)
+        if val is not None:
+            if dump.get("llm_config") is None:
+                dump["llm_config"] = {}
+            dump["llm_config"].setdefault(_fld, val)
+
     agent = Agent(**dump)
     db.add(agent)
 
@@ -144,7 +152,15 @@ async def update_agent(agent_id: str, data: AgentUpdate, db: AsyncSession = Depe
     agent = await db.get(Agent, agent_id)
     if not agent:
         raise HTTPException(404, f"Agent '{agent_id}' not found")
-    for field, value in data.model_dump(exclude_unset=True).items():
+    updates = data.model_dump(exclude_unset=True)
+    # Fold top-level LLM fields into llm_config
+    for _fld in ("model", "temperature", "max_tokens"):
+        val = updates.pop(_fld, None)
+        if val is not None:
+            cfg = dict(agent.llm_config) if agent.llm_config else {}
+            cfg[_fld] = val
+            updates["llm_config"] = cfg
+    for field, value in updates.items():
         setattr(agent, field, value)
     await db.commit()
     await db.refresh(agent)

@@ -29,6 +29,222 @@ CISA_KEV_SCHEMA = {
     }
 }
 
+LOOKUP_TECH_STACK_SCHEMA = {
+    "type": "function",
+    "function": {
+        "name": "lookup_tech_stack",
+        "description": "Check if a product/vendor is in Health First's tech stack. Returns matching systems with match confidence.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "product": {"type": "string", "description": "Product name to look up"},
+                "vendor": {"type": "string", "description": "Vendor name (optional, improves match accuracy)", "default": ""},
+            },
+            "required": ["product"]
+        }
+    }
+}
+
+GET_CVSS_DETAILS_SCHEMA = {
+    "type": "function",
+    "function": {
+        "name": "get_cvss_details",
+        "description": "Return CVSS score breakdown for a CVE. Uses payload data when available.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "cve_id": {"type": "string", "description": "CVE identifier (e.g. CVE-2024-1234)"},
+                "cvss_score": {"type": "number", "description": "Known CVSS score (optional)", "default": None},
+                "severity": {"type": "string", "description": "Known severity level (optional, e.g. CRITICAL, HIGH, MEDIUM, LOW)", "default": None},
+            },
+            "required": ["cve_id"]
+        }
+    }
+}
+
+CALCULATE_RISK_SCORE_SCHEMA = {
+    "type": "function",
+    "function": {
+        "name": "calculate_risk_score",
+        "description": "Calculate composite risk score for Health First based on CVSS, exploitability, exposure, and system criticality.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "cvss": {"type": "number", "description": "CVSS base score (0.0-10.0)"},
+                "exploited": {"type": "boolean", "description": "Whether the vulnerability is known to be actively exploited"},
+                "hf_exposed": {"type": "boolean", "description": "Whether Health First's tech stack is exposed to this vulnerability"},
+                "system_criticality": {"type": "string", "description": "System criticality level (critical, high, medium, low)", "default": None},
+            },
+            "required": ["cvss", "exploited", "hf_exposed"]
+        }
+    }
+}
+
+CLASSIFY_TICKET_SCHEMA = {
+    "type": "function",
+    "function": {
+        "name": "classify_ticket",
+        "description": "Classify an IT ticket by category based on keyword matching.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "description": {"type": "string", "description": "IT ticket description text"},
+                "category_hint": {"type": "string", "description": "Optional category hint to bias classification (network, application, endpoint, access, infrastructure)", "default": None},
+            },
+            "required": ["description"]
+        }
+    }
+}
+
+LOOKUP_KNOWN_RESOLUTION_SCHEMA = {
+    "type": "function",
+    "function": {
+        "name": "lookup_known_resolution",
+        "description": "Look up a known resolution for common IT issues based on category and keywords.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "IT ticket category (e.g. network, application, endpoint, access, infrastructure)"},
+                "keywords": {"type": "array", "items": {"type": "string"}, "description": "Keywords extracted from the ticket"},
+            },
+            "required": ["category", "keywords"]
+        }
+    }
+}
+
+ASSESS_PRIORITY_SCHEMA = {
+    "type": "function",
+    "function": {
+        "name": "assess_priority",
+        "description": "Assess IT ticket priority based on severity, affected users, and system criticality.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "severity": {"type": "string", "description": "Severity level (critical, high, medium, low)", "default": None},
+                "affected_users": {"type": "integer", "description": "Number of affected users", "default": 1},
+                "system_criticality": {"type": "string", "description": "System criticality tier (tier_1, tier_2, tier_3)", "default": None},
+            },
+            "required": []
+        }
+    }
+}
+
+CLASSIFY_HR_CASE_SCHEMA = {
+    "type": "function",
+    "function": {
+        "name": "classify_hr_case",
+        "description": "Classify an HR case by category based on keyword matching. Returns category, subcategory, keywords, and regulatory flags.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "description": {"type": "string", "description": "HR case description text"},
+                "category_hint": {"type": "string", "description": "Optional category hint to bias classification", "default": None},
+            },
+            "required": ["description"]
+        }
+    }
+}
+
+ASSESS_HR_PRIORITY_SCHEMA = {
+    "type": "function",
+    "function": {
+        "name": "assess_hr_priority",
+        "description": "Assess HR case priority based on category, regulatory flags, and employee impact.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "HR case category (e.g. benefits, payroll, pto, fmla, ada, workers_comp, compliance)"},
+                "regulatory_flags": {"type": "array", "items": {"type": "string"}, "description": "Regulatory flags (e.g. FMLA, ADA, OSHA, HIPAA)"},
+                "affected_employees": {"type": "integer", "description": "Number of affected employees", "default": 1},
+            },
+            "required": ["category", "regulatory_flags"]
+        }
+    }
+}
+
+LOOKUP_HR_POLICY_SCHEMA = {
+    "type": "function",
+    "function": {
+        "name": "lookup_hr_policy",
+        "description": "Look up HR policy reference and standard procedure for a case category.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "HR case category (e.g. pto, benefits, fmla, ada, payroll, onboarding, workers_comp, offboarding, compliance, policy)"},
+                "keywords": {"type": "array", "items": {"type": "string"}, "description": "Keywords extracted from the HR case"},
+            },
+            "required": ["category", "keywords"]
+        }
+    }
+}
+
+CLASSIFY_REV_CYCLE_CASE_SCHEMA = {
+    "type": "function",
+    "function": {
+        "name": "classify_rev_cycle_case",
+        "description": "Classify a revenue cycle case by category using keyword matching. Returns category, subcategory, matched keywords, and detected denial codes.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "description": {"type": "string", "description": "Revenue cycle case description text"},
+                "category_hint": {"type": "string", "description": "Optional category hint to bias classification", "default": None},
+            },
+            "required": ["description"]
+        }
+    }
+}
+
+ANALYZE_DENIAL_SCHEMA = {
+    "type": "function",
+    "function": {
+        "name": "analyze_denial",
+        "description": "Analyze a denial code and return root cause, resolution steps, and appeal template reference.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "denial_code": {"type": "string", "description": "Standard denial reason code (e.g. CO-4, CO-16, CO-45)"},
+                "payer": {"type": "string", "description": "Payer name for context"},
+                "amount": {"type": "number", "description": "Claim dollar amount"},
+            },
+            "required": ["denial_code", "payer", "amount"]
+        }
+    }
+}
+
+ASSESS_REV_CYCLE_PRIORITY_SCHEMA = {
+    "type": "function",
+    "function": {
+        "name": "assess_rev_cycle_priority",
+        "description": "Assess revenue cycle case priority based on dollar amount, aging, filing deadline, and category.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "category": {"type": "string", "description": "Case category (e.g. denial_appeal, coding_review, billing_inquiry, ar_followup, compliance, prior_auth)"},
+                "amount": {"type": "number", "description": "Dollar amount of claim or balance"},
+                "days_aged": {"type": "integer", "description": "Days since claim was filed or denial received"},
+                "timely_filing_deadline": {"type": "integer", "description": "Payer timely filing limit in days"},
+            },
+            "required": ["category", "amount", "days_aged", "timely_filing_deadline"]
+        }
+    }
+}
+
+ALL_TOOL_SCHEMAS = {
+    "lookup_tech_stack": LOOKUP_TECH_STACK_SCHEMA,
+    "check_cisa_kev": CISA_KEV_SCHEMA,
+    "get_cvss_details": GET_CVSS_DETAILS_SCHEMA,
+    "calculate_risk_score": CALCULATE_RISK_SCORE_SCHEMA,
+    "classify_ticket": CLASSIFY_TICKET_SCHEMA,
+    "lookup_known_resolution": LOOKUP_KNOWN_RESOLUTION_SCHEMA,
+    "assess_priority": ASSESS_PRIORITY_SCHEMA,
+    "classify_hr_case": CLASSIFY_HR_CASE_SCHEMA,
+    "assess_hr_priority": ASSESS_HR_PRIORITY_SCHEMA,
+    "lookup_hr_policy": LOOKUP_HR_POLICY_SCHEMA,
+    "classify_rev_cycle_case": CLASSIFY_REV_CYCLE_CASE_SCHEMA,
+    "analyze_denial": ANALYZE_DENIAL_SCHEMA,
+    "assess_rev_cycle_priority": ASSESS_REV_CYCLE_PRIORITY_SCHEMA,
+}
+
 
 def _fetch_cisa_kev() -> dict[str, dict]:
     """Fetch the CISA KEV catalog and return a dict keyed by CVE ID."""
@@ -683,3 +899,21 @@ def assess_rev_cycle_priority(
         "urgency": urgency_map[final],
         "justification": " | ".join(reasons) if reasons else "Standard rev cycle case",
     }
+
+
+# ── Executor registry ─────────────────────────────────────────────
+ALL_TOOL_EXECUTORS = {
+    "lookup_tech_stack": lookup_tech_stack,
+    "check_cisa_kev": check_cisa_kev,
+    "get_cvss_details": get_cvss_details,
+    "calculate_risk_score": calculate_risk_score,
+    "classify_ticket": classify_ticket,
+    "lookup_known_resolution": lookup_known_resolution,
+    "assess_priority": assess_priority,
+    "classify_hr_case": classify_hr_case,
+    "assess_hr_priority": assess_hr_priority,
+    "lookup_hr_policy": lookup_hr_policy,
+    "classify_rev_cycle_case": classify_rev_cycle_case,
+    "analyze_denial": analyze_denial,
+    "assess_rev_cycle_priority": assess_rev_cycle_priority,
+}

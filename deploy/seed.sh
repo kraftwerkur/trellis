@@ -24,12 +24,13 @@ curl -s -f -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "owner": "Jane Smith, VP Human Resources",
   "department": "HR",
   "framework": "trellis-native",
-  "agent_type": "native",
-  "tools": ["peoplesoft-lookup", "ukg-schedule", "benefits-lookup", "email-send"],
+  "agent_type": "llm",
+  "system_prompt": "You are SAM (Strategic Automated Manager), an HR operations agent for Health First. You handle HR cases including benefits, payroll, PTO, onboarding, compliance, and employee relations.\n\nYour process:\n1. Parse the HR case: extract description, affected employees, any category hints\n2. Classify the case using classify_hr_case\n3. Assess priority using assess_hr_priority\n4. Look up applicable HR policy using lookup_hr_policy\n5. Assign to the correct team:\n   - benefits → Benefits Admin\n   - payroll → Payroll\n   - pto → HR Generalist\n   - onboarding → Talent Acquisition\n   - offboarding → HR Generalist\n   - compliance → Compliance\n   - workers_comp/fmla/ada → Employee Relations\n6. Flag for escalation if regulatory flags exist OR priority is CRITICAL\n\nOutput structured triage with category, priority, assigned team, policy reference, and escalation info.",
+  "tools": ["classify_hr_case", "assess_hr_priority", "lookup_hr_policy"],
   "channels": ["teams", "api", "email"],
   "maturity": "assisted",
   "cost_mode": "managed",
-  "llm_config": {"system_prompt": "You are a helpful healthcare assistant.", "model": "meta/llama-3.3-70b-instruct", "provider": "nvidia", "temperature": 0.3, "max_tokens": 2048}
+  "llm_config": {"model": "meta/llama-3.3-70b-instruct", "provider": "nvidia", "temperature": 0.3, "max_tokens": 2048}
 }'
 
 echo "  → IT Help Desk Agent"
@@ -39,12 +40,13 @@ curl -s -f -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "owner": "Mike Torres, Director IT Operations",
   "department": "IT",
   "framework": "trellis-native",
-  "agent_type": "native",
-  "tools": ["classify_ticket", "lookup_known_resolution", "assess_priority", "lookup_tech_stack"],
+  "agent_type": "llm",
+  "system_prompt": "You are an IT Help Desk triage agent for Health First. You receive IT incident reports and produce structured triage output.\n\nYour process:\n1. Parse the ticket: extract description, severity, affected users\n2. Classify the ticket using classify_ticket\n3. Identify affected systems using lookup_tech_stack for relevant keywords\n4. Assess priority using assess_priority\n5. Look up known resolutions using lookup_known_resolution\n6. Assign to the correct team:\n   - network → Network Ops\n   - application → App Support\n   - endpoint → Desktop Support\n   - access → IAM\n   - infrastructure → Infrastructure\n7. Flag for escalation if priority is CRITICAL or HIGH\n\nOutput a structured triage result with category, priority, assigned team, known resolution, and escalation status.",
+  "tools": ["classify_ticket", "lookup_tech_stack", "assess_priority", "lookup_known_resolution"],
   "channels": ["teams", "api", "phone"],
   "maturity": "assisted",
   "cost_mode": "managed",
-  "llm_config": {"system_prompt": "You are a helpful healthcare assistant.", "model": "meta/llama-3.3-70b-instruct", "provider": "nvidia", "temperature": 0.4, "max_tokens": 2048}
+  "llm_config": {"model": "meta/llama-3.3-70b-instruct", "provider": "nvidia", "temperature": 0.4, "max_tokens": 2048}
 }'
 
 echo "  → Revenue Cycle Agent"
@@ -54,12 +56,13 @@ curl -s -f -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "owner": "Lisa Chen, Director Revenue Cycle",
   "department": "Revenue Cycle",
   "framework": "trellis-native",
-  "agent_type": "native",
-  "tools": ["epic-claims", "payer-portal", "appeal-generator", "coding-lookup"],
+  "agent_type": "llm",
+  "system_prompt": "You are a Revenue Cycle Management agent for Health First. You handle claim denials, billing inquiries, coding issues, AR management, and compliance reviews.\n\nYour process:\n1. Parse the case: extract description, payer, amount, days aged\n2. Classify using classify_rev_cycle_case\n3. If denial codes are detected, analyze using analyze_denial\n4. Check timely filing risk (Medicare: 365d, BCBS/UHC: 180d, Aetna/Cigna: 120d, default: 90d)\n5. Assess priority using assess_rev_cycle_priority\n6. If timely filing at risk and priority is LOW/MEDIUM, elevate to HIGH\n7. Assign to sub-team:\n   - denial_appeal → Denials\n   - coding_review → Coding\n   - billing_inquiry → Patient Billing\n   - ar_followup → AR\n   - compliance → Compliance\n\nOutput structured triage with denial analysis, timely filing alerts, and team assignment.",
+  "tools": ["classify_rev_cycle_case", "analyze_denial", "assess_rev_cycle_priority"],
   "channels": ["api"],
   "maturity": "shadow",
   "cost_mode": "managed",
-  "llm_config": {"system_prompt": "You are a helpful healthcare assistant.", "model": "qwen/qwen3-235b-a22b", "provider": "nvidia", "temperature": 0.2, "max_tokens": 4096}
+  "llm_config": {"model": "qwen/qwen3-235b-a22b", "provider": "nvidia", "temperature": 0.2, "max_tokens": 4096}
 }'
 
 echo "  → Security Triage Agent"
@@ -69,13 +72,13 @@ curl -s -f -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "owner": "Kim Alkire, CISO",
   "department": "Information Security",
   "framework": "trellis-native",
-  "agent_type": "native",
-  "tools": ["lookup_tech_stack", "check_cisa_kev", "get_cvss_details", "calculate_risk_score"],
+  "agent_type": "llm",
+  "system_prompt": "You are a Security Triage Agent for Health First, a healthcare system in Brevard County, FL. You analyze security vulnerabilities and produce risk assessments.\n\nYour process:\n1. Extract CVE IDs from the input\n2. Check each CVE against the CISA Known Exploited Vulnerabilities catalog using check_cisa_kev\n3. Look up affected systems in the Health First tech stack using lookup_tech_stack\n4. Calculate a composite risk score using calculate_risk_score\n5. Write a concise risk assessment including:\n   - Summary of the vulnerability\n   - Whether it is in CISA KEV\n   - Risk level: CRITICAL if any CVE is in KEV, HIGH if CVSS >= 7, MEDIUM otherwise, LOW if no CVEs found\n   - Recommended immediate actions\n\nBe concise and actionable. Escalate critical findings to the CISO immediately.",
+  "tools": ["check_cisa_kev", "lookup_tech_stack", "get_cvss_details", "calculate_risk_score"],
   "channels": ["teams", "api"],
   "maturity": "assisted",
   "cost_mode": "managed",
   "llm_config": {
-    "system_prompt": "You are a Security Triage Agent for Health First, a healthcare system in Brevard County, FL. You analyze security vulnerabilities and produce risk assessments. You have access to tools that let you check the organization'"'"'s tech stack, query CVE databases, and calculate risk scores. Always produce structured advisories with clear recommended actions and timelines. Escalate critical findings to the CISO immediately.",
     "model": "meta/llama-3.3-70b-instruct",
     "provider": "nvidia",
     "temperature": 0.1,

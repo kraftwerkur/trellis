@@ -24,6 +24,7 @@ async def test_full_flow(client: AsyncClient):
             "owner": "test",
             "department": "IT",
             "framework": "mock",
+            "agent_type": "http",
             "endpoint": "http://test/mock-agent/envelope",
             "health_endpoint": "http://test/mock-agent/health",
         },

@@ -412,6 +412,7 @@ async def test_slice1_flow_still_works(client: AsyncClient):
     resp = await client.post("/api/agents", json={
         "agent_id": "mock-echo", "name": "Mock Echo Agent", "owner": "test",
         "department": "IT", "framework": "mock",
+        "agent_type": "http",
         "endpoint": "http://test/mock-agent/envelope",
         "health_endpoint": "http://test/mock-agent/health",
     })

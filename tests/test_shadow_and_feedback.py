@@ -12,6 +12,7 @@ async def _register_agent_with_intake(client: AsyncClient, agent_id: str, catego
         "owner": "test",
         "department": "IT",
         "framework": "mock",
+        "agent_type": "http",
         "endpoint": "http://test/mock-agent/envelope",
         "health_endpoint": "http://test/mock-agent/health",
     })

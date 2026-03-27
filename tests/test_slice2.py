@@ -16,6 +16,7 @@ async def _register_agent(client: AsyncClient, agent_id: str = "mock-echo"):
             "owner": "test",
             "department": "IT",
             "framework": "mock",
+            "agent_type": "http",
             "endpoint": "http://test/mock-agent/envelope",
         },
     )

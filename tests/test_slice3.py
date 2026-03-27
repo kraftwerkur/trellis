@@ -261,7 +261,7 @@ async def test_manifest_sync_non_http_fails(client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_default_agent_type_is_http(client: AsyncClient):
+async def test_default_agent_type_is_llm(client: AsyncClient):
     resp = await client.post("/api/agents", json={
         "agent_id": "default-type",
         "name": "Default",
@@ -270,7 +270,7 @@ async def test_default_agent_type_is_http(client: AsyncClient):
         "endpoint": "http://localhost/test",
     })
     assert resp.status_code == 201
-    assert resp.json()["agent_type"] == "http"
+    assert resp.json()["agent_type"] == "llm"
 
 
 # --- Slice 1 & 2 Compatibility ---
@@ -285,6 +285,7 @@ async def test_slice1_flow_still_works(client: AsyncClient):
         "owner": "test",
         "department": "IT",
         "framework": "mock",
+        "agent_type": "http",
         "endpoint": "http://test/mock-agent/envelope",
         "health_endpoint": "http://test/mock-agent/health",
     })

@@ -178,8 +178,14 @@ async def dispatch_function(
 
 async def dispatch_llm(
     llm_config: dict, envelope: Envelope, agent_id: str | None = None,
+    tool_schemas: list[dict] | None = None,
+    tool_executors: dict[str, Any] | None = None,
 ) -> tuple[str, dict[str, Any] | None, str | None]:
-    """Run an LLM agent through gateway routing. Agents never touch real API keys."""
+    """Run an LLM agent through gateway routing. Agents never touch real API keys.
+
+    When tool_schemas and tool_executors are provided, uses AgentLoop for
+    multi-step ReAct-style tool calling.
+    """
     from trellis.gateway import MODEL_PROVIDER_MAP, _providers
 
     text = envelope.payload.text or "(no text)"
@@ -188,6 +194,38 @@ async def dispatch_llm(
     temperature = llm_config.get("temperature", 0.7)
     max_tokens = llm_config.get("max_tokens", 1024)
 
+    # ── AgentLoop path: when tools are provided, use multi-step ReAct loop ──
+    if tool_schemas and tool_executors:
+        try:
+            from trellis.agent_loop import AgentLoop
+            loop = AgentLoop(
+                system_prompt=system_prompt,
+                tools=tool_schemas,
+                tool_executors=tool_executors,
+                model=model,
+                temperature=temperature,
+                max_steps=llm_config.get("max_steps", 5),
+            )
+            loop_result = await loop.run(text)
+            return "success", {
+                "status": loop_result.status,
+                "result": {
+                    "text": loop_result.result.get("text", ""),
+                    "data": {
+                        "model": model, "model_requested": model,
+                        "provider": "agent_loop",
+                        "total_tokens": loop_result.total_tokens,
+                        "steps": loop_result.steps,
+                        "tool_calls": loop_result.result.get("tool_calls_made", []),
+                        "routed_via": "trellis-gateway",
+                    },
+                    "attachments": [],
+                },
+            }, None
+        except Exception as e:
+            return "error", None, f"AgentLoop dispatch failed: {str(e)[:500]}"
+
+    # ── Direct LLM path: simple single-turn inference (no tools) ──
     body = {
         "model": model,
         "messages": [{"role": "system", "content": system_prompt}, {"role": "user", "content": text}],
@@ -243,9 +281,32 @@ async def _dispatch_by_type(agent: Agent, envelope: Envelope):
             return "error", None, f"Agent '{agent.agent_id}' has no function_ref"
         return await dispatch_function(agent.function_ref, envelope)
     elif agent.agent_type == "llm":
-        if not agent.llm_config:
-            return "error", None, f"Agent '{agent.agent_id}' has no llm_config"
-        return await dispatch_llm(agent.llm_config, envelope, agent_id=agent.agent_id)
+        # Build effective config: prefer top-level system_prompt, fall back to llm_config
+        llm_config = dict(agent.llm_config) if agent.llm_config else {}
+        if agent.system_prompt:
+            llm_config["system_prompt"] = agent.system_prompt
+        if not llm_config.get("system_prompt"):
+            llm_config.setdefault("system_prompt", "You are a helpful assistant.")
+
+        # Wire agent tools into the dispatch
+        tool_schemas = []
+        tool_executors = {}
+        if agent.tools:
+            try:
+                from trellis.agents.tools import ALL_TOOL_SCHEMAS, ALL_TOOL_EXECUTORS
+                for tool_name in agent.tools:
+                    if tool_name in ALL_TOOL_SCHEMAS:
+                        tool_schemas.append(ALL_TOOL_SCHEMAS[tool_name])
+                    if tool_name in ALL_TOOL_EXECUTORS:
+                        tool_executors[tool_name] = ALL_TOOL_EXECUTORS[tool_name]
+            except ImportError:
+                logger.debug("ALL_TOOL_SCHEMAS/ALL_TOOL_EXECUTORS not available yet")
+
+        return await dispatch_llm(
+            llm_config, envelope, agent_id=agent.agent_id,
+            tool_schemas=tool_schemas or None,
+            tool_executors=tool_executors or None,
+        )
     elif agent.agent_type == "native":
         from trellis.agents import dispatch_native_agent
         return await dispatch_native_agent(agent, envelope)

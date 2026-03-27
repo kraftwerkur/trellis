@@ -24,7 +24,7 @@ class AgentCreate(BaseModel):
     owner: str
     department: str
     framework: str = "none"
-    agent_type: str = "http"
+    agent_type: str = "llm"
     runtime_type: str = "pi"
     endpoint: str | None = None
     health_endpoint: str | None = None
@@ -33,6 +33,10 @@ class AgentCreate(BaseModel):
     maturity: str = "shadow"
     cost_mode: str = "managed"
     status: str = "unknown"
+    system_prompt: str | None = None
+    model: str | None = None
+    temperature: float | None = None
+    max_tokens: int | None = None
     llm_config: LLMConfig | None = None
     function_ref: str | None = None
     phi_shield_mode: str = "off"
@@ -52,6 +56,10 @@ class AgentUpdate(BaseModel):
     maturity: str | None = None
     cost_mode: str | None = None
     status: str | None = None
+    system_prompt: str | None = None
+    model: str | None = None
+    temperature: float | None = None
+    max_tokens: int | None = None
     llm_config: dict[str, Any] | None = None
     function_ref: str | None = None
     phi_shield_mode: str | None = None
@@ -72,6 +80,7 @@ class AgentRead(BaseModel):
     maturity: str
     cost_mode: str
     status: str
+    system_prompt: str | None = None
     llm_config: dict[str, Any] | None = None
     function_ref: str | None = None
     phi_shield_mode: str = "off"

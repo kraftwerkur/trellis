@@ -1,9 +1,9 @@
 # Trellis — Enterprise AI Agent Orchestration
 
-**Date:** 2026-02-22 (updated 2026-03-09)
-**Status:** Implemented. 438 tests passing.
+**Date:** 2026-02-22 (updated 2026-03-27)
+**Status:** v1.0 evolution in progress. 623 tests passing.
 **Owner:** Eric O'Brien, SVP Enterprise Technology
-**One-liner:** Kubernetes for AI agents — manage, route, and govern hundreds of agents across a healthcare system, regardless of framework.
+**One-liner:** Kubernetes for AI agents — manage, route, and govern hundreds of agents across a healthcare system. Every agent is an LLM agent. Differentiated by configuration, not code.
 
 ---
 
@@ -85,13 +85,11 @@ The brain. Receives envelopes, decides where they go, enforces governance, track
 
 ### Layer 3: Agents (Workers)
 
-Do the actual work. Framework-agnostic. Agents keep full autonomy — they own the logic loop, tool chaining, memory, and decision-making. They run on any framework (Pi SDK, LangChain, OpenAI Assistants, raw Python).
+Do the actual work. In v1.0, **every agent is an LLM agent** — a system prompt + tool permissions + model config, executed by the platform's AgentLoop runtime. No custom code, no external processes, no container-per-agent. See [Agent Model (v1.0)](#agent-model-v10) for the full design.
 
-The key architectural constraint: **agents use Trellis as their LLM provider.** Instead of calling `api.openai.com` directly, agents point at the Trellis LLM Gateway (`trellis-llm.hf.internal/v1/chat/completions`). Same OpenAI-compatible API shape — agents don't even know they're going through Trellis. They just use a different base URL.
+Agents use the **Trellis LLM Gateway** for all inference. The gateway provides cost tracking, model routing, rate limiting, and budget enforcement — all transparent to the agent. The AgentLoop calls the gateway internally; agents don't manage their own LLM connections.
 
-This gives the platform full cost visibility, model routing, and rate limiting without stripping agents of their autonomy. Agents still decide what to ask, when to chain tools, how to reason. Trellis decides which model answers, tracks every token, and enforces budgets.
-
-External/vendor agents that can't point at the gateway are the exception — they self-report costs with anomaly monitoring and budget caps.
+External/vendor HTTP agents are the exception — they run as independent services and POST results back. They self-report costs with anomaly monitoring and budget caps.
 
 ---
 
@@ -396,50 +394,231 @@ Audit logs are append-only, immutable, retained per HIPAA requirements (minimum 
 
 ---
 
-## Agent Contract
+## Agent Model (v1.0)
 
-To register on the platform, an agent must implement four endpoints:
+**Updated:** 2026-03-27
+**Status:** Active. Supersedes the original 4-endpoint HTTP contract.
+**Design principle:** Every agent is an LLM agent. Differentiated by configuration, not code.
 
-### 1. `POST /envelope` — Handle Work
+### The Shift
 
-Accepts a generic envelope. Returns a result.
+The original architecture described agents as external HTTP services implementing 4 endpoints (`/envelope`, `/health`, `/cost-report`, `/manifest`). In practice, 9 of 9 agents are native Python classes running inside the Trellis process, most of which are just system prompts + tool calls wrapped in boilerplate. The v0.3 SecurityTriageAgent — the most sophisticated — is just "extract CVEs, call KEV API, ask LLM to assess."
+
+The realization: **agents are configuration, not code.** The AgentLoop (ReAct-style multi-step execution with tool calling) is the universal runtime. What makes one agent different from another is:
+
+1. **System prompt** — what it knows, how it reasons, what format it returns
+2. **Tool permissions** — what it can touch (CISA KEV lookup, PeopleSoft query, email send)
+3. **Model config** — which LLM, temperature, max tokens, budget
+4. **PHI shield mode** — full redaction, audit only, or off
+5. **Maturity level** — shadow, assisted, or autonomous (enforced by platform)
+6. **Intake declaration** — what envelopes it handles (for intelligent routing)
+
+No custom Python classes. No HTTP endpoints. No deployment artifacts. An agent is a row in the database with a good system prompt and the right tool bindings.
+
+### Agent Manifest
+
+Registration is a single API call or dashboard form:
 
 ```json
-// Request: Generic Envelope (see spec above)
-
-// Response:
 {
-  "status": "completed|failed|delegated|pending_review",
+  "agent_id": "security-triage",
+  "name": "Security Triage Agent",
+  "owner": "Kim Alkire, CISO",
+  "department": "Information Security",
+
+  "system_prompt": "You are a Security Triage Agent for Health First...",
+  "model": "meta/llama-3.3-70b-instruct",
+  "provider": "nvidia",
+  "temperature": 0.1,
+  "max_tokens": 4096,
+
+  "tools": ["check_cisa_kev", "lookup_tech_stack", "calculate_risk_score"],
+  "channels": ["teams", "api"],
+  "maturity": "assisted",
+  "phi_shield_mode": "audit_only",
+
+  "intake": {
+    "categories": ["security.vulnerability", "security.incident"],
+    "source_types": ["monitoring", "api"],
+    "keywords": ["CVE", "vulnerability", "exploit", "breach", "ransomware"],
+    "systems": ["crowdstrike", "sentinel", "nvd"],
+    "priority_range": ["high", "critical"]
+  }
+}
+```
+
+That's the entire agent. No code. No container. No deployment.
+
+### Atomic Work Model
+
+Every agent interaction is atomic: **one envelope in, one structured result out.**
+
+```
+Envelope → AgentLoop(system_prompt, tools, model) → Result
+```
+
+The AgentLoop handles multi-step reasoning internally (ReAct pattern):
+1. LLM reads the envelope + system prompt
+2. LLM decides to call a tool (or not)
+3. Tool result fed back to LLM
+4. Repeat until LLM produces a final answer (max 5 steps default)
+5. Result returned to the dispatcher
+
+```json
+{
+  "status": "completed|failed|pending_review",
   "result": {
     "text": "Human-readable response",
     "data": {},
     "attachments": []
   },
-  "delegations": [
-    { "target_agent": "agent-id", "envelope": { "..." } }
-  ],
-  "cost_report": {
-    "inference_calls": 3,
-    "total_tokens": 4500,
-    "estimated_cost_usd": 0.008,
-    "model": "gpt-4o-mini"
+  "steps": 3,
+  "total_tokens": 4500,
+  "cost_usd": 0.008
+}
+```
+
+Agents don't maintain conversation state between envelopes. Each envelope is a fresh context. This is intentional — stateless agents are predictable, testable, and horizontally scalable.
+
+### Compound Workflows via Delegation
+
+Complex multi-agent workflows are NOT monolithic agents with hardcoded logic. They're emergent behavior from delegation:
+
+```
+Security alert arrives
+  → SecurityTriage agent assesses severity
+  → If critical: delegates to ITHelp to create incident ticket
+  → ITHelp returns ticket ID
+  → SecurityTriage includes ticket reference in final report
+```
+
+Delegation happens through the agent's system prompt and the `delegate` tool. The agent decides when to delegate based on the situation — the platform handles routing the delegated envelope to the right agent, tracking the hop chain, and enforcing max-hops (default 3) to prevent loops.
+
+The delegation protocol:
+```json
+{
+  "tool": "delegate",
+  "args": {
+    "to_agent": "it-help",
+    "envelope": { "payload": { "text": "Create P1 incident..." } },
+    "mode": "sync"
   }
 }
 ```
 
-### 2. `GET /health` — Health Check
+### Agent Types (Simplified)
 
-Returns `200 OK` with `{ "status": "healthy|degraded|unhealthy" }`. Platform polls this every 60 seconds.
+| Type | Runtime | Use Case |
+|------|---------|----------|
+| **LLM Agent** (default) | AgentLoop + Trellis Gateway | 95% of agents. System prompt + tools + model config. |
+| **HTTP Agent** (escape hatch) | External HTTP endpoint | Vendor black-boxes, legacy agents, agents that must run externally. POSTs envelope, gets result. |
 
-### 3. `POST /cost-report` — Cost Reporting (external agents only)
+The `function` and `native` types from v0.3 are **deprecated.** Existing native agents are migrated to LLM agents by extracting their system prompts and tool bindings. The SecurityTriageAgent's Python class becomes a system prompt + `[check_cisa_kev, lookup_tech_stack, calculate_risk_score]` tool binding.
 
-External agents that cannot use the Trellis LLM Gateway must POST cost data here on each execution. Managed agents skip this — the gateway tracks costs automatically because all inference flows through it.
+### Tool Permission Model
 
-### 4. `GET /manifest` — Agent Metadata
+Tools exist independently of agents. An agent's `tools` array is an allowlist — the agent can only call tools it's been granted.
 
-Returns the agent's registration data: name, tools needed, channels supported, maturity level. Used during initial registration and periodic sync.
+```json
+{
+  "tool_id": "check_cisa_kev",
+  "name": "CISA KEV Lookup",
+  "description": "Check if a CVE is in the CISA Known Exploited Vulnerabilities catalog",
+  "schema": {
+    "parameters": {
+      "cve_id": { "type": "string", "description": "CVE identifier (e.g., CVE-2024-1234)" }
+    },
+    "required": ["cve_id"]
+  },
+  "phi": false,
+  "rate_limit": "100/hour",
+  "requires_review": false
+}
+```
 
-That's it. Four endpoints. If you can serve HTTP, you can be an agent on this platform.
+Tool governance rules:
+- Tools marked `phi: true` require CISO review before any agent can use them
+- Tools with `requires_review: true` need department admin approval per agent
+- Rate limits are per-agent, enforced by the tool registry
+- Tool usage is fully audited (who called what, when, with what input)
+
+### Maturity Ladder (Enforced)
+
+The maturity field isn't just metadata — the platform enforces behavior:
+
+| Level | Behavior | Promotion Criteria |
+|-------|----------|-------------------|
+| **shadow** | Agent executes but result is held. Human reviews and approves before delivery. | 50+ envelopes processed, <5% override rate, department admin approval |
+| **assisted** | Agent delivers results but flags uncertainty (confidence < threshold) for human review. | 200+ envelopes, <2% error rate, 30 days in assisted, department admin approval |
+| **autonomous** | Agent operates independently. Alerts on anomalies only. | Platform admin approval required. Quarterly review. |
+
+Promotion is proposed by the platform (based on metrics) and approved by humans. Demotion is automatic on anomaly detection (error spike, cost spike, PHI incident).
+
+### Onboarding Flow
+
+**"I want an agent for X"** — the happy path:
+
+1. **Department admin** opens the Trellis dashboard → Agents → New Agent
+2. **Fills out the manifest:** name, purpose (becomes system prompt seed), department, what it handles (intake declaration)
+3. **Platform suggests tools** based on the intake declaration and department. Admin selects from available tools.
+4. **Model selection:** platform recommends based on task complexity. Most agents start on a mid-tier model.
+5. **PHI assessment:** if any selected tool is `phi: true`, routes to CISO review queue.
+6. **Review gate:** platform admin reviews tool permissions and system prompt.
+7. **Agent starts in shadow mode.** First 50 envelopes are human-reviewed.
+8. **Dashboard shows:** shadow queue, accuracy metrics, cost tracking from day one.
+
+No code written. No containers deployed. No CI/CD pipeline. The agent exists the moment it's registered.
+
+### Agent Workspace & State
+
+Agents are stateless between envelopes by design. However, agents have access to:
+
+| Resource | Scope | Persistence | Purpose |
+|----------|-------|-------------|---------|
+| **Scratch memory** | Per-envelope | Ephemeral | Working memory during AgentLoop execution (key-value dict) |
+| **Agent config** | Per-agent | Persistent | System prompt, model config, tool bindings (DB row) |
+| **Audit trail** | Per-agent | Persistent (6yr) | Every envelope processed, every tool called, every LLM inference |
+| **Performance metrics** | Per-agent | Persistent | Success rate, avg latency, cost-per-resolution, error rate |
+| **Feedback history** | Per-agent per-category | Persistent | Historical success rate for routing weight adjustment |
+
+There is no persistent agent memory, no conversation history, no file storage per agent. If an agent needs to "remember" something across envelopes, that's a tool — a database lookup, a knowledge base query, a shared state service. The agent doesn't own that state; it accesses it through governed, audited tool calls.
+
+This is a deliberate constraint. Stateless agents are:
+- **Predictable** — same envelope always produces same behavior (given same tools and model)
+- **Testable** — send an envelope, check the result. No setup, no teardown.
+- **Replaceable** — swap the system prompt, the model, even the agent ID. Nothing breaks.
+- **Auditable** — every input and output is captured. No hidden state to inspect.
+
+### Migration from v0.3
+
+The 9 existing native agents become 9 LLM agent registrations:
+
+| v0.3 Native Agent | v1.0 LLM Agent | Key Change |
+|--------------------|----------------|------------|
+| SecurityTriageAgent (Python class) | system prompt + `[check_cisa_kev, lookup_tech_stack, calculate_risk_score]` | Extract CVE regex into a tool; risk assessment becomes prompt engineering |
+| ITHelpAgent | system prompt + `[classify_ticket, lookup_known_resolution, lookup_tech_stack]` | Already mostly prompt-driven |
+| SAMHRAgent | system prompt + `[peoplesoft_lookup, ukg_schedule, benefits_lookup]` | Drop Pi SDK dependency |
+| RevCycleAgent | system prompt + `[epic_claims, payer_portal, appeal_generator, coding_lookup]` | Pure prompt migration |
+| HealthAuditor | system prompt + `[check_agent_health, check_db, check_system_resources]` | Platform tools exposed to LLM |
+| AuditCompactor | system prompt + `[compact_audit_events, archive_to_storage]` | Structured task → prompt |
+| RuleOptimizer | system prompt + `[analyze_rule_usage, detect_dead_rules, suggest_rules]` | SQL analysis → tool |
+| SchemaDriftDetector | system prompt + `[compare_schema, get_schema_baseline]` | Schema diff → tool |
+| CostOptimizer | system prompt + `[analyze_agent_costs, get_model_usage, suggest_downgrades]` | Cost analysis → tool |
+
+The Python class files in `trellis/agents/` become reference documentation, then get deleted. The `_NATIVE_AGENTS` registry and `dispatch_native_agent()` function are deprecated.
+
+### Legacy HTTP Agent Support
+
+The HTTP agent type remains as an escape hatch for:
+- Vendor black-box agents that can't run inside Trellis
+- Agents in other languages/runtimes
+- Agents requiring special infrastructure (GPU, specific OS, etc.)
+
+HTTP agents implement a simplified contract:
+- `POST /envelope` — receives envelope, returns result
+- `GET /health` — returns health status
+
+The original `/cost-report` and `/manifest` endpoints are dropped. Cost tracking happens through the gateway (if the agent uses it) or is inferred from response metadata. Manifests are replaced by the dashboard registration form.
 
 ---
 
@@ -682,11 +861,11 @@ The platform team doesn't need to understand what every agent does. They need to
 
 ### Support Model — "I Want an Agent"
 
-1. **Intake** — Department fills out a one-page form: problem statement, data sources needed, tools required, expected volume.
-2. **Feasibility** — Platform team assesses: adapters exist? Tools exist? PHI? New integrations? One-hour conversation, not a six-week project.
-3. **Build** — Department builds (if they have developers) or requests platform team help. Agent must conform to the contract (four endpoints).
-4. **Registration & Review** — Platform team reviews tool permissions. CISO reviews if PHI involved. This is the gate.
-5. **Shadow → Assisted → Autonomous** — Standard maturity progression. Platform monitors cost and error rates. Department monitors output quality.
+1. **Intake** — Department admin opens the dashboard, describes what the agent should do, what inputs it handles, what tools it needs.
+2. **Feasibility** — Platform suggests matching tools and model tier. If new tools or integrations are needed, flags for platform team review.
+3. **Configure** — System prompt authored (with templates for common patterns), tools selected from the registry, intake declaration defined. No code, no build step.
+4. **Review Gate** — Platform admin reviews tool permissions and prompt. CISO reviews if PHI-touching tools are requested. This is the gate.
+5. **Shadow → Assisted → Autonomous** — Standard maturity progression, enforced by the platform. Metrics-driven promotion, human-approved.
 
 ### Growth Path
 
@@ -759,7 +938,7 @@ Event router, agent registry, HTTP adapter, SQLite database, envelope handling.
 OpenAI-compatible proxy, multi-provider support (NVIDIA NIM, Anthropic, OpenAI, Ollama), token counting, cost logging, budget caps per agent.
 
 ### Phase 3: Agent Onboarding ✅
-Four agent types (http, function, llm, native), auto-key provisioning, health checks, manifest sync.
+~~Four agent types (http, function, llm, native)~~ → v1.0: two types (llm + http escape hatch). Auto-key provisioning, health checks. Native/function types deprecated.
 
 ### Phase 4: Rules Engine + Audit ✅
 JSON condition matching, fan-out routing, rule testing/toggle, immutable audit trail with trace chains.
@@ -802,8 +981,8 @@ Platform-level enrichment middleware. Every inbound envelope gets auto-classifie
 ### Phase 11: Agent Identity & Access
 Agent digital identities with scoped permissions, credential vault (managed secrets, auto-rotation), role-based access policies, delegation chains. Required for agents that interact with downstream systems (Epic, PeopleSoft, Ivanti).
 
-### Phase 12: Framework Adapters
-Dispatch adapters for external agent runtimes — Pi SDK (RPC), Qwen-Agent, OpenClaw sessions, LangChain (HTTP). Trellis is framework-agnostic; each adapter is a thin translation layer between envelopes and the agent's native interface.
+### Phase 12: ~~Framework Adapters~~ → Deprecated
+~~Dispatch adapters for external agent runtimes.~~ Replaced by v1.0 Agent Model — all agents are LLM agents configured via the AgentLoop. External agents use the HTTP escape hatch. No framework-specific adapters needed.
 
 ### Phase 13: Production Hardening
 PostgreSQL (replace ephemeral SQLite), Azure AD integration, RBAC, persistent storage, CI/CD pipeline, load testing.
@@ -857,140 +1036,86 @@ Trellis integrates with Microsoft Teams via the **Bot Framework Adapter** (speci
 3. **Turn Context:** The adapter maintains a `TurnContext` for each interaction, ensuring that agent responses are correctly routed back to the specific conversation/tenant.
 4. **FastAPI Integration:** The production adapter is implemented as a FastAPI endpoint (`/api/messages`), allowing it to coexist with the Trellis Platform Core on the same compute resource.
 
-- **SAM agent** — working HR operations agent built on Pi SDK. Handles PTO policy questions, employee lookups, onboarding checklists via mock tools. Runs locally against Ollama (llama3.1:8b).
+- **SAM agent** — HR operations agent, now an LLM agent (v1.0). System prompt + tool bindings for PeopleSoft lookup, UKG schedule query, benefits lookup. Originally built on Pi SDK; migrated to config-driven AgentLoop.
 - **Mock HR tools** — PeopleSoft lookup, UKG schedule query, benefits lookup. Currently hardcoded responses, designed to be swapped for real integrations.
-- **Pi SDK foundation** — conversation management, tool orchestration, context handling. Solid framework for a single agent.
 
-### How It Evolves
+### How It Evolved
 
-SAM doesn't get thrown away. It becomes the first tenant on the platform:
+SAM was the first agent on the platform and proved the architecture:
 
-1. **Wrap SAM** with the agent contract — add `/envelope`, `/health`, `/cost-report`, `/manifest` endpoints around the existing Pi SDK logic.
-2. **Register SAM** in the platform's agent registry. Assign it the `peoplesoft-lookup`, `ukg-schedule`, and `email-send` tools.
-3. **Route to SAM** via rules: `source_type=teams AND department=HR → sam-hr`.
-4. **Move inference** through the LLM gateway. SAM's Pi SDK calls go through the gateway instead of directly to Ollama/Azure OpenAI. Instant FinOps visibility.
-5. **Promote SAM** through maturity levels: shadow → assisted → autonomous as confidence grows.
+1. **Started as Pi SDK agent** — custom Python code, framework-specific conversation management.
+2. **Registered in platform** — assigned tools, routing rules, API key for gateway access.
+3. **Migrated to LLM agent (v1.0)** — Pi SDK code replaced by a system prompt + tool bindings. Same behavior, zero custom code. The AgentLoop handles reasoning and tool calling.
+4. **All inference through LLM Gateway** — automatic cost tracking, model routing, budget enforcement.
+5. **Maturity progression** — shadow → assisted. Autonomous pending department admin approval.
 
-The existing codebase becomes a reference implementation — proof that the agent contract works, that the adapter pattern is clean, that the platform adds governance without adding friction. Every subsequent agent follows SAM's path.
-
----
+Every subsequent agent follows this pattern: define the prompt, bind the tools, register, start in shadow mode.
 
 ---
 
-## Pluggable Agent Runtimes
+---
 
-**Date:** 2026-02-23
-**Directive:** "Pi should be the default agent and one could be provisioned through Trellis. Keep agnostic option for other things. Make it simple to replace when the next Pi comes along."
+## Agent Runtime (v1.0)
+
+**Date:** 2026-02-23 (original), 2026-03-27 (v1.0 update)
+**Status:** Simplified. The AgentLoop is the single runtime for all managed agents.
 
 ### Design Principle
 
-Trellis is the **control plane**. It doesn't run agent logic — it delegates to **runtimes**. A runtime is anything that can start an agent, send it work, check its health, and stop it. Four methods. That's the whole interface.
+The original architecture defined a `AgentRuntime` ABC with pluggable runtimes (Pi, HTTP, LangChain, etc.). In practice, we built one runtime — the AgentLoop — and it handles everything. The abstraction layer added complexity without value.
 
-Pi is the default runtime today. Tomorrow it could be something else. The swap should take an afternoon, not a sprint.
+v1.0 simplifies to two dispatch paths:
 
-### Runtime Interface
+```
+Envelope arrives → Dispatcher checks agent_type
+  ├── "llm" (default) → AgentLoop(system_prompt, tools, model) → Result
+  └── "http"           → POST envelope to external endpoint → Result
+```
+
+### AgentLoop — The Universal Runtime
+
+The AgentLoop (`trellis/agent_loop.py`) is a ReAct-style execution engine:
 
 ```python
-class AgentRuntime(ABC):
-    runtime_type: str                                           # "pi", "http", "function", etc.
-    async def start(config: AgentConfig) -> AgentInstance       # Provision agent
-    async def stop(instance_id: str) -> None                    # Tear down
-    async def send(instance_id: str, payload: dict) -> Response # Send work
-    async def health(instance_id: str) -> HealthStatus          # Health check
+loop = AgentLoop(
+    system_prompt="You are a security analyst...",
+    tools=[CISA_KEV_SCHEMA, TECH_STACK_SCHEMA],
+    tool_executors={"check_cisa_kev": check_cisa_kev, ...},
+    llm_call=gateway_llm_call,   # routes through Trellis LLM Gateway
+    max_steps=5,
+)
+result = await loop.run("Analyze CVE-2024-1234 impact on our systems")
 ```
 
-**AgentConfig** carries everything needed to spin up an agent: system prompt, model, tools, temperature, max_tokens, plus an `extras` dict for runtime-specific options (sandbox config, budget caps, Pi SDK options, etc.).
+The AgentLoop handles:
+- Multi-step reasoning (observe → think → act → repeat)
+- Tool calling with permission enforcement
+- Token tracking and cost attribution
+- Max-step circuit breaker
+- Structured result extraction
 
-### Shipped Runtimes
+No agent-specific code needed. The loop is parameterized entirely by the agent's database config.
 
-| Runtime | Type | Description |
-|---------|------|-------------|
-| **PiRuntime** | `pi` | Default. Uses Pi SDK's Agent class. Phase 1: LLM gateway dispatch. Phase 2: full Pi agent loop with tools + streaming. |
-| **HttpRuntime** | `http` | Backward compat. POSTs envelopes to external HTTP endpoints. For vendor agents, legacy agents, anything with a URL. |
+### HTTP Dispatch — The Escape Hatch
 
-### How It Works
-
-```
-Agent Registration (with runtime_type="pi")
-    ↓
-Event Router matches envelope to agent
-    ↓
-Dispatcher looks up agent's runtime_type
-    ↓
-RuntimeRegistry.get("pi") → PiRuntime
-    ↓
-PiRuntime.start(config) → instance
-PiRuntime.send(instance_id, envelope) → response
-PiRuntime.stop(instance_id)
-    ↓
-Response back through event router → audit
-```
-
-### Agent Registration
-
-When registering an agent, `runtime_type` defaults to `"pi"`:
-
-```json
-{
-  "agent_id": "sam-hr",
-  "name": "SAM - HR Operations",
-  "runtime_type": "pi",
-  "llm_config": {
-    "system_prompt": "You are SAM, an HR operations assistant...",
-    "model": "qwen3:8b"
-  }
-}
-```
-
-For legacy HTTP agents:
-```json
-{
-  "agent_id": "vendor-x",
-  "runtime_type": "http",
-  "endpoint": "https://vendor-x.example.com/envelope",
-  "health_endpoint": "https://vendor-x.example.com/health"
-}
-```
-
-### Writing a New Runtime
-
-1. Create `trellis/runtimes/your_runtime.py`
-2. Implement the 4 methods of `AgentRuntime`
-3. Register it: `register_runtime(YourRuntime())`
-4. Agents can now use `runtime_type="your_runtime"`
-
-Example — a hypothetical LangChain runtime:
+For external agents that can't run inside Trellis:
 
 ```python
-class LangChainRuntime(AgentRuntime):
-    runtime_type = "langchain"
-
-    async def start(self, config):
-        chain = build_chain(config.system_prompt, config.tools)
-        # ... store instance
-        return AgentInstance(...)
-
-    async def send(self, instance_id, payload):
-        result = await self._chains[instance_id].ainvoke(payload)
-        return RuntimeResponse(status="success", data=result)
-
-    # ... stop, health
+async def dispatch_http(endpoint: str, envelope: Envelope) -> Result:
+    async with httpx.AsyncClient() as client:
+        response = await client.post(endpoint, json=envelope.dict())
+        return parse_result(response.json())
 ```
 
-### File Layout
+### Deprecated
 
-```
-trellis/runtimes/
-├── __init__.py          # Public API
-├── interface.py         # AgentRuntime ABC + dataclasses
-├── registry.py          # RuntimeRegistry singleton
-├── pi_runtime.py        # Default: Pi SDK agents
-└── http_runtime.py      # Backward compat: HTTP agents
-```
-
-### Migration Path
-
-Existing agents (`agent_type=http|function|llm`) continue to work via legacy dispatch. The `runtime_type` field defaults to `"pi"` for new agents. Existing agents can be migrated by setting their `runtime_type` — no breaking changes.
+The following are deprecated and scheduled for removal:
+- `AgentRuntime` ABC and `RuntimeRegistry` — never needed more than one runtime
+- `PiRuntime` — Pi SDK dependency removed; agents are framework-agnostic configs
+- `runtime_type` field on Agent model — defaults to "llm", only "http" is the alternative
+- `function` agent type — replaced by LLM agents with tool bindings
+- `native` agent type — replaced by LLM agents with equivalent system prompts
+- `_NATIVE_AGENTS` registry in `trellis/agents/__init__.py` — agents are DB rows, not Python classes
 
 ---
 

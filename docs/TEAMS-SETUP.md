@@ -2,7 +2,7 @@
 
 Step-by-step guide for connecting Trellis to Microsoft Teams via Azure Bot Service.
 
-**Audience:** Hospital IT teams deploying Trellis at Health First.
+**Audience:** Hospital IT teams deploying Trellis at Acme Health.
 
 ---
 
@@ -96,17 +96,17 @@ For org-wide deployment, create a `manifest.json`:
   "version": "1.0.0",
   "id": "YOUR_APP_ID",
   "developer": {
-    "name": "Health First IT",
-    "websiteUrl": "https://hf.org",
-    "privacyUrl": "https://hf.org/privacy",
-    "termsOfUseUrl": "https://hf.org/terms"
+    "name": "Acme Health IT",
+    "websiteUrl": "https://example.com",
+    "privacyUrl": "https://example.com/privacy",
+    "termsOfUseUrl": "https://example.com/terms"
   },
   "name": {
     "short": "Trellis",
     "full": "Trellis AI Agent Platform"
   },
   "description": {
-    "short": "AI agent orchestration for Health First",
+    "short": "AI agent orchestration for Acme Health",
     "full": "Route requests to the right AI agent — HR, IT, Security, Revenue Cycle."
   },
   "icons": {

@@ -1,5 +1,5 @@
 # Intelligent Routing Architecture — Phase 13 Design
-**Trellis Platform | Health First**
+**Trellis Platform | Acme Health**
 **Author:** Reef (Design Session 2026-03-08)
 **Status:** Design — Pending Eric Review
 **Replaces:** Phase 13 sketch in ARCHITECTURE.md
@@ -67,7 +67,7 @@ The rules engine is a priority-ordered list of JSON conditions. First match wins
 
 At 5 agents: manageable. At 15 agents: a project. At 50 agents: a full-time job, and still wrong half the time.
 
-### 2.2 Concrete Health First Examples
+### 2.2 Concrete Acme Health Examples
 
 **Example A — The Server Breach Problem**
 
@@ -98,7 +98,7 @@ This fragile coupling between classifier output and rule conditions is a latent 
 ### 2.3 What We Actually Need
 
 A system where:
-- An agent can describe itself — "I handle security vulnerabilities from NVD and CISA, focused on systems in the Health First stack"
+- An agent can describe itself — "I handle security vulnerabilities from NVD and CISA, focused on systems in the Acme Health stack"
 - A new envelope is scored against all agents simultaneously — "this envelope is 0.82 likely for Security Triage, 0.34 for IT Help Desk"
 - The best-matching agent gets the envelope, with confidence recorded
 - If two agents are both good matches (server breach scenario), both get it — with explicit roles
@@ -305,7 +305,7 @@ class AgentIntake(BaseModel):
     "systems": ["CrowdStrike", "Sentinel", "Defender", "SailPoint", "Checkpoint",
                 "Arista", "Nutanix"],
     "priority_range": ["high", "critical"],
-    "description": "Handles security vulnerability alerts, threat intelligence, and compliance incidents affecting Health First infrastructure. Cross-references against HF tech stack. Generates structured risk advisories.",
+    "description": "Handles security vulnerability alerts, threat intelligence, and compliance incidents affecting Acme Health infrastructure. Cross-references against HF tech stack. Generates structured risk advisories.",
     "max_concurrent": 5,
     "sla_seconds": 600,
     "phi_allowed": false,
@@ -1268,7 +1268,7 @@ def downgrade() -> None:
   "trigger_conditions": {"payload.data._classification.phi_detected": true},
   "action": {"veto_if": {"phi_allowed": false}},
   "audit_reason": "HIPAA Privacy Rule — 45 CFR 164.502",
-  "created_by": "eric.obrien@hf.org"
+  "created_by": "admin@example.com"
 }
 ```
 
@@ -1341,7 +1341,7 @@ Mode is stored in the database (not env var alone) so it survives process restar
 ```json
 {
   "outcome": "human_correct",    // or "human_incorrect"
-  "reviewer_id": "kim.alkire@hf.org",
+  "reviewer_id": "ciso@example.com",
   "notes": "Correctly routed to security triage"
 }
 ```
@@ -1896,7 +1896,7 @@ At 10,000/minute, review: batch score logging, connection pooling, and potential
 These require Eric's input before implementation can be finalized.
 
 **Q1: After-Hours Routing — Do We Have On-Call Agents?**
-The Policy Layer design includes time-based routing (`business_hours_only` + `fallback_agent_id`). This only works if there IS an after-hours fallback agent for IT and clinical routing. Does Health First have a designated on-call agent (or human-escalation path) we should route to after hours? Or should after-hours critical events just go to the same agent with a priority flag?
+The Policy Layer design includes time-based routing (`business_hours_only` + `fallback_agent_id`). This only works if there IS an after-hours fallback agent for IT and clinical routing. Does Acme Health have a designated on-call agent (or human-escalation path) we should route to after hours? Or should after-hours critical events just go to the same agent with a priority flag?
 
 **Q2: PHI in Envelope Payloads — Current Exposure Level?**
 The Classification Engine has a PHI Shield (mode: audit_only by default). For the PHI isolation policy to work, we need `phi_detected: true` to be reliable. Is the PHI Shield currently in audit_only mode or active detection? Should we activate it before Phase 13 ships? This affects whether the PHI isolation policy is structural protection or theater.
@@ -1905,13 +1905,13 @@ The Classification Engine has a PHI Shield (mode: audit_only by default). For th
 For `maturity=assisted` agents, the feedback loop includes human reviewer confirmation. Who in the org reviews these? Is this a platform team function, department function, or will we build a reviewer assignment system? The feedback submission API (`POST /api/routing/feedback/{envelope_id}`) assumes we know who the reviewer is. If there's no review process defined, assisted-maturity feedback just won't come in, and we'll only have automated signals.
 
 **Q4: Facilities Scoping — Which Departments/Facilities Need It?**
-The intake schema includes `department_scope` and `facility_scope` lists. If empty, the agent is enterprise-wide. Are there current or planned agents that should only serve specific hospitals (e.g., a Rockledge FSED-specific agent, or a Cape Canaveral-specific clinical agent)? If yes, what are the scope identifiers we should use (facility codes from Epic? IDs from PeopleSoft?).
+The intake schema includes `department_scope` and `facility_scope` lists. If empty, the agent is enterprise-wide. Are there current or planned agents that should only serve specific hospitals (e.g., a satellite FSED-specific agent, or a campus-specific clinical agent)? If yes, what are the scope identifiers we should use (facility codes from Epic? IDs from PeopleSoft?).
 
 **Q5: Regulatory Override Policy — Which Source Types Are Mandatory to Compliance?**
-The design includes a policy that routes certain events to the Compliance agent regardless of score. Which source types or categories should trigger this? CMS and OIG events are obvious. What about CISA KEV alerts (they could be HIPAA-relevant)? Revenue Cycle denials? This policy should be defined with Kim Alkire (CISO).
+The design includes a policy that routes certain events to the Compliance agent regardless of score. Which source types or categories should trigger this? CMS and OIG events are obvious. What about CISA KEV alerts (they could be HIPAA-relevant)? Revenue Cycle denials? This policy should be defined with the CISO.
 
 **Q6: Scoring Weights — Accept Defaults or Tune First?**
-Default weights are: Category 30%, Source Type 25%, Keyword 20%, System 15%, Priority 10%. These were derived logically but not empirically. Should we run the shadow mode comparison with these weights first and tune based on disagreement analysis? Or does Eric have a gut feel for whether, say, Source Type should be weighted higher than Keyword in Health First's specific context?
+Default weights are: Category 30%, Source Type 25%, Keyword 20%, System 15%, Priority 10%. These were derived logically but not empirically. Should we run the shadow mode comparison with these weights first and tune based on disagreement analysis? Or does Eric have a gut feel for whether, say, Source Type should be weighted higher than Keyword in Acme Health's specific context?
 
 **Q7: Target: Zero Rules or Coexistence?**
 The current design targets eventual elimination of pure routing rules (replacing them with intake declarations + policies). Is that the right goal? Or should we keep rules as a power-user escape hatch for unusual routing needs that don't fit the intake model? My recommendation is keep rules available but deprecated — a rules engine that nobody uses is harmless, but removing it eliminates an escape hatch we might regret losing. But Eric should decide.

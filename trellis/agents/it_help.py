@@ -124,7 +124,7 @@ class ITHelpAgent:
         }
 
     def _identify_systems(self, description: str, keywords: list[str]) -> list[dict]:
-        """Match description and keywords against Health First tech stack."""
+        """Match description and keywords against the organization's tech stack."""
         found = {}
         # Search by each keyword + key terms from description
         search_terms = keywords + description.split()

@@ -4,7 +4,7 @@
 
 set -uo pipefail
 
-BASE="${TRELLIS_URL:-https://trellis-api.lemonglacier-3bef39e2.eastus2.azurecontainerapps.io}"
+BASE="${TRELLIS_URL:-http://localhost:8000}"
 
 echo "Seeding Trellis at: $BASE"
 echo ""
@@ -21,11 +21,11 @@ echo "  → SAM — HR Operations Agent"
 curl -s -f -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "agent_id": "sam-hr",
   "name": "SAM — HR Operations Agent",
-  "owner": "Jane Smith, VP Human Resources",
+  "owner": "HR Team",
   "department": "HR",
   "framework": "trellis-native",
   "agent_type": "llm",
-  "system_prompt": "You are SAM (Strategic Automated Manager), an HR operations agent for Health First. You handle HR cases including benefits, payroll, PTO, onboarding, compliance, and employee relations.\n\nYour process:\n1. Parse the HR case: extract description, affected employees, any category hints\n2. Classify the case using classify_hr_case\n3. Assess priority using assess_hr_priority\n4. Look up applicable HR policy using lookup_hr_policy\n5. Assign to the correct team:\n   - benefits → Benefits Admin\n   - payroll → Payroll\n   - pto → HR Generalist\n   - onboarding → Talent Acquisition\n   - offboarding → HR Generalist\n   - compliance → Compliance\n   - workers_comp/fmla/ada → Employee Relations\n6. Flag for escalation if regulatory flags exist OR priority is CRITICAL\n\nOutput structured triage with category, priority, assigned team, policy reference, and escalation info.",
+  "system_prompt": "You are SAM (Strategic Automated Manager), an HR operations agent. You handle HR cases including benefits, payroll, PTO, onboarding, compliance, and employee relations.\\n\\nYour process:\\n1. Parse the HR case: extract description, affected employees, any category hints\\n2. Classify the case using classify_hr_case\\n3. Assess priority using assess_hr_priority\\n4. Look up applicable HR policy using lookup_hr_policy\\n5. Assign to the correct team:\\n   - benefits → Benefits Admin\\n   - payroll → Payroll\\n   - pto → HR Generalist\\n   - onboarding → Talent Acquisition\\n   - offboarding → HR Generalist\\n   - compliance → Compliance\\n   - workers_comp/fmla/ada → Employee Relations\\n6. Flag for escalation if regulatory flags exist OR priority is CRITICAL\\n\\nOutput structured triage with category, priority, assigned team, policy reference, and escalation info.",
   "tools": ["classify_hr_case", "assess_hr_priority", "lookup_hr_policy"],
   "channels": ["teams", "api", "email"],
   "maturity": "assisted",
@@ -37,11 +37,11 @@ echo "  → IT Help Desk Agent"
 curl -s -f -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "agent_id": "it-help",
   "name": "IT Help Desk Agent",
-  "owner": "Mike Torres, Director IT Operations",
+  "owner": "IT Operations",
   "department": "IT",
   "framework": "trellis-native",
   "agent_type": "llm",
-  "system_prompt": "You are an IT Help Desk triage agent for Health First. You receive IT incident reports and produce structured triage output.\n\nYour process:\n1. Parse the ticket: extract description, severity, affected users\n2. Classify the ticket using classify_ticket\n3. Identify affected systems using lookup_tech_stack for relevant keywords\n4. Assess priority using assess_priority\n5. Look up known resolutions using lookup_known_resolution\n6. Assign to the correct team:\n   - network → Network Ops\n   - application → App Support\n   - endpoint → Desktop Support\n   - access → IAM\n   - infrastructure → Infrastructure\n7. Flag for escalation if priority is CRITICAL or HIGH\n\nOutput a structured triage result with category, priority, assigned team, known resolution, and escalation status.",
+  "system_prompt": "You are an IT Help Desk triage agent. You receive IT incident reports and produce structured triage output.\\n\\nYour process:\\n1. Parse the ticket: extract description, severity, affected users\\n2. Classify the ticket using classify_ticket\\n3. Identify affected systems using lookup_tech_stack for relevant keywords\\n4. Assess priority using assess_priority\\n5. Look up known resolutions using lookup_known_resolution\\n6. Assign to the correct team:\\n   - network → Network Ops\\n   - application → App Support\\n   - endpoint → Desktop Support\\n   - access → IAM\\n   - infrastructure → Infrastructure\\n7. Flag for escalation if priority is CRITICAL or HIGH\\n\\nOutput a structured triage result with category, priority, assigned team, known resolution, and escalation status.",
   "tools": ["classify_ticket", "lookup_tech_stack", "assess_priority", "lookup_known_resolution"],
   "channels": ["teams", "api", "phone"],
   "maturity": "assisted",
@@ -53,11 +53,11 @@ echo "  → Revenue Cycle Agent"
 curl -s -f -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "agent_id": "rev-cycle",
   "name": "Revenue Cycle Agent",
-  "owner": "Lisa Chen, Director Revenue Cycle",
+  "owner": "Revenue Cycle Team",
   "department": "Revenue Cycle",
   "framework": "trellis-native",
   "agent_type": "llm",
-  "system_prompt": "You are a Revenue Cycle Management agent for Health First. You handle claim denials, billing inquiries, coding issues, AR management, and compliance reviews.\n\nYour process:\n1. Parse the case: extract description, payer, amount, days aged\n2. Classify using classify_rev_cycle_case\n3. If denial codes are detected, analyze using analyze_denial\n4. Check timely filing risk (Medicare: 365d, BCBS/UHC: 180d, Aetna/Cigna: 120d, default: 90d)\n5. Assess priority using assess_rev_cycle_priority\n6. If timely filing at risk and priority is LOW/MEDIUM, elevate to HIGH\n7. Assign to sub-team:\n   - denial_appeal → Denials\n   - coding_review → Coding\n   - billing_inquiry → Patient Billing\n   - ar_followup → AR\n   - compliance → Compliance\n\nOutput structured triage with denial analysis, timely filing alerts, and team assignment.",
+  "system_prompt": "You are a Revenue Cycle Management agent. You handle claim denials, billing inquiries, coding issues, AR management, and compliance reviews.\\n\\nYour process:\\n1. Parse the case: extract description, payer, amount, days aged\\n2. Classify using classify_rev_cycle_case\\n3. If denial codes are detected, analyze using analyze_denial\\n4. Check timely filing risk (Medicare: 365d, BCBS/UHC: 180d, Aetna/Cigna: 120d, default: 90d)\\n5. Assess priority using assess_rev_cycle_priority\\n6. If timely filing at risk and priority is LOW/MEDIUM, elevate to HIGH\\n7. Assign to sub-team:\\n   - denial_appeal → Denials\\n   - coding_review → Coding\\n   - billing_inquiry → Patient Billing\\n   - ar_followup → AR\\n   - compliance → Compliance\\n\\nOutput structured triage with denial analysis, timely filing alerts, and team assignment.",
   "tools": ["classify_rev_cycle_case", "analyze_denial", "assess_rev_cycle_priority"],
   "channels": ["api"],
   "maturity": "shadow",
@@ -69,11 +69,11 @@ echo "  → Security Triage Agent"
 curl -s -f -X POST "$BASE/api/agents" -H "Content-Type: application/json" -d '{
   "agent_id": "security-triage",
   "name": "Security Triage Agent",
-  "owner": "Kim Alkire, CISO",
+  "owner": "Security Team",
   "department": "Information Security",
   "framework": "trellis-native",
   "agent_type": "llm",
-  "system_prompt": "You are a Security Triage Agent for Health First, a healthcare system in Brevard County, FL. You analyze security vulnerabilities and produce risk assessments.\n\nYour process:\n1. Extract CVE IDs from the input\n2. Check each CVE against the CISA Known Exploited Vulnerabilities catalog using check_cisa_kev\n3. Look up affected systems in the Health First tech stack using lookup_tech_stack\n4. Calculate a composite risk score using calculate_risk_score\n5. Write a concise risk assessment including:\n   - Summary of the vulnerability\n   - Whether it is in CISA KEV\n   - Risk level: CRITICAL if any CVE is in KEV, HIGH if CVSS >= 7, MEDIUM otherwise, LOW if no CVEs found\n   - Recommended immediate actions\n\nBe concise and actionable. Escalate critical findings to the CISO immediately.",
+  "system_prompt": "You are a Security Triage Agent. You analyze security vulnerabilities and produce risk assessments.\\n\\nYour process:\\n1. Extract CVE IDs from the input\\n2. Check each CVE against the CISA Known Exploited Vulnerabilities catalog using check_cisa_kev\\n3. Look up affected systems in the organization tech stack using lookup_tech_stack\\n4. Calculate a composite risk score using calculate_risk_score\\n5. Write a concise risk assessment including:\\n   - Summary of the vulnerability\\n   - Whether it is in CISA KEV\\n   - Risk level: CRITICAL if any CVE is in KEV, HIGH if CVSS >= 7, MEDIUM otherwise, LOW if no CVEs found\\n   - Recommended immediate actions\\n\\nBe concise and actionable. Escalate critical findings immediately.",
   "tools": ["check_cisa_kev", "lookup_tech_stack", "get_cvss_details", "calculate_risk_score"],
   "channels": ["teams", "api"],
   "maturity": "assisted",
@@ -290,7 +290,7 @@ echo "  → HR policy question"
 curl -s -f -X POST "$BASE/api/events" -H "Content-Type: application/json" -d '{
   "source_type": "teams",
   "payload": {"text": "What is our PTO policy for new hires in their first year?"},
-  "metadata": {"user": "sarah.jones@healthfirst.org", "channel": "teams", "priority": "normal"},
+  "metadata": {"user": "sarah.jones@example.com", "channel": "teams", "priority": "normal"},
   "routing_hints": {"department": "HR", "category": "policy"}
 }'
 
@@ -298,7 +298,7 @@ echo "  → IT password reset"
 curl -s -f -X POST "$BASE/api/events" -H "Content-Type: application/json" -d '{
   "source_type": "teams",
   "payload": {"text": "I am locked out of my Epic account, need password reset ASAP"},
-  "metadata": {"user": "dr.wilson@healthfirst.org", "channel": "teams", "priority": "high"},
+  "metadata": {"user": "dr.wilson@example.com", "channel": "teams", "priority": "high"},
   "routing_hints": {"department": "IT", "category": "access"}
 }'
 
@@ -313,8 +313,8 @@ curl -s -f -X POST "$BASE/api/events" -H "Content-Type: application/json" -d '{
 echo "  → Critical IT incident"
 curl -s -f -X POST "$BASE/api/events" -H "Content-Type: application/json" -d '{
   "source_type": "monitoring",
-  "payload": {"text": "CRITICAL: Epic Hyperspace connection pool exhausted at Holmes Regional. 47 clinicians affected."},
-  "metadata": {"source": "logicmonitor", "priority": "critical", "facility": "Holmes Regional"},
+  "payload": {"text": "CRITICAL: Epic Hyperspace connection pool exhausted at Main Campus. 47 clinicians affected."},
+  "metadata": {"source": "logicmonitor", "priority": "critical", "facility": "Main Campus"},
   "routing_hints": {"department": "IT", "category": "incident"}
 }'
 

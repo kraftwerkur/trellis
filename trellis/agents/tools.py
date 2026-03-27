@@ -33,7 +33,7 @@ LOOKUP_TECH_STACK_SCHEMA = {
     "type": "function",
     "function": {
         "name": "lookup_tech_stack",
-        "description": "Check if a product/vendor is in Health First's tech stack. Returns matching systems with match confidence.",
+        "description": "Check if a product/vendor is in your organization's tech stack. Returns matching systems with match confidence.",
         "parameters": {
             "type": "object",
             "properties": {
@@ -66,16 +66,16 @@ CALCULATE_RISK_SCORE_SCHEMA = {
     "type": "function",
     "function": {
         "name": "calculate_risk_score",
-        "description": "Calculate composite risk score for Health First based on CVSS, exploitability, exposure, and system criticality.",
+        "description": "Calculate composite risk score based on CVSS, exploitability, exposure, and system criticality.",
         "parameters": {
             "type": "object",
             "properties": {
                 "cvss": {"type": "number", "description": "CVSS base score (0.0-10.0)"},
                 "exploited": {"type": "boolean", "description": "Whether the vulnerability is known to be actively exploited"},
-                "hf_exposed": {"type": "boolean", "description": "Whether Health First's tech stack is exposed to this vulnerability"},
+                "exposed": {"type": "boolean", "description": "Whether the organization's tech stack is exposed to this vulnerability"},
                 "system_criticality": {"type": "string", "description": "System criticality level (critical, high, medium, low)", "default": None},
             },
-            "required": ["cvss", "exploited", "hf_exposed"]
+            "required": ["cvss", "exploited", "exposed"]
         }
     }
 }
@@ -277,7 +277,7 @@ def _fuzzy_match(a: str, b: str) -> float:
 
 
 def lookup_tech_stack(product: str, vendor: str = "") -> dict:
-    """Check if a product/vendor is in Health First's tech stack.
+    """Check if a product/vendor is in the organization's tech stack.
 
     Returns matching systems with match confidence.
     """
@@ -380,10 +380,10 @@ def get_cvss_details(cve_id: str, cvss_score: float | None = None, severity: str
 def calculate_risk_score(
     cvss: float,
     exploited: bool,
-    hf_exposed: bool,
+    exposed: bool,
     system_criticality: str | None = None,
 ) -> dict:
-    """Calculate composite risk score for Health First.
+    """Calculate composite risk score for the organization.
 
     Formula: base_score × exploitability_multiplier × exposure_multiplier × criticality_multiplier
     """
@@ -393,8 +393,8 @@ def calculate_risk_score(
     # Exploitability: known exploited = 1.5x, unknown = 1.0x
     exploit_mult = 1.5 if exploited else 1.0
 
-    # Exposure: in HF stack = 1.5x, not in stack = 0.3x
-    exposure_mult = 1.5 if hf_exposed else 0.3
+    # Exposure: in org stack = 1.5x, not in stack = 0.3x
+    exposure_mult = 1.5 if exposed else 0.3
 
     # System criticality multiplier
     crit_map = {"critical": 1.5, "high": 1.2, "medium": 1.0, "low": 0.7}
@@ -446,7 +446,7 @@ _CATEGORY_KEYWORDS = {
 }
 
 _KNOWN_RESOLUTIONS = {
-    "password_reset": "Direct to self-service portal at password.hf.org, or IAM team for locked accounts",
+    "password_reset": "Direct to self-service portal at password.acme.internal, or IAM team for locked accounts",
     "vpn_connectivity": "Check Cisco AnyConnect version, clear DNS cache, verify MFA token",
     "printer_issues": "Restart print spooler, check queue, verify network path",
     "epic_access": "Submit access request via ServiceNow, requires manager approval",

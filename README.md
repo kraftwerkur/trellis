@@ -4,7 +4,7 @@
 
 [![Tests](https://img.shields.io/badge/tests-623%20passed-brightgreen)](#tests)
 [![Python](https://img.shields.io/badge/python-3.11%2B-blue)](#quick-start)
-[![License](https://img.shields.io/badge/license-proprietary-lightgrey)](#)
+[![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
 ---
 
@@ -455,3 +455,9 @@ Regulated industries face a fundamental tension: **AI agents need access to sens
 One-command deploy via `deploy/deploy.sh` to Azure Container Apps. Bicep infrastructure-as-code (Container Registry, Key Vault, Log Analytics). Scales to zero when idle (~$5-10/mo at demo scale). Runs entirely within your Azure tenant — PHI never leaves your perimeter.
 
 See **[deploy/README.md](deploy/README.md)** for details.
+
+---
+
+## License
+
+Apache License 2.0 — see [LICENSE](LICENSE) for details.

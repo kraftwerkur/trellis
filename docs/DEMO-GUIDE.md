@@ -41,7 +41,7 @@ curl -s http://localhost:8100/api/agents | python3 -m json.tool
 **2. "Watch a clinical event flow through the system in real time."** *(90 sec)*
 
 ```bash
-# Simulate an Epic ADT^A01 — patient admitted to Holmes Regional ICU
+# Simulate an Epic ADT^A01 — patient admitted to Main Campus ICU
 curl -s -X POST http://localhost:8100/api/adapter/hl7 \
   -H "Content-Type: text/plain" \
   -d 'MSH|^~\&|EPIC|HOLMESREGIONAL|TRELLIS|HF|20260301120000||ADT^A01|MSG10001|P|2.5
@@ -49,7 +49,7 @@ PID|||MRN-78432^^^HF||MARTINEZ^ELENA||19651214|F
 PV1||I|ICU^301^A|||||||||||||||VN-20260301-001' | python3 -m json.tool
 ```
 
-> *"Elena Martinez was just admitted to the ICU at Holmes Regional. That HL7 message from Epic hit Trellis, got converted to a standard envelope, the rules engine matched it to the bed management agent, and the agent responded — before the admitting clerk closed their Epic screen. Full audit trail."*
+> *"Elena Martinez was just admitted to the ICU at Main Campus. That HL7 message from Epic hit Trellis, got converted to a standard envelope, the rules engine matched it to the bed management agent, and the agent responded — before the admitting clerk closed their Epic screen. Full audit trail."*
 
 ```bash
 # Show the audit trail for this event
@@ -146,7 +146,7 @@ curl -s http://localhost:8100/health | python3 -m json.tool
 ### Act 2: The Patient Journey
 *(8 minutes)*
 
-> **The story:** Elena Martinez, 60, arrives at Holmes Regional with hyperglycemia and altered mental status. We'll follow her journey — admission, lab orders, results, and discharge — through Trellis, showing how each clinical event triggers the right agent automatically.
+> **The story:** Elena Martinez, 60, arrives at Main Campus with hyperglycemia and altered mental status. We'll follow her journey — admission, lab orders, results, and discharge — through Trellis, showing how each clinical event triggers the right agent automatically.
 
 #### Step 1: Register Healthcare Agents
 
@@ -250,7 +250,7 @@ curl -s -X POST http://localhost:8100/api/rules \
 
 [SCREENSHOT: Dashboard Rules page — showing the three rules with conditions displayed as human-readable text]
 
-#### Step 3: Admit — Elena Arrives at Holmes Regional
+#### Step 3: Admit — Elena Arrives at Main Campus
 
 ```bash
 # Epic fires an ADT^A01 — patient admission
@@ -272,7 +272,7 @@ PV1||I|ICU^301^A|||||||||||||||VN-20260301-001' | python3 -m json.tool
 }
 ```
 
-> 💡 **Health First value:** *"Before the admitting clerk closes their Epic screen, Trellis has already notified the bed manager agent. It checks ICU capacity, flags any isolation requirements, and alerts the charge nurse — automatically. No manual page, no phone call, no delay."*
+> 💡 **Acme Health value:** *"Before the admitting clerk closes their Epic screen, Trellis has already notified the bed manager agent. It checks ICU capacity, flags any isolation requirements, and alerts the charge nurse — automatically. No manual page, no phone call, no delay."*
 
 #### Step 4: Lab Order — BMP Ordered
 
@@ -300,7 +300,7 @@ curl -s -X POST http://localhost:8100/api/adapter/fhir \
 }
 ```
 
-> 💡 **Health First value:** *"The same patient, different protocol (FHIR instead of HL7), different agent — but the same platform, the same audit trail, the same trace ID linking everything together. Epic fires HL7v2 for ADT, FHIR R4 for results. Trellis handles both."*
+> 💡 **Acme Health value:** *"The same patient, different protocol (FHIR instead of HL7), different agent — but the same platform, the same audit trail, the same trace ID linking everything together. Epic fires HL7v2 for ADT, FHIR R4 for results. Trellis handles both."*
 
 #### Step 5: Lab Results — Critical Value
 
@@ -316,7 +316,7 @@ OBX|2|NM|CREAT^Creatinine||1.1|mg/dL|0.7-1.3|N
 OBX|3|NM|BUN^Blood Urea Nitrogen||18|mg/dL|7-20|N' | python3 -m json.tool
 ```
 
-> 💡 **Health First value:** *"Glucose 142, flagged high. The lab processor agent can trigger critical value notifications, check if orders have been acknowledged, and escalate if thresholds are breached — all following your clinical protocols, coded as rules in the platform."*
+> 💡 **Acme Health value:** *"Glucose 142, flagged high. The lab processor agent can trigger critical value notifications, check if orders have been acknowledged, and escalate if thresholds are breached — all following your clinical protocols, coded as rules in the platform."*
 
 #### Step 6: Discharge — Elena Goes Home
 
@@ -338,7 +338,7 @@ PV1||I|ICU^301^A|||||||||||||||VN-20260301-001' | python3 -m json.tool
 }
 ```
 
-> 💡 **Health First value:** *"Discharge triggers the coordinator agent — follow-up appointment scheduling, medication reconciliation reminders, patient education materials. The readmission clock starts ticking; the agent ensures nothing falls through the cracks."*
+> 💡 **Acme Health value:** *"Discharge triggers the coordinator agent — follow-up appointment scheduling, medication reconciliation reminders, patient education materials. The readmission clock starts ticking; the agent ensures nothing falls through the cracks."*
 
 #### Step 7: Full Audit Trail
 
@@ -364,7 +364,7 @@ curl -s "http://localhost:8100/api/audit?limit=20" | python3 -m json.tool
 curl -s -X POST http://localhost:8100/api/phi/detect \
   -H "Content-Type: application/json" \
   -d '{
-    "text": "Patient Elena Martinez (MRN-78432, DOB: 12/14/1965, SSN 123-45-6789) was admitted to Holmes Regional ICU 301-A for hyperglycemia. Emergency contact: 321-555-0142. Email: elena.martinez@email.com. Attending: Dr. Patel (NPI 1234567890)."
+    "text": "Patient Elena Martinez (MRN-78432, DOB: 12/14/1965, SSN 123-45-6789) was admitted to Main Campus ICU 301-A for hyperglycemia. Emergency contact: 321-555-0142. Email: elena.martinez@email.com. Attending: Dr. Patel (NPI 1234567890)."
   }' | python3 -m json.tool
 ```
 
@@ -379,7 +379,7 @@ curl -s -X POST http://localhost:8100/api/phi/detect \
     {"type": "EMAIL", "text": "elena.martinez@email.com", "source": "regex", "score": 0.9},
     {"type": "NPI", "text": "NPI 1234567890", "source": "regex", "score": 0.95}
   ],
-  "redacted_text": "Patient Elena Martinez ([MRN_1], [DATE_OF_BIRTH_1], [SSN_1]) was admitted to Holmes Regional ICU 301-A for hyperglycemia. Emergency contact: [PHONE_1]. Email: [EMAIL_1]. Attending: Dr. Patel ([NPI_1])."
+  "redacted_text": "Patient Elena Martinez ([MRN_1], [DATE_OF_BIRTH_1], [SSN_1]) was admitted to Main Campus ICU 301-A for hyperglycemia. Emergency contact: [PHONE_1]. Email: [EMAIL_1]. Attending: Dr. Patel ([NPI_1])."
 }
 ```
 
@@ -391,7 +391,7 @@ curl -s -X POST http://localhost:8100/api/phi/detect \
 
 [SCREENSHOT: Dashboard PHI Shield page — detection categories bar chart, per-agent breakdown, recent events feed]
 
-> 💡 **Health First value:** *"PHI Shield covers all 18 HIPAA Safe Harbor identifiers plus healthcare-specific types (MRN, NPI, ICD-10, CPT codes). It uses regex for structured data and Presidio NLP for unstructured text (names, addresses). Kim Alkire's security team can set the mode per agent from the dashboard — no code changes."*
+> 💡 **Acme Health value:** *"PHI Shield covers all 18 HIPAA Safe Harbor identifiers plus healthcare-specific types (MRN, NPI, ICD-10, CPT codes). It uses regex for structured data and Presidio NLP for unstructured text (names, addresses). the CISO's security team can set the mode per agent from the dashboard — no code changes."*
 
 ---
 
@@ -454,7 +454,7 @@ curl -s -X POST http://localhost:8100/api/finops/classify \
 }
 ```
 
-> 💡 **Health First value:** *"Budget caps per agent. If the revenue cycle bot hits its monthly limit, it gets throttled — not killed. Alert at 80%, hard stop at 100%. Department-level rollups so Michael can see exactly what IT is spending vs. Clinical vs. Revenue Cycle. No Azure bill surprises."*
+> 💡 **Acme Health value:** *"Budget caps per agent. If the revenue cycle bot hits its monthly limit, it gets throttled — not killed. Alert at 80%, hard stop at 100%. Department-level rollups so Michael can see exactly what IT is spending vs. Clinical vs. Revenue Cycle. No Azure bill surprises."*
 
 [SCREENSHOT: Dashboard FinOps page — cost trend chart, per-department breakdown, budget utilization bars]
 
@@ -524,7 +524,7 @@ TRELLIS_URL="https://trellis-api.<region>.azurecontainerapps.io"
 curl -s "$TRELLIS_URL/health" | python3 -m json.tool
 ```
 
-> 💡 **Health First value:** *"Runs in our Azure tenant, behind our VNet, with our managed identities. PHI never leaves our perimeter. Scales to zero when idle — $5/month at demo scale, production-grade when we need it. No vendor lock-in, no third-party BAA complexity."*
+> 💡 **Acme Health value:** *"Runs in our Azure tenant, behind our VNet, with our managed identities. PHI never leaves our perimeter. Scales to zero when idle — $5/month at demo scale, production-grade when we need it. No vendor lock-in, no third-party BAA complexity."*
 
 [SCREENSHOT: Azure Portal — Container Apps showing trellis-api running with green health indicator]
 
@@ -572,7 +572,7 @@ curl -s -X POST http://localhost:8100/api/routing/score \
 curl -s http://localhost:8100/api/routing/overlaps | python3 -m json.tool
 ```
 
-> 💡 **Health First value:** *"When we go from 5 agents to 50, we don't need 200 routing rules. Each new agent declares its intake and starts routing correctly from day one. The feedback loop learns from outcomes — routing accuracy improves automatically."*
+> 💡 **Acme Health value:** *"When we go from 5 agents to 50, we don't need 200 routing rules. Each new agent declares its intake and starts routing correctly from day one. The feedback loop learns from outcomes — routing accuracy improves automatically."*
 
 [SCREENSHOT: Dashboard Routing page — agent scores visualization, overlap warnings]
 
@@ -630,12 +630,12 @@ curl -s http://localhost:8100/api/tools | python3 -m json.tool
 
 ---
 
-## Key Differentiators for Health First
+## Key Differentiators for Acme Health
 
 | Capability | Why It Matters Here |
 |------------|-------------------|
 | **HL7/FHIR Adapters** | Direct integration with Epic — our EMR since June 2025. ADT, ORM, ORU, SIU messages route automatically. |
-| **PHI Shield** | HIPAA compliance enforced by infrastructure, not policy. Kim Alkire's team gets per-agent control. |
+| **PHI Shield** | HIPAA compliance enforced by infrastructure, not policy. the CISO's team gets per-agent control. |
 | **FinOps** | Michael Carr gets a single dashboard for all AI spend across departments. Budget caps prevent runaway costs. |
 | **Rules Engine** | Department admins manage routing without code deployments. Clinical, HR, Revenue Cycle — each manages their own rules. |
 | **Teams Adapter** | Agents are accessible where staff already work — Microsoft Teams. No new app to learn. |
@@ -728,6 +728,6 @@ docker compose down -v
 
 ---
 
-*Demo guide created for Health First leadership presentations.*
+*Demo guide created for Acme Health leadership presentations.*
 *Trellis — Enterprise AI Agent Orchestration Platform*
 *Built by Eric O'Brien, SVP Enterprise Technology and Operations*

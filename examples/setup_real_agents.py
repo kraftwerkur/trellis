@@ -36,8 +36,8 @@ AGENTS = [
         "agent_type": "llm",
         "llm_config": {
             "system_prompt": (
-                "You are a healthcare security analyst at a large hospital system "
-                "(4 hospitals, Brevard County FL). Our tech stack includes: "
+                "You are a healthcare security analyst at a large hospital system. "
+                "Our tech stack includes: "
                 "Ivanti SM (ITSM), CrowdStrike (EDR), Sentinel/Defender (SIEM), "
                 "SailPoint (IAM), Nutanix (infra), Arista (network), Epic (EMR), "
                 "Azure (cloud). When given a security advisory or vulnerability, assess: "

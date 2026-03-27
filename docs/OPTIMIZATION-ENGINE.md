@@ -183,7 +183,7 @@ Content-Type: application/json
   "risk_flags": [],
   "rollback_triggered": false,
   "approval_status": "approved",
-  "approved_by": "eric.obrien@hf.org",
+  "approved_by": "admin@example.com",
   "approved_at": "2026-03-13T05:48:00Z"
 }
 ```
@@ -485,4 +485,4 @@ The PHI Shield runs on any free-text in experiment descriptions before storage.
 
 *— Atlas 🏗️*
 *Architecture designed for Trellis v1 — Healthcare AI Agent Control Plane*
-*Health First deployment context: Azure Container Apps, Epic EMR integration, HIPAA environment*
+*Acme Health deployment context: Azure Container Apps, Epic EMR integration, HIPAA environment*

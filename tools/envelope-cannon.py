@@ -301,7 +301,7 @@ IT_TEMPLATES = [
             "License server unreachable",
         ],
         "workflows": ["medication reconciliation", "patient discharge", "order entry", "scheduling", "time entry"],
-        "units": ["Holmes Regional", "Cape Canaveral Hospital", "Palm Bay Hospital", "Viera Hospital", "all facilities"],
+        "units": ["Main Campus", "North Campus", "East Campus", "West Campus", "all facilities"],
         "counts": ["3", "7", "12", "47", "20+"],
     },
     {
@@ -313,7 +313,7 @@ IT_TEMPLATES = [
             "Intermittent network outages in {floor} disrupting clinical workflows.",
         ],
         "floors": ["ICU ward", "3rd floor east wing", "radiology suite", "ED", "OR"],
-        "locations": ["Building C", "the new Cape Canaveral Hospital annex", "Viera MOB", "Palm Bay ED"],
+        "locations": ["Building C", "the new North Campus annex", "West Campus MOB", "East Campus ED"],
     },
     {
         "category": "account-lockout",
@@ -332,14 +332,14 @@ IT_TEMPLATES = [
 SEVERITIES = ["low", "low", "normal", "normal", "high", "critical"]
 
 USERS = [
-    ("dr.patel@healthfirst.org", "Dr. Patel", "Cardiology"),
-    ("nurse.thompson@healthfirst.org", "R. Thompson RN", "ICU"),
-    ("j.rodriguez@healthfirst.org", "J. Rodriguez", "ED"),
-    ("admin.chen@healthfirst.org", "A. Chen", "Administration"),
-    ("billing.ops@healthfirst.org", "Billing Ops", "Revenue Cycle"),
-    ("pharmacy.tech@healthfirst.org", "Pharmacy Tech", "Pharmacy"),
-    ("rad.tech01@healthfirst.org", "Rad Tech 01", "Radiology"),
-    ("lab.director@healthfirst.org", "Lab Director", "Laboratory"),
+    ("dr.patel@example.com", "Dr. Patel", "Cardiology"),
+    ("nurse.thompson@example.com", "R. Thompson RN", "ICU"),
+    ("j.rodriguez@example.com", "J. Rodriguez", "ED"),
+    ("admin.chen@example.com", "A. Chen", "Administration"),
+    ("billing.ops@example.com", "Billing Ops", "Revenue Cycle"),
+    ("pharmacy.tech@example.com", "Pharmacy Tech", "Pharmacy"),
+    ("rad.tech01@example.com", "Rad Tech 01", "Radiology"),
+    ("lab.director@example.com", "Lab Director", "Laboratory"),
 ]
 
 
@@ -466,12 +466,12 @@ HR_TEMPLATES = [
 ]
 
 HR_USERS = [
-    ("m.johnson@healthfirst.org", "M. Johnson", "Nursing"),
-    ("t.williams@healthfirst.org", "T. Williams", "HR"),
-    ("s.davis@healthfirst.org", "S. Davis", "Finance"),
-    ("k.brown@healthfirst.org", "K. Brown", "Radiology"),
-    ("l.jones@healthfirst.org", "L. Jones", "Laboratory"),
-    ("p.garcia@healthfirst.org", "P. Garcia", "Administration"),
+    ("m.johnson@example.com", "M. Johnson", "Nursing"),
+    ("t.williams@example.com", "T. Williams", "HR"),
+    ("s.davis@example.com", "S. Davis", "Finance"),
+    ("k.brown@example.com", "K. Brown", "Radiology"),
+    ("l.jones@example.com", "L. Jones", "Laboratory"),
+    ("p.garcia@example.com", "P. Garcia", "Administration"),
 ]
 
 

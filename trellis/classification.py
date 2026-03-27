@@ -86,7 +86,7 @@ HIGH_KEYWORDS = ["urgent", "escalat"]  # prefix match (escalate, escalation)
 # ── Tech stack tag extraction ─────────────────────────────────────────────
 
 def _load_tech_stack_names() -> list[str]:
-    """Load system names from Health First tech_stack.json for tag extraction."""
+    """Load system names from tech_stack.json for tag extraction."""
     try:
         data_dir = Path(__file__).parent / "agents" / "data"
         ts_path = data_dir / "tech_stack.json"
@@ -109,7 +109,7 @@ def _load_tech_stack_names() -> list[str]:
 
 _TECH_STACK_NAMES: list[str] = _load_tech_stack_names()
 
-# Known payer names (Health First context)
+# Known payer names (healthcare context)
 _PAYER_NAMES = ["medicare", "medicaid", "bcbs", "aetna", "cigna", "humana", "united", "uhc", "florida blue"]
 
 # Denial codes (revenue cycle)

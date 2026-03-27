@@ -1,6 +1,6 @@
 # Trellis — Enterprise AI Agent Orchestration
 
-**Executive Briefing | Health First**
+**Executive Briefing | Acme Health**
 **Prepared by:** Eric O'Brien, SVP Enterprise Technology
 **Date:** February 2026
 
@@ -176,7 +176,7 @@ Trellis isn't a generic AI platform adapted for healthcare. It was designed for 
 
 **Tomorrow:** Azure Container Apps. Each agent and adapter runs in its own container with managed identity, network isolation, and resource limits. PostgreSQL replaces SQLite. Azure AD provides authentication. Application Insights provides telemetry.
 
-**Key point:** Trellis can run in Health First's existing Azure infrastructure. No new cloud subscriptions, no vendor dependencies, no SaaS contracts. It's software we own and operate.
+**Key point:** Trellis can run in Acme Health's existing Azure infrastructure. No new cloud subscriptions, no vendor dependencies, no SaaS contracts. It's software we own and operate.
 
 ---
 

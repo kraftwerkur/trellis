@@ -224,7 +224,7 @@ class TestChunkText:
 
 class TestBuildDocumentEnvelopes:
     def test_basic_txt_envelope(self):
-        data = b"This is a test policy document for Health First."
+        data = b"This is a test policy document for Acme Health."
         envelopes = build_document_envelopes("policy.txt", data)
         assert len(envelopes) == 1
         env = envelopes[0]

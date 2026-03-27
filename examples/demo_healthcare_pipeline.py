@@ -181,14 +181,14 @@ RULES = [
 # ── Sample HL7v2 Messages ─────────────────────────────────────────────────
 
 HL7_ADT_A01 = (
-    "MSH|^~\\&|EPIC|HOLMESREGIONAL|TRELLIS|HF|20260301120000||ADT^A01|MSG10001|P|2.5\r"
-    "PID|||MRN-78432^^^HF||MARTINEZ^ELENA||19651214|F\r"
+    "MSH|^~\\\\&|EPIC|MAINCAMPUS|TRELLIS|ACME|20260301120000||ADT^A01|MSG10001|P|2.5\r"
+    "PID|||MRN-78432^^^ACME||MARTINEZ^ELENA||19651214|F\r"
     "PV1||I|ICU^301^A|||||||||||||||VN-20260301-001"
 )
 
 HL7_ORU_R01 = (
-    "MSH|^~\\&|BEAKER|HOLMESREGIONAL|EPIC|HF|20260301130000||ORU^R01|MSG10002|P|2.5\r"
-    "PID|||MRN-78432^^^HF||MARTINEZ^ELENA||19651214|F\r"
+    "MSH|^~\\\\&|BEAKER|MAINCAMPUS|EPIC|ACME|20260301130000||ORU^R01|MSG10002|P|2.5\r"
+    "PID|||MRN-78432^^^ACME||MARTINEZ^ELENA||19651214|F\r"
     "OBR|1|ORD-5521||BMP^Basic Metabolic Panel\r"
     "OBX|1|NM|GLU^Glucose||142|mg/dL|70-100|H\r"
     "OBX|2|NM|CREAT^Creatinine||1.1|mg/dL|0.7-1.3|N\r"
@@ -196,15 +196,15 @@ HL7_ORU_R01 = (
 )
 
 HL7_SIU_S12 = (
-    "MSH|^~\\&|CADENCE|VIERAHOSPITAL|TRELLIS|HF|20260301090000||SIU^S12|MSG10003|P|2.5\r"
-    "PID|||MRN-41098^^^HF||THOMPSON^JAMES||19880507|M"
+    "MSH|^~\\\\&|CADENCE|WESTCAMPUS|TRELLIS|ACME|20260301090000||SIU^S12|MSG10003|P|2.5\r"
+    "PID|||MRN-41098^^^ACME||THOMPSON^JAMES||19880507|M"
 )
 
 # ── Sample FHIR Resources ─────────────────────────────────────────────────
 
 FHIR_PATIENT = {
     "resourceType": "Patient",
-    "id": "pat-hf-78432",
+    "id": "pat-acme-78432",
     "identifier": [{"system": "urn:oid:2.16.840.1.113883.3.552", "value": "MRN-78432"}],
     "name": [{"family": "Martinez", "given": ["Elena"]}],
     "gender": "female",
@@ -216,9 +216,9 @@ FHIR_ENCOUNTER = {
     "id": "enc-20260301-001",
     "status": "in-progress",
     "class": {"system": "http://terminology.hl7.org/CodeSystem/v3-ActCode", "code": "IMP"},
-    "subject": {"reference": "Patient/pat-hf-78432", "display": "Elena Martinez"},
+    "subject": {"reference": "Patient/pat-acme-78432", "display": "Elena Martinez"},
     "period": {"start": "2026-03-01T12:00:00-05:00"},
-    "location": [{"location": {"display": "Holmes Regional — ICU 301-A"}}],
+    "location": [{"location": {"display": "Main Campus — ICU 301-A"}}],
     "reasonCode": [{"text": "Hyperglycemia with altered mental status"}],
 }
 
@@ -242,7 +242,7 @@ FHIR_OBSERVATION = {
             {"system": "http://loinc.org", "code": "8867-4", "display": "Heart rate"}
         ]
     },
-    "subject": {"reference": "Patient/pat-hf-78432", "display": "Elena Martinez"},
+    "subject": {"reference": "Patient/pat-acme-78432", "display": "Elena Martinez"},
     "effectiveDateTime": "2026-03-01T12:30:00-05:00",
     "valueQuantity": {"value": 92, "unit": "beats/minute", "system": "http://unitsofmeasure.org", "code": "/min"},
 }
@@ -255,7 +255,7 @@ FHIR_APPOINTMENT = {
     "start": "2026-03-05T10:00:00-05:00",
     "end": "2026-03-05T10:30:00-05:00",
     "participant": [
-        {"actor": {"reference": "Patient/pat-hf-78432", "display": "Elena Martinez"}, "status": "accepted"},
+        {"actor": {"reference": "Patient/pat-acme-78432", "display": "Elena Martinez"}, "status": "accepted"},
         {"actor": {"reference": "Practitioner/doc-patel", "display": "Dr. Anita Patel"}, "status": "accepted"},
     ],
 }
@@ -278,8 +278,8 @@ FHIR_SUBSCRIPTION_NOTIFICATION = {
                 "id": "enc-sub-20260301",
                 "status": "arrived",
                 "class": {"code": "EMER"},
-                "subject": {"reference": "Patient/pat-hf-55210", "display": "Robert Chen"},
-                "location": [{"location": {"display": "Cape Canaveral Hospital — ED Bay 7"}}],
+                "subject": {"reference": "Patient/pat-acme-55210", "display": "Robert Chen"},
+                "location": [{"location": {"display": "North Campus — ED Bay 7"}}],
                 "reasonCode": [{"text": "Chest pain, rule out ACS"}],
             }
         },
@@ -363,11 +363,11 @@ def send_hl7_messages() -> list[dict]:
 
     messages = [
         ("ADT^A01 — Patient Admission", HL7_ADT_A01,
-         "Elena Martinez admitted to Holmes Regional ICU 301-A (hyperglycemia)"),
+         "Elena Martinez admitted to Main Campus ICU 301-A (hyperglycemia)"),
         ("ORU^R01 — Lab Results", HL7_ORU_R01,
          "BMP results for Martinez: Glucose 142 mg/dL (HIGH), Creatinine 1.1, BUN 18"),
         ("SIU^S12 — Appointment Scheduled", HL7_SIU_S12,
-         "James Thompson appointment booked via Cadence at Viera Hospital"),
+         "James Thompson appointment booked via Cadence at West Campus"),
     ]
 
     results = []
@@ -441,7 +441,7 @@ def send_fhir_subscription() -> list[dict]:
     print("  This is how real-time ADT events arrive from Epic's subscription API.\n")
 
     print(f"  {CYAN}━━━ Subscription Notification — ED Arrival ━━━{RESET}")
-    info("Robert Chen arrived at Cape Canaveral Hospital ED Bay 7 (chest pain, r/o ACS)")
+    info("Robert Chen arrived at North Campus ED Bay 7 (chest pain, r/o ACS)")
 
     r = requests.post(f"{BASE}/api/adapter/fhir/subscription", json=FHIR_SUBSCRIPTION_NOTIFICATION, timeout=10)
     results = []

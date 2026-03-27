@@ -9,7 +9,7 @@
 
 ## Executive Summary (BLUF)
 
-Health First needs a platform that manages AI agents the way Kubernetes manages containers: deploy them, route work to them, track their costs, and audit every action — without caring what framework they run on. Today we have one agent (SAM, HR) built on Pi SDK. Tomorrow we'll have dozens across HR, Revenue Cycle, IT, Clinical, and Supply Chain. This architecture defines a three-layer system — adapters that normalize any input into a generic envelope, a platform core that routes and governs, and agents that do the actual work. The platform is Azure-native, HIPAA-ready, and designed so that a Pi SDK agent, an OpenAI Assistants agent, and a vendor black-box can all coexist under the same governance model. We chose a hybrid approach (Shape C) that gives managed agents free FinOps and model routing while letting external agents bring their own inference. The result: one dashboard, one audit trail, one cost model for every AI agent in the enterprise.
+Acme Health needs a platform that manages AI agents the way Kubernetes manages containers: deploy them, route work to them, track their costs, and audit every action — without caring what framework they run on. Today we have one agent (SAM, HR) built on Pi SDK. Tomorrow we'll have dozens across HR, Revenue Cycle, IT, Clinical, and Supply Chain. This architecture defines a three-layer system — adapters that normalize any input into a generic envelope, a platform core that routes and governs, and agents that do the actual work. The platform is Azure-native, HIPAA-ready, and designed so that a Pi SDK agent, an OpenAI Assistants agent, and a vendor black-box can all coexist under the same governance model. We chose a hybrid approach (Shape C) that gives managed agents free FinOps and model routing while letting external agents bring their own inference. The result: one dashboard, one audit trail, one cost model for every AI agent in the enterprise.
 
 ---
 
@@ -212,7 +212,7 @@ Tools exist independently of agents. A tool is a capability: "look up an employe
   "name": "PeopleSoft Employee Lookup",
   "description": "Query HCM for employee records by ID or name",
   "schema": { "input": { "employee_id": "string" }, "output": { "record": "object" } },
-  "endpoint": "https://tools.hf.internal/peoplesoft/lookup",
+  "endpoint": "https://tools.acme.internal/peoplesoft/lookup",
   "phi": true,
   "allowed_agents": ["sam-hr", "hr-onboarding"],
   "rate_limit": "100/hour"
@@ -423,10 +423,10 @@ Registration is a single API call or dashboard form:
 {
   "agent_id": "security-triage",
   "name": "Security Triage Agent",
-  "owner": "Kim Alkire, CISO",
+\"owner\": \"CISO\",
   "department": "Information Security",
 
-  "system_prompt": "You are a Security Triage Agent for Health First...",
+\"You are a Security Triage Agent for Acme Health...
   "model": "meta/llama-3.3-70b-instruct",
   "provider": "nvidia",
   "temperature": 0.1,
@@ -643,7 +643,7 @@ Every adapter follows the same pattern:
 2. Extract sender, content, metadata
 3. Build envelope with appropriate `source_type`
 4. Generate `envelope_id`, inherit or create `trace_id`
-5. POST to `https://platform.hf.internal/router/envelope`
+5. POST to `https://platform.acme.internal/router/envelope`
 
 ### Example: Teams Adapter
 
@@ -749,7 +749,7 @@ app.post('/api/fhir/notify', async (req, res) => {
 
 ### Managed Agents (Through LLM Gateway)
 
-Cost tracking is automatic and tamper-proof. Agents use the Trellis LLM Gateway as their LLM provider (`base_url = trellis-llm.hf.internal/v1`). Every inference call flows through the gateway, which logs:
+Cost tracking is automatic and tamper-proof. Agents use the Trellis LLM Gateway as their LLM provider (`base_url = trellis-llm.acme.internal/v1`). Every inference call flows through the gateway, which logs:
 - Model used (what the agent requested vs. what was actually served)
 - Input/output tokens
 - Cost at current pricing
@@ -991,7 +991,7 @@ PostgreSQL (replace ephemeral SQLite), Azure AD integration, RBAC, persistent st
 
 ## Production Environment
 
-For production deployments (specifically within the Health First Azure tenant), Trellis shifts from a lightweight local stack to a high-availability enterprise architecture. This environment is designed to meet security, scalability, and persistence requirements.
+For production deployments (specifically within the Acme Health Azure tenant), Trellis shifts from a lightweight local stack to a high-availability enterprise architecture. This environment is designed to meet security, scalability, and persistence requirements.
 
 ### Infrastructure Topology
 
@@ -1023,7 +1023,7 @@ graph TD
 
 As per **AGENTS.md (Information Quality section)**, all production configuration must be verified before assertion. The infrastructure is defined as code (Bicep) and validated using the Azure CLI (`az bicep build`) prior to deployment.
 
-For environment-specific context regarding Health First's Azure configuration and naming conventions, refer to **USER.md**.
+For environment-specific context regarding Acme Health's Azure configuration and naming conventions, refer to **USER.md**.
 
 ---
 
@@ -1348,7 +1348,7 @@ The dashboard gets a **Platform Health** tab showing:
 
 **Status:** Implemented (60+ tests passing) — see [`docs/INTELLIGENT-ROUTING-DESIGN.md`](docs/INTELLIGENT-ROUTING-DESIGN.md)
 
-**Problem:** Current routing is rigid pattern matching — static rules with hardcoded conditions. Doesn't scale past 20+ agents. Adding a new agent requires manually creating routing rules. Classification Engine infers hints but feeds them into dumb rules. See §2 of the design doc for concrete Health First examples.
+**Problem:** Current routing is rigid pattern matching — static rules with hardcoded conditions. Doesn't scale past 20+ agents. Adding a new agent requires manually creating routing rules. Classification Engine infers hints but feeds them into dumb rules. See §2 of the design doc for concrete Acme Health examples.
 
 **Vision:** Agents declare what they handle. The Classification Engine's output feeds a multi-dimensional scoring engine that scores every envelope against every agent simultaneously. Best match wins. Rules evolve into a small policy layer — governance constraints, not routing logic. A daily feedback loop improves routing accuracy over time.
 

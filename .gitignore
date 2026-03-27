@@ -38,3 +38,15 @@ static/
 *.db-wal
 *.db-journal
 *.db*
+
+# Internal operational files
+.hermes/
+research/
+
+# Logs and data
+*.log
+*.jsonl
+autoresearch*
+AUTORESEARCH*
+CODE-REVIEW*
+STATUS.md

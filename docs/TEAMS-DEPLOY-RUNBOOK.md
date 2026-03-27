@@ -387,6 +387,6 @@ Before going live beyond demo:
 - [ ] Add typing indicator while processing (send `typing` activity before routing)
 - [ ] Set calendar reminder to rotate the client secret before expiry
 - [ ] Create proper Teams app icons (color.png 192×192, outline.png 32×32)
-- [ ] Review and customize the Teams App Manifest for Health First branding
+- [ ] Review and customize the Teams App Manifest for Acme Health branding
 - [ ] Test with Bot Framework Emulator's "Inspect" mode for detailed activity logging
 - [ ] Load test with concurrent messages to verify async handling

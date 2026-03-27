@@ -24,7 +24,7 @@ Run:
 Prerequisites (live mode):
     cd projects/trellis && uv run uvicorn trellis.main:app --port 8100
 
-Author: Reef (AI Agent) for Eric O'Brien, SVP Enterprise Technology, Health First
+Author: Reef (AI Agent) for Platform Team
 """
 
 import argparse
@@ -158,7 +158,7 @@ AGENTS = [
     {
         "agent_id": "security-ops",
         "name": "Security Operations Agent",
-        "owner": "Kim Alkire",
+        "owner": "Security Team",
         "department": "IT Security",
         "framework": "custom",
         "agent_type": "http",
@@ -224,10 +224,10 @@ RULES = [
 # Real HL7v2 uses pipe-delimited segments.
 
 HL7_ADT_MESSAGE = "\r".join([
-    "MSH|^~\\&|EPIC|HOLMES_REGIONAL|TRELLIS|HF_PLATFORM|20260305120000||ADT^A01|MSG00001|P|2.5.1",
+    "MSH|^~\\\\&|EPIC|MAIN_CAMPUS|TRELLIS|PLATFORM|20260305120000||ADT^A01|MSG00001|P|2.5.1",
     "EVN|A01|20260305120000",
     "PID|1||MRN-1234567^^^EPIC^MR||DOE^JANE^M||19850315|F|||123 MAIN ST^^MELBOURNE^FL^32901||321-555-0100||S||ACCT-98765",
-    "PV1|1|I|ICU^ICU-BED-3^A|E|||1234567890^SMITH^JOHN^DR|||MED||||ADM|||1234567890^SMITH^JOHN^DR|IN||||||||||||||||||HOLMES||A|||20260305120000",
+    "PV1|1|I|ICU^ICU-BED-3^A|E|||1234567890^SMITH^JOHN^DR|||MED||||ADM|||1234567890^SMITH^JOHN^DR|IN||||||||||||||||||MAIN||A|||20260305120000",
     "DG1|1||J18.9^Pneumonia, unspecified^ICD-10|||A",
     "IN1|1|BCBS|BCBS-FL|BLUE CROSS BLUE SHIELD OF FLORIDA",
 ])
@@ -320,7 +320,7 @@ DOCUMENT_ENVELOPE = {
                 "Section 2: Personal Protective Equipment\n"
                 "N95 respirators are required for all aerosol-generating procedures. "
                 "Standard precautions apply to all patient encounters. Contact Dr. Sarah "
-                "Chen at 321-555-0199 or sarah.chen@hf.org for questions.\n\n"
+                "Chen at 321-555-0199 or sarah.chen@example.com for questions.\n\n"
                 "Effective Date: March 15, 2026\n"
                 "Approved by: Infection Prevention Committee\n"
                 "Document ID: IC-POL-2026-003",
@@ -363,8 +363,8 @@ PHI_TEST_SAMPLES = [
         "label": "Patient referral note (SSN + MRN + Phone)",
         "text": (
             "Patient Jane Doe (MRN: 1234567, SSN: 123-45-6789) was admitted to "
-            "Holmes Regional Medical Center on 03/05/2026. Contact her emergency "
-            "contact at (321) 555-0100 or email jane.doe@hf.org for follow-up. "
+            "Main Campus Medical Center on 03/05/2026. Contact her emergency "
+            "contact at (321) 555-0100 or email jane.doe@example.com for follow-up. "
             "Diagnosis: J18.9 Pneumonia. NPI: 1234567890."
         ),
     },
@@ -486,7 +486,7 @@ def run_dry():
     banner("3. HL7 ADT MESSAGE (Patient Admission)", MAGENTA)
     step("Send raw HL7v2 ADT^A01 message to /api/events/adapter/hl7")
     substep("Patient: Jane Doe, MRN-1234567")
-    substep("Admission to ICU at Holmes Regional")
+    substep("Admission to ICU at Main Campus")
     substep("Diagnosis: J18.9 Pneumonia")
     info("Expected: Rules engine matches source_type=hl7 → routes to epic-clinical agent")
     print()
@@ -675,7 +675,7 @@ def send_hl7_event():
     """Send an HL7 ADT^A01 message through the HL7 adapter."""
     banner("3. HL7 ADT MESSAGE — Patient Admission", MAGENTA)
     step("Sending HL7v2 ADT^A01 (patient admission) to the HL7 adapter...")
-    substep("Patient: Jane Doe | MRN: 1234567 | Facility: Holmes Regional")
+    substep("Patient: Jane Doe | MRN: 1234567 | Facility: Main Campus")
     substep("Admission: ICU Bed 3 | Diagnosis: J18.9 Pneumonia")
     print()
 

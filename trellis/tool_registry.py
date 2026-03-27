@@ -285,7 +285,7 @@ def _register_builtin_tools():
 
     # Security / vulnerability tools
     tool_registry.register(T.lookup_tech_stack, name="lookup_tech_stack", category="data",
-        description="Check if a product/vendor is in Health First's tech stack",
+        description="Check if a product/vendor is in the organization's tech stack",
         requires_permissions=["tech_stack.read"])
     tool_registry.register(T.check_cisa_kev, name="check_cisa_kev", category="data",
         description="Check if a CVE is in the CISA Known Exploited Vulnerabilities catalog",
@@ -294,7 +294,7 @@ def _register_builtin_tools():
         description="Get CVSS score breakdown for a CVE",
         requires_permissions=["cvss.read"])
     tool_registry.register(T.calculate_risk_score, name="calculate_risk_score", category="assess",
-        description="Calculate composite risk score for Health First",
+        description="Calculate composite risk score for the organization",
         requires_permissions=["risk.assess"])
 
     # IT help desk tools

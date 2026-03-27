@@ -59,10 +59,10 @@ export function StatCard({
   const statusCfg = status ? STATUS_CONFIG[status] : null;
 
   return (
-    <div className={`card-dark accent-left-${accent} p-4 group`}>
+    <div className={`card-dark accent-left-${accent} p-5 group hover:border-[hsl(var(--primary))]/20 transition-colors`}>
       {/* Header row: label + optional status badge */}
       <div className="flex items-center justify-between mb-1">
-        <div className="text-[10px] uppercase tracking-widest text-zinc-500">
+        <div className="text-[10px] uppercase tracking-widest text-[hsl(var(--muted-foreground))]">
           {label}
         </div>
         {statusCfg && (
@@ -77,7 +77,7 @@ export function StatCard({
 
       {/* Value row */}
       <div className="flex items-end gap-2">
-        <div className="text-2xl font-bold font-data text-zinc-100">
+        <div className="text-2xl font-bold font-data text-[hsl(var(--foreground))]">
           {value}
         </div>
         {trendCfg && (
@@ -93,7 +93,7 @@ export function StatCard({
       </div>
 
       {/* Sub text */}
-      {sub && <div className="text-xs text-zinc-500 mt-1">{sub}</div>}
+      {sub && <div className="text-xs text-[hsl(var(--muted-foreground))] mt-1">{sub}</div>}
     </div>
   );
 }

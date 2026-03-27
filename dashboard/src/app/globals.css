@@ -8,38 +8,39 @@
 
 @theme inline {
   /* Dark mode palette (default) */
-  --color-background: hsl(220 20% 6%);           /* #0d1117 deep navy-black */
-  --color-foreground: hsl(210 20% 90%);           /* #dfe6ed light gray */
-  --color-card: hsl(220 18% 10%);                 /* #151b25 dark card */
-  --color-card-foreground: hsl(210 20% 90%);
-  --color-popover: hsl(220 18% 10%);
-  --color-popover-foreground: hsl(210 20% 90%);
+  --color-background: hsl(222 25% 7%);           /* #0f1218 deep navy-black */
+  --color-foreground: hsl(210 25% 92%);           /* #e4ecf5 light gray */
+  --color-card: hsl(222 20% 11%);                 /* #161b26 dark card */
+  --color-card-foreground: hsl(210 25% 92%);
+  --color-popover: hsl(222 20% 11%);
+  --color-popover-foreground: hsl(210 25% 92%);
   --color-primary: hsl(187 80% 37%);              /* #0891B2 teal — healthcare trust */
   --color-primary-foreground: hsl(0 0% 100%);
-  --color-secondary: hsl(220 14% 16%);            /* #232a35 subtle dark */
+  --color-secondary: hsl(222 14% 20%);            /* #2a3140 subtle dark */
   --color-secondary-foreground: hsl(210 20% 85%);
-  --color-muted: hsl(220 14% 14%);                /* #1e242e */
+  --color-muted: hsl(222 16% 15%);                /* #1e2430 */
   --color-muted-foreground: hsl(215 15% 55%);     /* #7b8a9e */
   --color-accent: hsl(160 64% 35%);               /* #059669 health green */
   --color-accent-foreground: hsl(0 0% 100%);
   --color-destructive: hsl(0 72% 51%);            /* #DC2626 */
   --color-destructive-foreground: hsl(0 0% 100%);
-  --color-border: hsl(220 14% 18%);               /* #272f3b */
-  --color-input: hsl(220 14% 18%);
+  --color-border: hsl(220 14% 20%);               /* #2a3140 */
+  --color-input: hsl(220 14% 20%);
   --color-ring: hsl(187 80% 37%);
 
   /* Chart palette */
-  --color-chart-1: hsl(187 80% 37%);              /* teal */
-  --color-chart-2: hsl(160 64% 35%);              /* green */
+  --color-chart-1: hsl(187 80% 45%);              /* teal */
+  --color-chart-2: hsl(160 64% 45%);              /* green */
   --color-chart-3: hsl(38 92% 50%);               /* amber */
   --color-chart-4: hsl(262 83% 58%);              /* purple */
   --color-chart-5: hsl(0 72% 51%);                /* red */
 
   /* Status tokens */
-  --color-status-healthy: hsl(142 71% 45%);       /* green */
+  --color-status-healthy: hsl(160 64% 45%);       /* #10B981 green */
   --color-status-warning: hsl(38 92% 50%);        /* amber */
   --color-status-critical: hsl(0 72% 51%);        /* red */
   --color-status-unknown: hsl(215 15% 55%);       /* gray */
+  --color-status-info: hsl(199 89% 48%);          /* #0EA5E9 blue informational */
 
   /* Radii & fonts */
   --radius: 0.5rem;

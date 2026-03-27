@@ -30,18 +30,18 @@ function Header({ sidebarWidth }: { sidebarWidth: number }) {
 
   return (
     <header
-      className="fixed top-0 right-0 z-30 h-12 flex items-center justify-between px-4 bg-black/60 backdrop-blur-xl border-b border-white/[0.06]"
+      className="fixed top-0 right-0 z-30 h-12 flex items-center justify-between px-4 bg-[hsl(var(--card))]/80 backdrop-blur-xl border-b border-[hsl(var(--border))]"
       style={{ left: sidebarWidth }}
     >
       <div className="flex items-center gap-3">
-        <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">{page?.title || "Trellis"}</span>
+        <span className="text-xs uppercase tracking-widest text-[hsl(var(--muted-foreground))] font-medium">{page?.title || "Trellis"}</span>
         {page?.desc && (
-          <span className="hidden sm:inline text-[10px] text-zinc-600">— {page.desc}</span>
+          <span className="hidden sm:inline text-[10px] text-[hsl(var(--muted-foreground))]/60">— {page.desc}</span>
         )}
       </div>
-      <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-white/[0.04] border border-white/[0.06]">
+      <div className="flex items-center gap-2 px-2.5 py-1 rounded bg-[hsl(var(--muted))] border border-[hsl(var(--border))]">
         <span className={`status-dot ${isOnline ? "status-dot-online" : "status-dot-unhealthy"}`} />
-        <span className="text-xs font-data text-zinc-400">
+        <span className="text-xs font-data text-[hsl(var(--muted-foreground))]">
           {health ? (isOnline ? "Online" : "Offline") : "…"}
         </span>
       </div>
@@ -65,12 +65,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           className="grid-bg pt-12 min-h-screen transition-all duration-200"
           style={{ marginLeft: sidebarWidth }}
         >
-          <div className="p-4">
+          <div className="p-4 lg:p-6 max-w-[1600px] mx-auto">
             <ErrorBoundary fallbackTitle="Page failed to render">
               {children}
             </ErrorBoundary>
           </div>
-          <footer className="flex items-center justify-center gap-2 py-4 text-[10px] text-zinc-600 uppercase tracking-widest">
+          <footer className="flex items-center justify-center gap-2 py-4 text-[10px] text-[hsl(var(--muted-foreground))]/50 uppercase tracking-widest">
             <span className="heartbeat-dot" />
             <span>Trellis v0.1.0 • Health First</span>
           </footer>

@@ -30,7 +30,7 @@ export function ActivityFeed({ events, limit = 20 }: { events: AuditEvent[] | nu
   }
 
   if (events.length === 0) {
-    return <div className="text-zinc-600 text-sm py-8 text-center">No events yet</div>;
+    return <div className="text-[hsl(var(--muted-foreground))]/60 text-sm py-8 text-center">No events yet</div>;
   }
 
   const shown = events.slice(0, limit);
@@ -39,13 +39,13 @@ export function ActivityFeed({ events, limit = 20 }: { events: AuditEvent[] | nu
     <div className="space-y-0.5">
       {shown.map((ev) => (
         <div key={ev.id} className="flex items-center gap-3 px-3 py-1.5 table-row-hover rounded text-sm">
-          <span className="font-data text-[11px] text-zinc-600 w-14 shrink-0">{timeAgo(ev.timestamp)}</span>
+          <span className="font-data text-[11px] text-[hsl(var(--muted-foreground))]/60 w-14 shrink-0">{timeAgo(ev.timestamp)}</span>
           <span className={eventBadgeClass(ev.event_type)}>{ev.event_type.replace(/_/g, " ")}</span>
           {ev.agent_id && (
-            <span className="font-data text-xs text-zinc-400 truncate">{ev.agent_id}</span>
+            <span className="font-data text-xs text-[hsl(var(--muted-foreground))] truncate">{ev.agent_id}</span>
           )}
           {ev.trace_id && (
-            <span className="font-data text-[10px] text-zinc-600 ml-auto truncate max-w-[120px]" title={ev.trace_id}>
+            <span className="font-data text-[10px] text-[hsl(var(--muted-foreground))]/50 ml-auto truncate max-w-[120px]" title={ev.trace_id}>
               {ev.trace_id.slice(0, 8)}
             </span>
           )}

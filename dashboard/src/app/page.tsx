@@ -74,7 +74,7 @@ function StatCard({ label, value, icon: Icon, accent, trend, sparkData }: {
           </div>
           {trend && (
             <Badge variant="outline" className={`text-[10px] border-0 px-1.5 py-0 font-medium ${
-              trend.direction === "up" ? "text-emerald-400" : trend.direction === "down" ? "text-red-400" : "text-zinc-500"
+              trend.direction === "up" ? "text-[hsl(var(--status-healthy))]" : trend.direction === "down" ? "text-[hsl(var(--status-critical))]" : "text-[hsl(var(--muted-foreground))]"
             }`}>
               {trend.direction === "up" ? <TrendingUp className="w-3 h-3 mr-1" /> : trend.direction === "down" ? <TrendingDown className="w-3 h-3 mr-1" /> : null}
               {trend.label}
@@ -82,8 +82,8 @@ function StatCard({ label, value, icon: Icon, accent, trend, sparkData }: {
           )}
         </div>
         <div>
-          <div className="text-2xl font-bold font-data text-zinc-100">{value}</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-widest">{label}</div>
+          <div className="text-2xl font-bold font-data text-[hsl(var(--foreground))]">{value}</div>
+          <div className="text-[10px] text-[hsl(var(--muted-foreground))] uppercase tracking-widest">{label}</div>
         </div>
         {sparkData && sparkData.length > 1 && (
           <div className="pt-1">

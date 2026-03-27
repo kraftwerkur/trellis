@@ -28,38 +28,38 @@ export function AgentCard({ agent, cost, onClick }: {
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className={statusDotClass(agent.status)} />
-            <span className="text-sm font-medium text-zinc-200 truncate">{agent.name}</span>
+            <span className="text-sm font-medium text-[hsl(var(--foreground))] truncate">{agent.name}</span>
           </div>
-          <div className="text-[10px] text-zinc-600 font-data mt-1 truncate">{agent.agent_id}</div>
+          <div className="text-[10px] text-[hsl(var(--muted-foreground))]/60 font-data mt-1 truncate">{agent.agent_id}</div>
         </div>
-        <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/[0.04] border border-white/[0.06] text-zinc-500 font-data shrink-0">
+        <span className="text-[10px] px-1.5 py-0.5 rounded bg-[hsl(var(--muted))] border border-[hsl(var(--border))] text-[hsl(var(--muted-foreground))] font-data shrink-0">
           {agent.framework}
         </span>
       </div>
 
       <div className="grid grid-cols-2 gap-2 text-xs">
         <div>
-          <div className="text-[10px] text-zinc-600 uppercase tracking-wider">Model</div>
-          <div className="font-data text-zinc-400 truncate">{model}</div>
+          <div className="text-[10px] text-[hsl(var(--muted-foreground))]/60 uppercase tracking-wider">Model</div>
+          <div className="font-data text-[hsl(var(--muted-foreground))] truncate">{model}</div>
         </div>
         <div>
-          <div className="text-[10px] text-zinc-600 uppercase tracking-wider">Type</div>
-          <div className="font-data text-zinc-400">{agent.agent_type}</div>
+          <div className="text-[10px] text-[hsl(var(--muted-foreground))]/60 uppercase tracking-wider">Type</div>
+          <div className="font-data text-[hsl(var(--muted-foreground))]">{agent.agent_type}</div>
         </div>
         <div>
-          <div className="text-[10px] text-zinc-600 uppercase tracking-wider">Requests</div>
-          <div className="font-data text-zinc-400">{cost?.request_count ?? "—"}</div>
+          <div className="text-[10px] text-[hsl(var(--muted-foreground))]/60 uppercase tracking-wider">Requests</div>
+          <div className="font-data text-[hsl(var(--muted-foreground))]">{cost?.request_count ?? "—"}</div>
         </div>
         <div>
-          <div className="text-[10px] text-zinc-600 uppercase tracking-wider">Cost</div>
-          <div className="font-data text-zinc-400">
+          <div className="text-[10px] text-[hsl(var(--muted-foreground))]/60 uppercase tracking-wider">Cost</div>
+          <div className="font-data text-[hsl(var(--muted-foreground))]">
             {cost ? `$${cost.total_cost_usd.toFixed(4)}` : "—"}
           </div>
         </div>
       </div>
 
       {agent.last_health_check && (
-        <div className="mt-3 text-[10px] text-zinc-600 font-data">
+        <div className="mt-3 text-[10px] text-[hsl(var(--muted-foreground))]/60 font-data">
           Last check: {new Date(agent.last_health_check).toLocaleTimeString()}
         </div>
       )}

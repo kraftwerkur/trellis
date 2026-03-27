@@ -62,7 +62,7 @@ export default function FinOpsPage() {
   return (
     <div className="space-y-4">
       {isLoading && (
-        <div className="text-[10px] text-zinc-500 bg-zinc-800/50 border border-zinc-700/30 rounded-lg px-3 py-1.5 text-center animate-pulse">
+        <div className="text-[10px] text-[hsl(var(--muted-foreground))] bg-[hsl(var(--muted))]/50 border border-[hsl(var(--border))]/50 rounded-lg px-3 py-1.5 text-center animate-pulse">
           Connecting to Trellis API…
         </div>
       )}
@@ -70,16 +70,16 @@ export default function FinOpsPage() {
       {/* Top stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { icon: DollarSign, color: "text-amber-500", label: "Total Spend", value: `$${totalCost.toFixed(2)}` },
-          { icon: TrendingUp, color: "text-cyan-500", label: "Today", value: `$${todayCost.toFixed(2)}` },
-          { icon: Users, color: "text-violet-500", label: "Active Agents", value: String(summary.length) },
-          { icon: Cpu, color: "text-emerald-500", label: "Total Requests", value: String(totalRequests) },
+          { icon: DollarSign, color: "text-[hsl(var(--status-warning))]", label: "Total Spend", value: `$${totalCost.toFixed(2)}` },
+          { icon: TrendingUp, color: "text-[hsl(var(--primary))]", label: "Today", value: `$${todayCost.toFixed(2)}` },
+          { icon: Users, color: "text-[hsl(var(--chart-4))]", label: "Active Agents", value: String(summary.length) },
+          { icon: Cpu, color: "text-[hsl(var(--status-healthy))]", label: "Total Requests", value: String(totalRequests) },
         ].map(s => (
-          <div key={s.label} className="card-dark p-4 flex items-center gap-3">
+          <div key={s.label} className="card-dark p-5 flex items-center gap-3">
             <s.icon className={`w-5 h-5 ${s.color}`} />
             <div>
-              <div className="text-sm font-data text-zinc-200">{s.value}</div>
-              <div className="text-[10px] text-zinc-600 uppercase">{s.label}</div>
+              <div className="text-sm font-data text-[hsl(var(--foreground))]">{s.value}</div>
+              <div className="text-[10px] text-[hsl(var(--muted-foreground))]/60 uppercase">{s.label}</div>
             </div>
           </div>
         ))}
@@ -87,12 +87,12 @@ export default function FinOpsPage() {
 
       {/* Cost Over Time */}
       <div className="card-dark overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-white/[0.06] flex items-center justify-between">
-          <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Cost Over Time</span>
+        <div className="px-4 py-2.5 border-b border-[hsl(var(--border))] flex items-center justify-between">
+          <span className="text-xs uppercase tracking-widest text-[hsl(var(--muted-foreground))] font-medium">Cost Over Time</span>
           <div className="flex gap-1">
             {(["hour", "day", "week"] as const).map(g => (
               <button key={g} onClick={() => setGranularity(g)}
-                className={`px-2 py-0.5 text-[10px] uppercase rounded ${granularity === g ? "bg-cyan-500/20 text-cyan-400" : "text-zinc-600 hover:text-zinc-400"}`}>
+                className={`px-2 py-0.5 text-[10px] uppercase rounded ${granularity === g ? "bg-[hsl(var(--primary))]/20 text-[hsl(var(--primary))]" : "text-[hsl(var(--muted-foreground))]/60 hover:text-[hsl(var(--muted-foreground))]"}`}>
                 {g}
               </button>
             ))}
@@ -100,7 +100,7 @@ export default function FinOpsPage() {
         </div>
         <div className="p-4 h-64">
           {timeseries.length === 0 ? (
-            <div className="text-center text-zinc-600 py-8 text-sm">No cost data yet</div>
+            <div className="text-center text-[hsl(var(--muted-foreground))]/60 py-8 text-sm">No cost data yet</div>
           ) : (
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={timeseries}>
@@ -111,9 +111,9 @@ export default function FinOpsPage() {
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-                <XAxis dataKey="bucket" tick={{ fontSize: 10, fill: "#52525b" }} tickLine={false} axisLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: "#52525b" }} tickLine={false} axisLine={false} tickFormatter={v => `$${v}`} />
-                <Tooltip contentStyle={{ background: "#0a0a0f", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, fontSize: 12 }}
+                <XAxis dataKey="bucket" tick={{ fontSize: 10, fill: "hsl(215, 15%, 55%)" }} tickLine={false} axisLine={false} />
+                <YAxis tick={{ fontSize: 10, fill: "hsl(215, 15%, 55%)" }} tickLine={false} axisLine={false} tickFormatter={v => `$${v}`} />
+                <Tooltip contentStyle={{ background: "hsl(222, 20%, 11%)", border: "1px solid hsl(220, 14%, 20%)", borderRadius: 8, fontSize: 12 }}
                   labelStyle={{ color: "#a1a1aa" }} itemStyle={{ color: "#06b6d4" }} formatter={(v: number) => [`$${v.toFixed(4)}`, "Cost"]} />
                 <Area type="monotone" dataKey="total_cost_usd" stroke="#06b6d4" fill="url(#costGrad)" strokeWidth={2} />
               </AreaChart>
@@ -125,12 +125,12 @@ export default function FinOpsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* Cost by Department (Donut) */}
         <div className="card-dark overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-white/[0.06]">
-            <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Cost by Department</span>
+          <div className="px-4 py-2.5 border-b border-[hsl(var(--border))]">
+            <span className="text-xs uppercase tracking-widest text-[hsl(var(--muted-foreground))] font-medium">Cost by Department</span>
           </div>
           <div className="p-4 h-64 flex items-center">
             {deptData.length === 0 ? (
-              <div className="text-center text-zinc-600 py-8 text-sm w-full">No cost data yet</div>
+              <div className="text-center text-[hsl(var(--muted-foreground))]/60 py-8 text-sm w-full">No cost data yet</div>
             ) : (
               <>
                 <div className="w-1/2 h-full">
@@ -140,7 +140,7 @@ export default function FinOpsPage() {
                         innerRadius={45} outerRadius={75} strokeWidth={0}>
                         {deptData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
                       </Pie>
-                      <Tooltip contentStyle={{ background: "#0a0a0f", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, fontSize: 12 }}
+                      <Tooltip contentStyle={{ background: "hsl(222, 20%, 11%)", border: "1px solid hsl(220, 14%, 20%)", borderRadius: 8, fontSize: 12 }}
                         formatter={(v: number) => [`$${v.toFixed(4)}`]} />
                     </PieChart>
                   </ResponsiveContainer>
@@ -149,8 +149,8 @@ export default function FinOpsPage() {
                   {deptData.map((d, i) => (
                     <div key={d.name} className="flex items-center gap-2 text-xs">
                       <span className="w-2 h-2 rounded-full shrink-0" style={{ background: COLORS[i % COLORS.length] }} />
-                      <span className="text-zinc-400 truncate">{d.name}</span>
-                      <span className="ml-auto font-data text-zinc-300">${d.value.toFixed(2)}</span>
+                      <span className="text-[hsl(var(--muted-foreground))] truncate">{d.name}</span>
+                      <span className="ml-auto font-data text-[hsl(var(--foreground))]/80">${d.value.toFixed(2)}</span>
                     </div>
                   ))}
                 </div>
@@ -161,12 +161,12 @@ export default function FinOpsPage() {
 
         {/* Cost by Agent (BarList) */}
         <div className="card-dark overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-white/[0.06]">
-            <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Top Agents by Spend</span>
+          <div className="px-4 py-2.5 border-b border-[hsl(var(--border))]">
+            <span className="text-xs uppercase tracking-widest text-[hsl(var(--muted-foreground))] font-medium">Top Agents by Spend</span>
           </div>
           <div className="p-4 space-y-2">
             {summary.length === 0 ? (
-              <div className="text-center text-zinc-600 py-8 text-sm">No agent cost data yet</div>
+              <div className="text-center text-[hsl(var(--muted-foreground))]/60 py-8 text-sm">No agent cost data yet</div>
             ) : (
               summary.slice(0, 6).map((s, i) => {
                 const maxCost = summary[0]?.total_cost_usd || 1;
@@ -174,10 +174,10 @@ export default function FinOpsPage() {
                 return (
                   <div key={s.agent_id}>
                     <div className="flex items-center justify-between text-xs mb-0.5">
-                      <span className="text-zinc-400 truncate font-mono text-[11px]">{s.agent_id}</span>
-                      <span className="font-data text-amber-400">${s.total_cost_usd.toFixed(4)}</span>
+                      <span className="text-[hsl(var(--muted-foreground))] truncate font-mono text-[11px]">{s.agent_id}</span>
+                      <span className="font-data text-[hsl(var(--status-warning))]">${s.total_cost_usd.toFixed(4)}</span>
                     </div>
-                    <div className="h-1.5 rounded-full bg-white/[0.04] overflow-hidden">
+                    <div className="h-1.5 rounded-full bg-[hsl(var(--muted))]/30 overflow-hidden">
                       <div className="h-full rounded-full transition-all duration-500"
                         style={{ width: `${pct}%`, background: COLORS[i % COLORS.length] }} />
                     </div>
@@ -192,8 +192,8 @@ export default function FinOpsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {/* Budget Tracker */}
         <div className="card-dark overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-white/[0.06]">
-            <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium flex items-center gap-2">
+          <div className="px-4 py-2.5 border-b border-[hsl(var(--border))]">
+            <span className="text-xs uppercase tracking-widest text-[hsl(var(--muted-foreground))] font-medium flex items-center gap-2">
               <Target className="w-3.5 h-3.5" /> Budget Tracker
             </span>
           </div>
@@ -204,17 +204,17 @@ export default function FinOpsPage() {
             ].map(b => (
               <div key={b.label}>
                 <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className="text-zinc-400">{b.label}</span>
-                  <span className="font-data text-zinc-300">${b.current.toFixed(2)} / ${b.cap.toFixed(0)}</span>
+                  <span className="text-[hsl(var(--muted-foreground))]">{b.label}</span>
+                  <span className="font-data text-[hsl(var(--foreground))]/80">${b.current.toFixed(2)} / ${b.cap.toFixed(0)}</span>
                 </div>
-                <div className="h-2.5 rounded-full bg-white/[0.04] overflow-hidden">
+                <div className="h-2.5 rounded-full bg-[hsl(var(--muted))]/30 overflow-hidden">
                   <div className="h-full rounded-full transition-all duration-700"
                     style={{
                       width: `${b.pct}%`,
-                      background: b.pct > 90 ? "#ef4444" : b.pct > 70 ? "#f59e0b" : "#10b981",
+                      background: b.pct > 90 ? "hsl(0, 72%, 51%)" : b.pct > 70 ? "hsl(38, 92%, 50%)" : "hsl(160, 64%, 45%)",
                     }} />
                 </div>
-                <div className="text-[10px] text-zinc-600 mt-0.5">{b.pct.toFixed(1)}% used</div>
+                <div className="text-[10px] text-[hsl(var(--muted-foreground))]/50 mt-0.5">{b.pct.toFixed(1)}% used</div>
               </div>
             ))}
           </div>
@@ -222,19 +222,19 @@ export default function FinOpsPage() {
 
         {/* Model Usage */}
         <div className="card-dark overflow-hidden">
-          <div className="px-4 py-2.5 border-b border-white/[0.06]">
-            <span className="text-xs uppercase tracking-widest text-zinc-500 font-medium">Model Usage</span>
+          <div className="px-4 py-2.5 border-b border-[hsl(var(--border))]">
+            <span className="text-xs uppercase tracking-widest text-[hsl(var(--muted-foreground))] font-medium">Model Usage</span>
           </div>
           <div className="p-4 h-64">
             {modelData.length === 0 ? (
-              <div className="text-center text-zinc-600 py-8 text-sm">No model usage data yet</div>
+              <div className="text-center text-[hsl(var(--muted-foreground))]/60 py-8 text-sm">No model usage data yet</div>
             ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={modelData} layout="vertical" margin={{ left: 10 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" horizontal={false} />
-                  <XAxis type="number" tick={{ fontSize: 10, fill: "#52525b" }} tickLine={false} axisLine={false} />
-                  <YAxis type="category" dataKey="model" tick={{ fontSize: 10, fill: "#71717a" }} tickLine={false} axisLine={false} width={120} />
-                  <Tooltip contentStyle={{ background: "#0a0a0f", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 8, fontSize: 12 }}
+                  <XAxis type="number" tick={{ fontSize: 10, fill: "hsl(215, 15%, 55%)" }} tickLine={false} axisLine={false} />
+                  <YAxis type="category" dataKey="model" tick={{ fontSize: 10, fill: "hsl(215, 15%, 55%)" }} tickLine={false} axisLine={false} width={120} />
+                  <Tooltip contentStyle={{ background: "hsl(222, 20%, 11%)", border: "1px solid hsl(220, 14%, 20%)", borderRadius: 8, fontSize: 12 }}
                     labelStyle={{ color: "#a1a1aa" }} />
                   <Bar dataKey="requests" radius={[0, 4, 4, 0]}>
                     {modelData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}

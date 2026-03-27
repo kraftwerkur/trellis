@@ -21,6 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from trellis.models import Agent, EnvelopeLog, RoutingFeedback, ShadowComparison
 from trellis.schemas import Envelope
+from trellis.embeddings import embedding_service
 
 logger = logging.getLogger("trellis.intelligent_router")
 
@@ -97,11 +98,12 @@ class RoutingDecision:
 # ═══════════════════════════════════════════════════════════════════════════
 
 DEFAULT_WEIGHTS = {
-    "category": 0.30,
-    "source_type": 0.25,
-    "keyword": 0.20,
-    "system": 0.15,
-    "priority": 0.10,
+    "category": 0.25,
+    "source_type": 0.20,
+    "keyword": 0.15,
+    "system": 0.10,
+    "priority": 0.05,
+    "semantic": 0.25,
 }
 
 # Multi-dispatch category pairs
@@ -243,6 +245,23 @@ def priority_score(agent_priority_range: list[str], envelope_priority: str) -> f
     if p in [pr.lower() for pr in agent_priority_range]:
         return 1.0
     return 0.0
+
+
+def semantic_score(agent_description: str, envelope_text: str, _cache: dict = {}) -> float:
+    """Cosine similarity between agent description and envelope text embeddings."""
+    if not embedding_service.available:
+        return 0.0
+    if not agent_description or not envelope_text:
+        return 0.0
+
+    # Cache agent description embeddings (they don't change often)
+    cache_key = agent_description[:200]
+    if cache_key not in _cache:
+        _cache[cache_key] = embedding_service.embed(agent_description)
+    agent_vec = _cache[cache_key]
+
+    envelope_vec = embedding_service.embed(envelope_text[:500])  # truncate long text
+    return max(0.0, embedding_service.similarity(agent_vec, envelope_vec))
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -435,13 +454,15 @@ def score_agent(
     kw = keyword_score(intake.keywords, signals["tags"], signals["text"])
     sys = system_score(intake.systems, signals["systems"])
     pri = priority_score(intake.priority_range, signals["priority"])
+    sem = semantic_score(intake.description, signals["text"])
 
     base = (
-        cat * w["category"]
-        + src * w["source_type"]
-        + kw * w["keyword"]
-        + sys * w["system"]
-        + pri * w["priority"]
+        cat * w.get("category", 0.25)
+        + src * w.get("source_type", 0.20)
+        + kw * w.get("keyword", 0.15)
+        + sys * w.get("system", 0.10)
+        + pri * w.get("priority", 0.05)
+        + sem * w.get("semantic", 0.25)
     )
 
     hist = historical_multiplier(agent_id, env_category)
@@ -461,6 +482,7 @@ def score_agent(
             "keyword": kw,
             "system": sys,
             "priority": pri,
+            "semantic": sem,
             "historical_multiplier": hist,
             "load_multiplier": load,
             "base_score": round(base, 4),

@@ -115,15 +115,63 @@ class AgentContext:
 
     # ── Delegation ────────────────────────────────────────────────────────
 
+    @property
+    def delegation_engine(self):
+        """Lazy-create a DelegationEngine instance."""
+        if not hasattr(self, "_delegation_engine") or self._delegation_engine is None:
+            from trellis.delegation import DelegationEngine
+            self._delegation_engine = DelegationEngine(db=self.db)
+        return self._delegation_engine
+
+    @delegation_engine.setter
+    def delegation_engine(self, engine):
+        self._delegation_engine = engine
+
     async def delegate(
         self,
-        target_agent_id: str,
-        payload: dict[str, Any] | None = None,
+        to_agent: str,
+        text: str,
+        context: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
-        """Delegate work to another agent (Iteration 2)."""
-        raise NotImplementedError(
-            "AgentContext.delegate() is not yet implemented — coming in Iteration 2"
+        """Delegate work to another agent and return the result."""
+        from trellis.delegation import DelegationRequest
+
+        context = context or {}
+        request = DelegationRequest(
+            from_agent=self.agent_id,
+            to_agent=to_agent,
+            text=text,
+            context=context,
+            trace_id=self.trace_id,
         )
+
+        await self.emit_event(
+            "delegation_requested",
+            details={
+                "delegation_id": request.delegation_id,
+                "to_agent": to_agent,
+                "text": text[:200],
+            },
+        )
+
+        result = await self.delegation_engine.delegate(request, db=self.db)
+
+        await self.emit_event(
+            "delegation_completed",
+            details={
+                "delegation_id": request.delegation_id,
+                "to_agent": to_agent,
+                "status": result.status,
+                "error": result.error,
+            },
+        )
+
+        return {
+            "delegation_id": request.delegation_id,
+            "status": result.status,
+            "result": result.result,
+            "error": result.error,
+        }
 
     # ── Async context manager ─────────────────────────────────────────────
 

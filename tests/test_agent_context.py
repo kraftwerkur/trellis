@@ -62,8 +62,8 @@ async def test_emit_event_writes_to_db():
 
 
 @pytest.mark.asyncio
-async def test_delegate_raises_not_implemented():
-    """delegate() raises NotImplementedError (Iteration 2 stub)."""
+async def test_delegate_works():
+    """delegate() routes to DelegationEngine and returns a result."""
     async with async_session() as db:
         ctx = AgentContext(
             agent_id="del-agent",
@@ -71,8 +71,9 @@ async def test_delegate_raises_not_implemented():
             envelope={"envelope_id": "env-3"},
             db=db,
         )
-        with pytest.raises(NotImplementedError, match="Iteration 2"):
-            await ctx.delegate("other-agent", payload={"key": "val"})
+        result = await ctx.delegate("it-help", text="Server is down", context={"description": "Server is down", "severity": "high"})
+        assert result["status"] in ("completed", "error")
+        assert "delegation_id" in result
 
 
 @pytest.mark.asyncio

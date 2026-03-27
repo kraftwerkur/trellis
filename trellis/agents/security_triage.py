@@ -110,17 +110,67 @@ class SecurityTriageAgent:
 
         assessment_text = loop_result.result.get("text", "")
 
+        result_data = {
+            "cve_ids": cve_ids,
+            "kev_results": kev_results,
+            "any_in_kev": any_in_kev,
+            "risk_level": risk_level,
+            "agent_loop_steps": loop_result.steps,
+        }
+
+        # Delegate to ITHelpAgent for CRITICAL CVEs when full context available
+        if risk_level == "CRITICAL" and db is not None and trace_id is not None:
+            try:
+                from trellis.agent_context import AgentContext
+
+                async with AgentContext(
+                    agent_id="security-triage",
+                    trace_id=trace_id,
+                    envelope=envelope,
+                    db=db,
+                ) as ctx:
+                    delegation_text = (
+                        f"CRITICAL vulnerability remediation needed. "
+                        f"CVEs in CISA KEV: {', '.join(c for c, r in kev_results.items() if r.get('found'))}. "
+                        f"Assessment: {assessment_text[:500]}"
+                    )
+                    delegation_context = {
+                        "description": delegation_text,
+                        "severity": "critical",
+                        "category_hint": "infrastructure",
+                        "affected_users": 100,
+                        "ticket_id": f"TRL-{trace_id[:8].upper()}",
+                        "cve_ids": cve_ids,
+                        "kev_results": kev_results,
+                        "risk_level": risk_level,
+                    }
+                    delegation_result = await ctx.delegate(
+                        to_agent="it-help",
+                        text=delegation_text,
+                        context=delegation_context,
+                    )
+                    if delegation_result.get("status") == "completed":
+                        inner = delegation_result.get("result", {})
+                        inner_result = inner.get("result", {})
+                        inner_data = inner_result.get("data", {})
+                        triage = inner_data.get("triage", {})
+                        result_data["ticket_id"] = triage.get(
+                            "ticket_id", delegation_context["ticket_id"]
+                        )
+                        result_data["delegation_id"] = delegation_result.get("delegation_id")
+                    else:
+                        logger.warning(
+                            "Delegation to it-help failed: %s",
+                            delegation_result.get("error"),
+                        )
+            except Exception:
+                logger.exception("Delegation to ITHelpAgent failed; continuing without ticket")
+
         return {
             "status": "completed",
             "result": {
                 "text": assessment_text,
-                "data": {
-                    "cve_ids": cve_ids,
-                    "kev_results": kev_results,
-                    "any_in_kev": any_in_kev,
-                    "risk_level": risk_level,
-                    "agent_loop_steps": loop_result.steps,
-                },
+                "data": result_data,
                 "attachments": [],
             },
         }

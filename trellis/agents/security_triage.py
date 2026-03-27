@@ -37,12 +37,13 @@ Be concise and actionable. Output plain text, not JSON."""
 class SecurityTriageAgent:
     """Multi-step security triage agent using AgentLoop."""
 
-    def __init__(self, llm_call=None):
+    def __init__(self, agent=None, llm_call=None):
+        self.agent = agent
         self.system_prompt = SYSTEM_PROMPT
         self.llm_call = llm_call
 
-    async def execute(
-        self, envelope: dict, *, db=None, trace_id: str | None = None
+    async def process(
+        self, envelope, *, db=None, trace_id: str | None = None
     ) -> dict:
         """Process a security envelope through multi-step triage.
 
@@ -176,21 +177,39 @@ class SecurityTriageAgent:
         }
 
     @staticmethod
-    def _extract_text(envelope: dict) -> str:
-        """Pull text content from an envelope dict."""
-        # Try common envelope shapes
-        if "body" in envelope:
-            body = envelope["body"]
-            if isinstance(body, dict):
-                return body.get("text", body.get("content", json.dumps(body)))
-            return str(body)
-        if "text" in envelope:
-            return envelope["text"]
-        if "payload" in envelope:
-            payload = envelope["payload"]
-            if isinstance(payload, dict):
-                return payload.get("text", payload.get("description", json.dumps(payload)))
-            return str(payload)
-        if "content" in envelope:
-            return envelope["content"]
-        return json.dumps(envelope)
+    def _extract_text(envelope) -> str:
+        """Pull text content from an envelope (Pydantic object or dict)."""
+        # Handle Pydantic Envelope objects (from native dispatcher)
+        if hasattr(envelope, "payload"):
+            payload = envelope.payload
+            if hasattr(payload, "text") and payload.text:
+                return payload.text
+            if hasattr(payload, "data") and payload.data:
+                return json.dumps(payload.data if isinstance(payload.data, dict) else payload.data)
+            # Convert to dict and fall through
+            if hasattr(envelope, "model_dump"):
+                envelope = envelope.model_dump()
+            elif hasattr(envelope, "dict"):
+                envelope = envelope.dict()
+            else:
+                return str(envelope)
+
+        # Dict-based envelope shapes
+        if isinstance(envelope, dict):
+            if "body" in envelope:
+                body = envelope["body"]
+                if isinstance(body, dict):
+                    return body.get("text", body.get("content", json.dumps(body)))
+                return str(body)
+            if "text" in envelope:
+                return envelope["text"]
+            if "payload" in envelope:
+                payload = envelope["payload"]
+                if isinstance(payload, dict):
+                    return payload.get("text", payload.get("description", json.dumps(payload)))
+                return str(payload)
+            if "content" in envelope:
+                return envelope["content"]
+            return json.dumps(envelope)
+
+        return str(envelope)
